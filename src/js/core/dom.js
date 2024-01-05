@@ -6,6 +6,27 @@ import env from './env';
 const NBSP_CHAR = String.fromCharCode(160);
 const ZERO_WIDTH_NBSP_CHAR = '\ufeff';
 
+const beautifyOpts = {
+  indent_size: 2,
+  indent_with_tabs: true,
+  indent_char: " ",
+  max_preserve_newlines: "2",
+  preserve_newlines: true,
+  keep_array_indentation: false,
+  break_chained_methods: false,
+  indent_scripts: "normal",
+  brace_style: "collapse",
+  space_before_conditional: true,
+  unescape_strings: false,
+  jslint_happy: false,
+  end_with_newline: false,
+  wrap_line_length: "140",
+  indent_inner_html: true,
+  comma_first: false,
+  e4x: false,
+  indent_empty_lines: false
+};
+
 /**
  * @method isEditable
  *
@@ -1066,20 +1087,25 @@ function value($node, stripLinebreaks) {
  * @param {jQuery} $node
  * @param {Boolean} [isNewlineOnBlock]
  */
-function html($node, isNewlineOnBlock) {
+function html($node, prettifyHtml) {
   let markup = value($node);
 
-  if (isNewlineOnBlock) {
-    const regexTag = /<(\/?)(\b(?!!)[^>\s]*)(.*?)(\s*\/?>)/g;
-    markup = markup.replace(regexTag, function(match, endSlash, name) {
-      name = name.toUpperCase();
-      const isEndOfInlineContainer = /^DIV|^TD|^TH|^P|^LI|^H[1-7]/.test(name) &&
-                                   !!endSlash;
-      const isBlockNode = /^BLOCKQUOTE|^TABLE|^TBODY|^TR|^HR|^UL|^OL/.test(name);
-
-      return match + ((isEndOfInlineContainer || isBlockNode) ? '\n' : '');
-    });
-    markup = markup.trim();
+  if (prettifyHtml) {
+    if (typeof window.html_beautify !== 'undefined') {
+      markup = window.html_beautify(markup, beautifyOpts);
+    }
+    else {
+      const regexTag = /<(\/?)(\b(?!!)[^>\s]*)(.*?)(\s*\/?>)/g;
+      markup = markup.replace(regexTag, function(match, endSlash, name) {
+        name = name.toUpperCase();
+        const isEndOfInlineContainer = /^DIV|^TD|^TH|^P|^LI|^H[1-7]/.test(name) &&
+                                     !!endSlash;
+        const isBlockNode = /^BLOCKQUOTE|^TABLE|^TBODY|^TR|^HR|^UL|^OL/.test(name);
+  
+        return match + ((isEndOfInlineContainer || isBlockNode) ? '\n' : '');
+      });
+      markup = markup.trim();
+    }
   }
 
   return markup;
