@@ -90,6 +90,10 @@ function isElement(node) {
   return node && node.nodeType === 1;
 }
 
+function isTag(node, tagName) {
+  return node && node.nodeName.toUpperCase() == tagName.toUpperCase();
+}
+
 /**
  * ex) br, col, embed, hr, img, input, ...
  * @see http://www.w3.org/html/wg/drafts/html/master/syntax.html#void-elements
@@ -1161,6 +1165,7 @@ export default {
   isText,
   isElement,
   isVoid,
+  isTag,
   isPara,
   isPurePara,
   isHeading,

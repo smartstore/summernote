@@ -16,7 +16,7 @@ export default class TablePopover {
       'summernote.keyup summernote.scroll summernote.change': () => {
         this.update();
       },
-      'summernote.disable summernote.dialog.shown': () => {
+      'summernote.disable summernote.dialog.shown summernote.popover.shown': () => {
         this.hide();
       },
       'summernote.blur': (we, event) => {
@@ -63,21 +63,28 @@ export default class TablePopover {
     const isCell = dom.isCell(target) || dom.isCell(target?.parentElement);
 
     if (isCell) {
-      const pos = dom.posFromPlaceholder(target);
-      const containerOffset = $(this.options.container).offset();
-      pos.top -= containerOffset.top;
-      pos.left -= containerOffset.left;
+      const isVoidOrLink = dom.isVoid(target) || dom.isAnchor(target) || dom.isAnchor(target?.parentElement);
 
-      this.$popover.css({
-        display: 'block',
-        left: pos.left,
-        top: pos.top,
-      });
-    } else {
-      this.hide();
+      if (!isVoidOrLink) {
+        const pos = dom.posFromPlaceholder(target);
+        const containerOffset = $(this.options.container).offset();
+        pos.top -= containerOffset.top;
+        pos.left -= containerOffset.left;
+  
+        this.context.triggerEvent('popover.shown');
+  
+        this.$popover.css({
+          display: 'block',
+          left: pos.left,
+          top: pos.top,
+        });
+
+        return true;
+      }
     }
 
-    return isCell;
+    this.hide();
+    return false;
   }
 
   hide() {

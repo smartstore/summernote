@@ -12,7 +12,7 @@ export default class LinkPopover {
       'summernote.keyup summernote.mouseup summernote.change summernote.scroll': () => {
         this.update();
       },
-      'summernote.disable summernote.dialog.shown': () => {
+      'summernote.disable summernote.dialog.shown summernote.popover.shown': () => {
         this.hide();
       },
       'summernote.blur': (we, event) => {
@@ -36,7 +36,7 @@ export default class LinkPopover {
       className: 'note-link-popover',
       callback: ($node) => {
         const $content = $node.find('.popover-content,.note-popover-content');
-        $content.prepend('<span><a target="_blank"></a>&nbsp;</span>');
+        $content.prepend('<span class="text-truncate d-inline-block" style="max-width: 300px"><a target="_blank" class="text-truncate"></a>&nbsp;</span>');
       },
     }).render().appendTo(this.options.container);
     const $content = this.$popover.find('.popover-content,.note-popover-content');
@@ -61,14 +61,19 @@ export default class LinkPopover {
     if (rng.isCollapsed() && rng.isOnAnchor()) {
       const anchor = dom.ancestor(rng.sc, dom.isAnchor);
       const href = $(anchor).attr('href');
-      this.$popover.find('a').attr('href', href).text(href);
+      this.$popover.find('a')
+        .attr('href', href)
+        .attr('title', href)
+        .text(href);
 
       const pos = dom.posFromPlaceholder(anchor);
       const containerOffset = $(this.options.container).offset();
       pos.top -= containerOffset.top;
       pos.left -= containerOffset.left;
 
-      this.$popover.css({
+      this.context.triggerEvent('popover.shown');
+
+       this.$popover.css({
         display: 'block',
         left: pos.left,
         top: pos.top,
