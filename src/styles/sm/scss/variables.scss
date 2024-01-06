@@ -1,0 +1,97 @@
+$black:                     #000;
+$white:                     #fff;
+$yiq-text-dark:             #393f46;
+$enable-rounded:            true;
+$input-border-color:        #dee2e6;
+$input-padding-x:           0.75rem;
+$input-padding-y:           0.5rem;
+$input-border-radius:       0.375rem;
+$input-focus-border-color:  #689de8;
+$zindex-sticky:             1020;
+$zindex-tooltip:            1070;
+
+@function valid-radius($radius) {
+    $return: ();
+    @each $value in $radius {
+      @if type-of($value) == number {
+        $return: append($return, max($value, 0));
+      } @else {
+        $return: append($return, $value);
+      }
+    }
+    @return $return;
+  }
+
+@mixin button-flat() {
+    --btn-color: #{$yiq-text-dark};
+    --btn-bg: transparent;
+    --btn-border-color: transparent;
+    --btn-box-shadow: none;
+    --btn-disabled-color: var(--btn-color);
+    --btn-disabled-bg: var(--btn-bg);
+    --btn-disabled-border-color: var(--btn-border-color);
+
+    border-radius: var(--btn-border-radius);
+    background-image: none;
+}
+
+@mixin border-radius($radius: $border-radius, $fallback-border-radius: false) {
+    @if $enable-rounded {
+      border-radius: valid-radius($radius);
+    }
+    @else if $fallback-border-radius != false {
+      border-radius: $fallback-border-radius;
+    }
+  }
+  
+  @mixin border-top-radius($radius) {
+    @if $enable-rounded {
+      border-start-start-radius: valid-radius($radius);
+      border-start-end-radius: valid-radius($radius);
+    }
+  }
+  
+  @mixin border-right-radius($radius) {
+    @if $enable-rounded {
+      border-start-end-radius: valid-radius($radius);
+      border-end-end-radius: valid-radius($radius);
+    }
+  }
+  
+  @mixin border-bottom-radius($radius) {
+    @if $enable-rounded {
+      border-end-end-radius: valid-radius($radius);
+      border-end-start-radius: valid-radius($radius);
+    }
+  }
+  
+  @mixin border-left-radius($radius) {
+    @if $enable-rounded {
+      border-start-start-radius: valid-radius($radius);
+      border-end-start-radius: valid-radius($radius);
+    }
+  }
+  
+  @mixin border-top-left-radius($radius) {
+    @if $enable-rounded {
+      border-start-start-radius: valid-radius($radius);
+    }
+  }
+  
+  @mixin border-top-right-radius($radius) {
+    @if $enable-rounded {
+      border-start-end-radius: valid-radius($radius);
+    }
+  }
+  
+  @mixin border-bottom-right-radius($radius) {
+    @if $enable-rounded {
+      border-end-end-radius: valid-radius($radius);
+    }
+  }
+  
+  @mixin border-bottom-left-radius($radius) {
+    @if $enable-rounded {
+      border-end-start-radius: valid-radius($radius);
+    }
+  }
