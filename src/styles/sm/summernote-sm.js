@@ -101,11 +101,11 @@ const popover = renderer.create([
 
 const checkbox = renderer.create('<div class="form-check"></div>', function($node, options) {
   $node.html([
+    '<input type="checkbox" class="form-check-input"' + (options.id ? ' id="note-' + options.id + '"' : ''),
+      (options.checked ? ' checked' : ''),
+      ' aria-label="' + (options.text ? options.text : '') + '"',
+      ' aria-checked="' + (options.checked ? 'true' : 'false') + '"/>',
     '<label class="form-check-label"' + (options.id ? ' for="note-' + options.id + '"' : '') + '>',
-      '<input type="checkbox" class="form-check-input"' + (options.id ? ' id="note-' + options.id + '"' : ''),
-        (options.checked ? ' checked' : ''),
-        ' aria-label="' + (options.text ? options.text : '') + '"',
-        ' aria-checked="' + (options.checked ? 'true' : 'false') + '"/>',
       ' ' + (options.text ? options.text : '') +
     '</label>',
   ].join(''));

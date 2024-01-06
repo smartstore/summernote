@@ -575,7 +575,7 @@ export default class Buttons {
       }).render();
     });
 
-    this.context.memo('button.picture', () => {
+    this.context.memo('button.image', () => {
       return this.button({
         contents: this.ui.icon(this.options.icons.picture),
         tooltip: this.lang.image.image,

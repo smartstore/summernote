@@ -181,6 +181,11 @@ $.extend(true, $.summernote.lang, {
     imageShapes: {
       tooltip: 'Shape',
       tooltipShapeOptions: ['Responsive', 'Border', 'Rounded', 'Circle', 'Thumbnail', 'Shadow (small)', 'Shadow (medium)', 'Shadow (large)']
+    },
+    tableStyles: {
+      tooltip: "Table style",
+      stylesExclusive: ["Basic", "Bordered"],
+      stylesInclusive: ["Striped", "Condensed", "Hoverable"]
     }
   }
 });

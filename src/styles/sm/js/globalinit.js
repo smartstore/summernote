@@ -66,7 +66,7 @@ export var summernote_global_config = {
     //['font', ['forecolor', 'backcolor']],
     ['font', ['fontname', 'color', 'fontsize']],
     ['para', ['style', 'cssclass', 'ul', 'ol', 'paragraph']],
-    ['insert', ['link', 'picture', 'table', 'hr', 'video']],
+    ['insert', ['link', 'image', 'table', 'hr', 'video']],
     ['view', ['fullscreen', 'codeview', 'help']]
   ],
   popover: {
