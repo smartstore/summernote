@@ -46,12 +46,6 @@ export var summernote_global_config = {
     return "http://" + url;
   },
   callbacks: {
-    onFocus() {
-      $(this).next().addClass('focus');
-    },
-    onBlur() {
-      $(this).next().removeClass('focus');
-    },
     onBlurCodeview(code, e) {
       // Summernote does not update WYSIWYG content on codable blur,
       // only when switched back to editor

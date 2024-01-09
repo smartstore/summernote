@@ -373,8 +373,10 @@ export default class Editor {
       this.context.triggerEvent('keyup', event);
     }).on('focus', (event) => {
       this.setLastRange();
+      this.$editor.addClass("focus");
       this.context.triggerEvent('focus', event);
     }).on('blur', (event) => {
+      this.$editor.removeClass("focus");
       this.context.triggerEvent('blur', event);
     }).on('mousedown', (event) => {
       this.context.triggerEvent('mousedown', event);
