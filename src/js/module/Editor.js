@@ -312,10 +312,11 @@ export default class Editor {
      * @param {String} value
      */
     this.floatMe = this.wrapCommand((value) => {
-      const $target = $(this.restoreTarget());
-      $target.toggleClass('note-float-left', value === 'left');
-      $target.toggleClass('note-float-right', value === 'right');
-      $target.css('float', (value === 'none' ? '' : value));
+      const $target = $(this.restoreTarget())
+      $target.removeClass('float-right float-left');
+      if (value == 'left' || value == 'right') {
+        $target.addClass('float-' + value);
+      }
     });
 
     /**

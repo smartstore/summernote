@@ -343,6 +343,7 @@ $.summernote = $.extend($.summernote, {
       'eraser': 'note-icon-eraser',
       'floatLeft': 'note-icon-float-left',
       'floatRight': 'note-icon-float-right',
+      'floatNone': 'note-icon-rollback',
       'font': 'note-icon-font',
       'frame': 'note-icon-frame',
       'italic': 'note-icon-italic',

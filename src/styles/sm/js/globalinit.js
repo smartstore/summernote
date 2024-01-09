@@ -1,25 +1,6 @@
 import $ from "jquery";
 
-let beautifyOpts = {
-  indent_size: 2,
-  indent_with_tabs: true,
-  indent_char: " ",
-  max_preserve_newlines: "2",
-  preserve_newlines: true,
-  keep_array_indentation: false,
-  break_chained_methods: false,
-  indent_scripts: "normal",
-  brace_style: "collapse",
-  space_before_conditional: true,
-  unescape_strings: false,
-  jslint_happy: false,
-  end_with_newline: false,
-  wrap_line_length: "140",
-  indent_inner_html: true,
-  comma_first: false,
-  e4x: false,
-  indent_empty_lines: false
-};
+let summernote_image_upload_url;
 
 export var summernote_global_config = {
   disableDragAndDrop: false,
@@ -29,7 +10,6 @@ export var summernote_global_config = {
   height: 300,
   prettifyHtml: true,
   popatmouse: true,
-  beautify: beautifyOpts,
   onCreateLink: function (url) {
     // Prevents that summernote prepends "http://" to our links (WTF!!!)
     var c = url[0];
@@ -42,7 +22,7 @@ export var summernote_global_config = {
       return url;
     }
 
-    // if url doesn't match an URL schema, set http:// as default
+    // if url doesn't match a URL schema, set http:// as default
     return "http://" + url;
   },
   callbacks: {
@@ -66,8 +46,10 @@ export var summernote_global_config = {
         }
       });
     },
-    _onImageUpload(files) {
-      sendFile(files[0], this);
+    onImageUpload(files) {
+      if (summernote_image_upload_url) {
+        sendFile(files[0], this);
+      }   
     },
   },
   toolbar: [
@@ -82,8 +64,7 @@ export var summernote_global_config = {
     image: [
       ['custom', ['imageAttributes', 'link', 'unlinkImage', 'imageShapes']],
       ['imagesize', ['imageSize100', 'imageSize50', 'imageSize25']],
-      //['float', ['floatLeft', 'floatRight', 'floatNone']],
-      ['float', ['bsFloatLeft', 'bsFloatRight', 'bsFloatNone']],
+      ['float', ['floatLeft', 'floatRight', 'floatNone']],
       ['remove', ['removeMedia']]
     ],
     link: [
@@ -114,6 +95,9 @@ export var summernote_global_config = {
     'alignJustify': 'fa fa-align-justify',
     'alignLeft': 'fa fa-align-left',
     'alignRight': 'fa fa-align-right',
+    'floatLeft': 'fa fa-align-left',
+    'floatRight': 'fa fa-align-right',
+    'floatNone': 'fa fa-align-justify',
     //'rowBelow': 'note-icon-row-below',
     'rowBelow': '<svg viewBox="0 0 14 14"><path d="m 1e-4,5.3181 c 0,0.2901 0.1688,0.5229 0.3789,0.5229 l 13.242,0 c 0.21,0 0.3789,-0.2328 0.3789,-0.5229 l 0,-4.7928 C 13.9999,0.2353 13.831,1e-4 13.621,1e-4 l -13.242,0 C 0.1689,1e-4 1e-4,0.2353 1e-4,0.5253 l 0,4.7928 z m 1.1582,-0.687 0,-3.4211 3.2168,0 0,3.4211 -3.2168,0 z m 4.2852,0 0,-3.4211 3.2148,0 0,3.4211 -3.2148,0 z m 4.2832,0 0,-3.4211 3.2148,0 0,3.4211 -3.2148,0 z m -6.7266,5.337 q 0,-0.264 0.1915,-0.4658 L 3.5798,9.1141 q 0.1966,-0.1965 0.4709,-0.1965 0.2795,0 0.4658,0.1965 l 1.5217,1.5164 0,-3.6436 q 0,-0.2691 0.194,-0.4372 0.1941,-0.1683 0.4684,-0.1683 l 0.6625,0 q 0.2743,0 0.4684,0.1683 0.1941,0.1681 0.1941,0.4372 l 0,3.6436 1.5216,-1.5164 q 0.1863,-0.1965 0.4658,-0.1965 0.2795,0 0.4658,0.1965 l 0.3882,0.3882 q 0.1966,0.1967 0.1966,0.4658 0,0.2742 -0.1966,0.471 l -3.3693,3.3692 q -0.1812,0.1916 -0.4658,0.1916 -0.2795,0 -0.471,-0.1916 L 3.1916,10.4391 Q 3.0001,10.2372 3.0001,9.9681 Z"/></svg>',
     //'colBefore': 'note-icon-col-before',
@@ -157,6 +141,7 @@ export var summernote_global_config = {
     'trash': 'fa fa-trash',
     'underline': 'fa fa-underline',
     'undo': 'fa fa-undo',
+    'rollback': 'fa fa-rotate-left',
     'unorderedlist': 'fa fa-list-ul',
     'video': 'fa fa-video'
   },
@@ -195,7 +180,6 @@ export var summernote_global_config = {
   }
 };
 
-const summernote_image_upload_url = "#";
 function sendFile(file, editor, welEditable) {
   data = new FormData();
   data.append("file", file);

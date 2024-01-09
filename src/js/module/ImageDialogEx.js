@@ -11,55 +11,6 @@ export default class ImageDialog {
     this.options = context.options;
     this.lang = this.options.langInfo;
 
-    // Image float popover stuff
-    this.context.memo('button.bsFloatLeft', () => {
-      return this.ui.button({
-        contents: this.ui.icon(this.options.icons.alignLeft),
-        callback: (btn) => {
-          btn.data("placement", "bottom");
-          btn.data("trigger", "hover");
-          btn.attr("title", this.lang.image.floatLeft);
-          btn.tooltip();
-        },
-        click: (e) => {
-          var $img = $(this.context.layoutInfo.editable.data('target'));
-          $img.removeClass('float-right float-left').addClass('float-left');
-          this.context.invoke('editor.afterCommand');
-        }
-      }).render();
-    });
-    this.context.memo('button.bsFloatRight', () => {
-      return this.ui.button({
-        contents: this.ui.icon(this.options.icons.alignRight),
-        callback: (btn) => {
-          btn.data("placement", "bottom");
-          btn.data("trigger", "hover");
-          btn.attr("title", this.lang.image.floatRight);
-          btn.tooltip();
-        },
-        click: (e) => {
-          var $img = $(this.context.layoutInfo.editable.data('target'));
-          $img.removeClass('float-right float-left').addClass('float-right');
-          this.context.invoke('editor.afterCommand');
-        }
-      }).render();
-    });
-    this.context.memo('button.bsFloatNone', () => {
-      return this.ui.button({
-        contents: this.ui.icon(this.options.icons.alignJustify),
-        callback: (btn) => {
-          btn.data("placement", "bottom");
-          btn.data("trigger", "hover");
-          btn.attr("title", this.lang.image.floatNone);
-          btn.tooltip();
-        },
-        click: (e) => {
-          var $img = $(this.context.layoutInfo.editable.data('target'));
-          $img.removeClass('float-right float-left');
-          this.context.invoke('editor.afterCommand');
-        }
-      }).render();
-    });
     this.context.memo('button.imageAttributes', () => {
       var button = this.ui.button({
         contents: '<i class="fa fa-pencil"></i>',
@@ -225,12 +176,12 @@ export default class ImageDialog {
       this.ui.onDialogShown(this.$dialog, () => {
         this.context.triggerEvent('dialog.shown');
 
-        function setUrlFocus() {
-          if (typeof Modernizr == "undefined" || !Modernizr.touchevents) {
+        function setInputFocus() {
+          if (!env.isSupportTouch) {
             $imageUrl.trigger('focus');
           }
         }
-        setUrlFocus();
+        setInputFocus();
 
         $imageBrowse.on('click.imageDialog', e => {
           e.preventDefault();
@@ -244,7 +195,7 @@ export default class ImageDialog {
               $imageUrl.val(url).trigger('change').trigger('input');
             })
             .always(() =>{
-              setUrlFocus();
+              setInputFocus();
             });
         });
 

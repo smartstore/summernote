@@ -201,9 +201,8 @@ export default class LinkDialog {
   }
 
   onCheckLinkUrl($input) {
-    $input.on('blur', (event) => {
-      event.target.value =
-        event.target.value == '' ? '' : this.checkLinkUrl(event.target.value);
+    $input.on('blur', (e) => {
+      e.target.value = e.target.value == '' ? '' : this.checkLinkUrl(e.target.value);
     });
   }
 
@@ -381,7 +380,7 @@ export default class LinkDialog {
         this.context.triggerEvent('dialog.shown');
 
         function setInputFocus() {
-          if (typeof Modernizr == "undefined" || !Modernizr.touchevents) {
+          if (!env.isSupportTouch) {
             $linkUrl.trigger('focus');
           }
         }

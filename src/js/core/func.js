@@ -160,6 +160,21 @@ function debounce(func, wait, immediate) {
  * @return {Boolean}
  */
 function isValidUrl(url) {
+  if (!url) {
+    return false;
+  }
+
+  var c = url[0];
+  if (c === "/" || c === "~" || c === "\\" || c === "." || c === "#") {
+    // Is an app (relative or absolute) path
+    return true;
+  }
+
+  if (/^[A-Za-z][A-Za-z0-9+-.]*\:[\/\/]?/.test(url)) {
+    // Starts with a valid protocol
+    return url;
+  }
+
   const expression = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/gi;
   return expression.test(url);
 }

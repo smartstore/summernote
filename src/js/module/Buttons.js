@@ -699,7 +699,7 @@ export default class Buttons {
 
     this.context.memo('button.floatNone', () => {
       return this.button({
-        contents: this.ui.icon(this.options.icons.rollback),
+        contents: this.ui.icon(this.options.icons.floatNone),
         tooltip: this.lang.image.floatNone,
         click: this.context.createInvokeHandler('editor.floatMe', 'none'),
       }).render();
