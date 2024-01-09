@@ -221,6 +221,7 @@ $.summernote = $.extend($.summernote, {
       onDialogShown: null,
       onEnter: null,
       onFocus: null,
+      onFileBrowse: null,
       onImageLinkInsert: null,
       onImageUpload: null,
       onImageUploadError: null,

@@ -53,6 +53,17 @@
       window.Res = {
           "Common.Notification": "Alert","Common.Close": "Close","Common.On": "On","Common.OK": "OK","Common.Cancel": "Cancel","Common.Off": "Off","Common.Exit": "Exit","Common.CtrlKey": "Ctrl","Common.ShiftKey": "Shift","Common.AltKey": "Alt","Common.DelKey": "Del","Common.EnterKey": "Enter","Common.EscKey": "Esc","Common.DontAskAgain": "Don\u0027t ask again","Common.DontShowAgain": "Don\u0027t show again","Common.CopyToClipboard": "Copy to clipboard","Common.CopyToClipboard.Failed": "Failed to copy.","Common.CopyToClipboard.Succeeded": "Copied!","Products.Longdesc.More": "Show more","Products.Longdesc.Less": "Show less","Admin.Common.AreYouSure": "Are you sure?","Admin.Common.AskToProceed": "Would you like to proceed?"   
       };
+
+      // Shims
+      Smartstore = {
+        media: {
+          openFileManager(opts) {
+            setTimeout(() => {
+              opts.onSelect([{url: 'https://placehold.co/300x200/orange/white'}]);
+            }, 500);
+          }
+        }
+      };
     </script>
   </head>
   <body>

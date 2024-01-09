@@ -46,20 +46,35 @@ export var summernote_global_config = {
     return "http://" + url;
   },
   callbacks: {
-    onFocus: function () {
+    onFocus() {
       $(this).next().addClass('focus');
     },
-    onBlur: function () {
+    onBlur() {
       $(this).next().removeClass('focus');
     },
-    _onImageUpload: function (files) {
-      sendFile(files[0], this);
-    },
-    onBlurCodeview: function (code, e) {
+    onBlurCodeview(code, e) {
       // Summernote does not update WYSIWYG content on codable blur,
       // only when switched back to editor
       $(this).val(code);
-    }
+    },
+    onFileBrowse(e, mediaType, deferred) {
+      Smartstore.media.openFileManager({
+        el: e.target,
+        type: mediaType,
+        backdrop: false,
+        onSelect: (files) => {
+          if (!files.length) {
+            deferred.reject();
+          }
+          else {
+            deferred.resolve(files[0].url);
+          }
+        }
+      });
+    },
+    _onImageUpload(files) {
+      sendFile(files[0], this);
+    },
   },
   toolbar: [
     ['text', ['bold', 'italic', 'underline', 'strikethrough', 'clear', 'cleaner']],

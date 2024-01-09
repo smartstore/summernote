@@ -62,9 +62,9 @@ export default class LinkDialog {
       '	<label class="note-form-label">URL</label>',
       '	<div class="input-group">',
       '		<input id="note-link-url" class="note-link-url form-control note-form-control note-input" type="text" value="http://" />',
-      '		<div class="input-group-append">',
-      '			<button class="btn btn-secondary btn-browse" type="button">' + this.lang.link.browse + '...</button>',
-      '		</div>',
+          this.options.callbacks.onFileBrowse 
+            ? `<div class="input-group-append"><button class="btn btn-secondary btn-browse" type="button">${this.lang.link.browse}...</button></div>`
+            : '',
       '	</div>',
       '</div>',
       '<div class="form-group note-form-group form-group-text">',
@@ -325,76 +325,83 @@ export default class LinkDialog {
    * @return {Promise}
    */
   showLinkDialog(linkInfo) {
-    var $linkText = this.$dialog.find('.note-link-text');
-    var $linkUrl = this.$dialog.find('.note-link-url');
-    var $linkClass = this.$dialog.find('.note-link-class');
-    var $linkStyle = this.$dialog.find('.note-link-style');
-    var $linkRel = this.$dialog.find('.note-link-rel');
-    var $linkBtn = this.$dialog.find('.note-link-btn');
-    var $openInNewWindow = this.$dialog.find('#sn-checkbox-open-in-new-window');
-    var $fileBrowse = this.$dialog.find('.btn-browse');
-
-    // if no url was given, copy text to url
-    if (!linkInfo.url) {
-      linkInfo.url = linkInfo.text;
-    }
-    $linkText.val(linkInfo.text);
-    $linkClass.val(linkInfo.cssClass);
-    $linkStyle.val(linkInfo.cssStyle);
-    $linkRel.val(linkInfo.rel);
-
-    const toggleLinkBtn = () => {
-      var enable = $linkUrl.val();
-      if (!linkInfo.img) {
-        enable = !!(enable) && !!($linkText.val());
-      }
-      this.ui.toggleBtn($linkBtn, enable);
-    };
-    const handleLinkTextUpdate = () => {
-      // if linktext was modified by keyup,
-      // stop cloning text from linkUrl
-      linkInfo.text = $linkText.val();
-      toggleLinkBtn();
-    };
-    const handleLinkUrlUpdate = () => {
-      // display same link on `Text to display` input
-      // when create a new link
-      if (!linkInfo.text) {
-        $linkText.val($linkUrl.val());
-      }
-      toggleLinkBtn();
-    };
-
-    $linkText.on('input.linkDialog', handleLinkTextUpdate);
-    $linkUrl.on('input.linkDialog', handleLinkUrlUpdate).val(linkInfo.url);
-
-    toggleLinkBtn();
-
-    var isChecked = linkInfo.isNewWindow !== undefined
-      ? linkInfo.isNewWindow
-      : this.options.linkTargetBlank;
-    $openInNewWindow.prop('checked', isChecked);
-
     return $.Deferred((deferred) => {
+      let $linkText = this.$dialog.find('.note-link-text');
+      let $linkUrl = this.$dialog.find('.note-link-url');
+      let $linkClass = this.$dialog.find('.note-link-class');
+      let $linkStyle = this.$dialog.find('.note-link-style');
+      let $linkRel = this.$dialog.find('.note-link-rel');
+      let $linkBtn = this.$dialog.find('.note-link-btn');
+      let $openInNewWindow = this.$dialog.find('#sn-checkbox-open-in-new-window');
+      let $fileBrowse = this.$dialog.find('.btn-browse');
+      let browsePromise;
+  
+      // if no url was given, copy text to url
+      if (!linkInfo.url) {
+        linkInfo.url = linkInfo.text;
+      }
+      $linkText.val(linkInfo.text);
+      $linkClass.val(linkInfo.cssClass);
+      $linkStyle.val(linkInfo.cssStyle);
+      $linkRel.val(linkInfo.rel);
+  
+      const toggleLinkBtn = () => {
+        var enable = $linkUrl.val();
+        if (!linkInfo.img) {
+          enable = !!(enable) && !!($linkText.val());
+        }
+        this.ui.toggleBtn($linkBtn, enable);
+      };
+      const handleLinkTextUpdate = () => {
+        // if linktext was modified by keyup,
+        // stop cloning text from linkUrl
+        linkInfo.text = $linkText.val();
+        toggleLinkBtn();
+      };
+      const handleLinkUrlUpdate = () => {
+        // display same link on `Text to display` input
+        // when create a new link
+        if (!linkInfo.text) {
+          $linkText.val($linkUrl.val());
+        }
+        toggleLinkBtn();
+      };
+  
+      $linkText.on('input.linkDialog', handleLinkTextUpdate);
+      $linkUrl.on('input.linkDialog', handleLinkUrlUpdate).val(linkInfo.url);
+  
+      toggleLinkBtn();
+  
+      var isChecked = linkInfo.isNewWindow !== undefined
+        ? linkInfo.isNewWindow
+        : this.options.linkTargetBlank;
+      $openInNewWindow.prop('checked', isChecked);
+
       this.ui.onDialogShown(this.$dialog, () => {
         this.context.triggerEvent('dialog.shown');
+
+        function setInputFocus() {
+          if (typeof Modernizr == "undefined" || !Modernizr.touchevents) {
+            $linkUrl.trigger('focus');
+          }
+        }
+        setInputFocus();
 
         $fileBrowse.on('click.linkDialog', (e) => {
           e.preventDefault();
 
-          Smartstore.media.openFileManager({
-            el: e.target,
-            backdrop: false,
-            onSelect: (files) => {
-              if (!files.length) return;
-              $linkUrl.val(files[0].url).trigger('change').trigger('input');
-            }
-          });
-        });
+          browsePromise = $.Deferred((deferredBrowse) => {
+            this.context.triggerEvent('file.browse', e, null, deferredBrowse);
+          }).promise();
 
-        if (typeof Modernizr !== "undefined" && !Modernizr.touchevents) {
-          $linkUrl.trigger('focus');
-        }
+          browsePromise
+            .then(url => {
+              $linkUrl.val(url).trigger('change').trigger('input');
+            })
+            .always(() =>{
+              setInputFocus();
+            });
+        });
 
         this.bindEnterKey($linkBtn);
 
@@ -421,8 +428,13 @@ export default class LinkDialog {
         $linkUrl.off('input');
         $linkBtn.off('click');
         $fileBrowse.off('click');
+
         if (deferred.state() === 'pending') {
           deferred.reject();
+        }
+
+        if (browsePromise && browsePromise.state() === 'pending') {
+          browsePromise.reject();
         }
       });
       this.ui.showDialog(this.$dialog);
