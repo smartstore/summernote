@@ -1,6 +1,11 @@
 import $ from 'jquery';
 
 const WHITESPACE_PATTERN = /\s/;
+const HOST_PATTERN = /^(?!-)([a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,6}$/;
+const IP_PATTERN = /^(([01]?[0-9]?[0-9]|2([0-4][0-9]|5[0-5]))\.){3}([01]?[0-9]?[0-9]|2([0-4][0-9]|5[0-5]))$/;
+const PROTOCOL_PATTERN = /^[A-Za-z][A-Za-z0-9+-.]*\:[\/\/]?/;
+const MAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const TEL_PATTERN = /^(\+?\d{1,3}[\s-]?)?(\d{1,4})[\s-]?(\d{1,4})[\s-]?(\d{1,4})$/;
 
 /**
  * @class core.func
@@ -166,22 +171,43 @@ function hasWhiteSpace(str) {
 }
 
 /**
- *
+ * @param {String} host
+ * @return {Boolean}
+ */
+function isValidHost(host) {
+  return host && (HOST_PATTERN.test(host) || IP_PATTERN.test(host));
+}
+
+/**
+ * @param {String} email
+ * @return {Boolean}
+ */
+function isValidEmail(email) {
+  return email && MAIL_PATTERN.test(email);
+}
+
+/**
+ * @param {String} tel
+ * @return {Boolean}
+ */
+function isValidTel(tel) {
+  return tel && TEL_PATTERN.test(tel);
+}
+
+/**
+ * @param {String} url
+ * @return {Boolean}
+ */
+function startsWithUrlScheme(url) {
+  return url && PROTOCOL_PATTERN.test(url);
+}
+
+/**
  * @param {String} url
  * @return {Boolean}
  */
 function isValidUrl(url) {
-  if (!url) {
-    return false;
-  }
-
-  if (/^[A-Za-z][A-Za-z0-9+-.]*\:[\/\/]?/.test(url)) {
-    // Starts with a valid protocol
-    return url;
-  }
-
-  const expression = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/gi;
-  return expression.test(url);
+  return url && (PROTOCOL_PATTERN.test(url) || isValidHost(url));
 }
 
 /**
@@ -210,6 +236,10 @@ export default {
   invertObject,
   namespaceToCamel,
   debounce,
+  isValidHost,
+  isValidEmail,
+  isValidTel,
+  startsWithUrlScheme,
   isValidUrl,
   hasWhiteSpace,
   matches

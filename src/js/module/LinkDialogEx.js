@@ -4,11 +4,6 @@ import key from '../core/key';
 import func from '../core/func';
 import dom from '../core/dom';
 
-const MAILTO_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-const TEL_PATTERN = /^(\+?\d{1,3}[\s-]?)?(\d{1,4})[\s-]?(\d{1,4})[\s-]?(\d{1,4})$/;
-const URL_SCHEME_PATTERN = /^[A-Za-z][A-Za-z0-9+-.]*\:[\/\/]?/; // /^([A-Za-z][A-Za-z0-9+-.]*\:|#|\/)/;
-const HOST_PATTERN = /[-a-zA-Z0-9@:%._\+~#=]{2,256}\.(com|net|org|de|uk|us|info|gov|edu|biz|info|io|co|ca|eu|au|tv|name|mil|pro|museum|int|arpa|aero|coop|jobs|mobi|tel|travel|xxx)(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
-
 export default class LinkDialog {
   constructor(context) {
     this.context = context;
@@ -95,10 +90,9 @@ export default class LinkDialog {
         : '',
     ].join('');
 
-    const buttonClass = 'btn btn-primary note-btn note-btn-primary note-link-btn';
     const footer = [
-      '<button type="button" class="btn btn-secondary btn-flat" data-dismiss="modal">' + Res['Common.Cancel'] + '</button>',
-      '<button type="submit" class="' + buttonClass + '" disabled>' + Res['Common.OK'] + '</button>',
+      '<button type="button" class="btn btn-secondary btn-flat" data-dismiss="modal">' + this.lang.common.cancel + '</button>',
+      '<button type="submit" class="btn btn-primary note-btn note-btn-primary note-link-btn" disabled>' + this.lang.common.ok + '</button>',
     ].join('');
 
     this.$dialog = this.ui.dialog({
@@ -186,14 +180,21 @@ export default class LinkDialog {
     url = url?.trim();
 
     if (url) {
-      if (MAILTO_PATTERN.test(url)) {
+      if (func.isValidEmail(url)) {
         return 'mailto://' + url;
       } 
-      else if (TEL_PATTERN.test(url)) {
+      else if (func.isValidTel(url)) {
         return 'tel://' + url;
       } 
-      else if (!URL_SCHEME_PATTERN.test(url)) {
-        if (HOST_PATTERN.test(url)) {
+      else if (!func.startsWithUrlScheme(url)) {
+        // Grab only first part
+        let url2 = url;
+        let slashIndex = url2.indexOf('/');
+        if (slashIndex > 1) {
+          url2 = url2.substring(0, slashIndex);
+        }
+
+        if (func.isValidHost(url2)) {
           return 'https://' + url;
         }
         else {

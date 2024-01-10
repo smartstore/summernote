@@ -157,16 +157,20 @@ $.extend(true, $.summernote.lang, {
     },
     specialChar: {
       specialChar: 'SPECIAL CHARACTERS',
-      select: 'Select Special characters',
+      select: 'Select special characters',
     },
     output: {
-      noSelection: 'No Selection Made!',
+      noSelection: 'No selection made!',
     },
   },
 });
 
 $.extend(true, $.summernote.lang, {
   'en-US': {
+    common: {
+      ok: 'OK',
+      cancel: 'Cancel'
+    },
     attrs: {
       cssClass: 'CSS Class',
       cssStyle: 'CSS Style',

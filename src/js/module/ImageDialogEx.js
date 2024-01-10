@@ -59,8 +59,8 @@ export default class ImageDialog {
       '</div>'
     ].join('');
     const footer = [
-      '<button type="button" class="btn btn-secondary btn-flat" data-dismiss="modal">' + Res['Common.Cancel'] + '</button>',
-      '<button type="submit" class="btn btn-primary note-btn note-btn-primary note-image-btn" disabled>' + Res['Common.OK'] + '</button>'
+      '<button type="button" class="btn btn-secondary btn-flat" data-dismiss="modal">' + this.lang.common.cancel + '</button>',
+      '<button type="submit" class="btn btn-primary note-btn note-btn-primary note-image-btn" disabled>' + this.lang.common.ok + '</button>'
     ].join('');
 
     this.$dialog = this.ui.dialog({
@@ -210,9 +210,9 @@ export default class ImageDialog {
 
       this.ui.onDialogHidden(this.$dialog, () => {
         this.$dialog.find('.note-input').off('keypress');
-        $imageUrl.off('input');
-        $imageBtn.off('click');
-        $imageBrowse.off('click');
+        $imageUrl.off();
+        $imageBtn.off();
+        $imageBrowse.off();
 
         if (deferred.state() === 'pending') {
           deferred.reject();
