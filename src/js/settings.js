@@ -417,6 +417,7 @@ $.summernote = $.extend($.summernote, {
       'undo': 'note-icon-undo',
       'unorderedlist': 'note-icon-unorderedlist',
       'video': 'note-icon-video',
+      'ellipsis': 'note-icon-ellipsis'
     },
   },
 });

@@ -43,10 +43,10 @@ export var summernote_global_config = {
   },
   toolbar: [
     ['edit', ['undo', 'redo']],
-    ['text', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
-    //['font', ['forecolor', 'backcolor']],
-    ['font', ['fontname', 'color', 'fontsize']],
-    ['para', ['style', 'cssclass', 'ul', 'ol', 'paragraph']],
+    ['text', ['bold', 'italic', 'underline', 'moreFontStyles']],
+    //['color', ['forecolor', 'backcolor']],
+    //['font', ['fontname', 'color', 'fontsize']],
+    ['para', ['style', 'cssclass', 'ul', 'ol', 'paragraph', 'clear']],
     ['insert', ['link', 'image', 'table', 'hr', 'video']],
     ['view', ['codeview', 'fullscreen', 'help']]
   ],
@@ -133,7 +133,8 @@ export var summernote_global_config = {
     'undo': 'fa fa-undo',
     'rollback': 'fa fa-rotate-left',
     'unorderedlist': 'fa fa-list-ul',
-    'video': 'fa fa-video'
+    'video': 'fa fa-video',
+    'ellipsis': 'fa fa-ellipsis'
   },
   codemirror: {
     mode: "htmlmixed",

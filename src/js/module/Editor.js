@@ -72,6 +72,10 @@ export default class Editor {
       this.context.memo('help.' + commands[idx], this.lang.help[commands[idx]]);
     }
 
+    this.inlineCode = this.wrapCommand((value) => {
+      // TODO: Implement
+    });
+
     this.fontName = this.wrapCommand((value) => {
       return this.fontStyling('font-family', env.validFontName(value));
     });

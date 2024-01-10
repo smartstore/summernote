@@ -171,6 +171,9 @@ $.extend(true, $.summernote.lang, {
       ok: 'OK',
       cancel: 'Cancel'
     },
+    font: {
+      code: 'Code'
+    },
     attrs: {
       cssClass: 'CSS Class',
       cssStyle: 'CSS Style',

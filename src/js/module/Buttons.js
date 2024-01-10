@@ -313,31 +313,55 @@ export default class Buttons {
       }).render();
     });
 
-    this.context.memo('button.strikethrough', () => {
-      return this.button({
-        className: 'note-btn-strikethrough',
-        contents: this.ui.icon(this.options.icons.strikethrough),
-        tooltip: this.lang.font.strikethrough + this.representShortcut('strikethrough'),
-        click: this.context.createInvokeHandlerAndUpdateState('editor.strikethrough'),
-      }).render();
+    const strikethrough = this.button({
+      className: 'note-btn-strikethrough',
+      contents: this.ui.icon(this.options.icons.strikethrough),
+      tooltip: this.lang.font.strikethrough + this.representShortcut('strikethrough'),
+      click: this.context.createInvokeHandlerAndUpdateState('editor.strikethrough'),
     });
+    this.context.memo('button.strikethrough', func.invoke(strikethrough, 'render'));
 
-    this.context.memo('button.superscript', () => {
-      return this.button({
-        className: 'note-btn-superscript',
-        contents: this.ui.icon(this.options.icons.superscript),
-        tooltip: this.lang.font.superscript,
-        click: this.context.createInvokeHandlerAndUpdateState('editor.superscript'),
-      }).render();
+    const superscript = this.button({
+      className: 'note-btn-superscript',
+      contents: this.ui.icon(this.options.icons.superscript),
+      tooltip: this.lang.font.superscript,
+      click: this.context.createInvokeHandlerAndUpdateState('editor.superscript'),
     });
+    this.context.memo('button.superscript', func.invoke(superscript, 'render'));
 
-    this.context.memo('button.subscript', () => {
-      return this.button({
-        className: 'note-btn-subscript',
-        contents: this.ui.icon(this.options.icons.subscript),
-        tooltip: this.lang.font.subscript,
-        click: this.context.createInvokeHandlerAndUpdateState('editor.subscript'),
-      }).render();
+    const subscript = this.button({
+      className: 'note-btn-subscript',
+      contents: this.ui.icon(this.options.icons.subscript),
+      tooltip: this.lang.font.subscript,
+      click: this.context.createInvokeHandlerAndUpdateState('editor.subscript'),
+    });
+    this.context.memo('button.subscript', func.invoke(subscript, 'render'));
+
+    const inlineCode = this.button({
+      className: 'note-btn-inlinecode',
+      contents: this.ui.icon(this.options.icons.code),
+      tooltip: this.lang.font.code,
+      click: this.context.createInvokeHandlerAndUpdateState('editor.inlineCode'),
+    });
+    this.context.memo('button.inlinecode', func.invoke(inlineCode, 'render'));
+
+    this.context.memo('button.moreFontStyles', () => {
+      return this.ui.buttonGroup([
+        this.button({
+          contents: this.ui.dropdownButtonContents(this.ui.icon(this.options.icons.ellipsis), this.options),
+          //tooltip: this.lang.paragraph.paragraph,
+          data: {
+            toggle: 'dropdown',
+          },
+        }),
+        this.ui.dropdown({
+          css: { 'min-width': 'auto' },
+          items: this.ui.buttonGroup({
+            className: 'note-more-fontstyles',
+            children: [strikethrough, superscript, subscript, inlineCode],
+          }).render()
+        })
+      ]).render();
     });
 
     this.context.memo('button.fontname', () => {

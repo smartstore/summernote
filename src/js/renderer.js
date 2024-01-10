@@ -19,6 +19,10 @@ class Renderer {
       $node.addClass(this.options.className);
     }
 
+    if (this.options && this.options.css) {
+      $node.css(this.options.css);
+    }
+
     if (this.options && this.options.data) {
       $.each(this.options.data, (k, v) => {
         $node.attr('data-' + k, v);
