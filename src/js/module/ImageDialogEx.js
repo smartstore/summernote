@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import env from '../core/env';
 import key from '../core/key';
+import dom from '../core/dom';
 
 export default class ImageDialog {
   constructor(context) {
@@ -32,29 +33,29 @@ export default class ImageDialog {
     const $container = this.options.dialogsInBody ? this.$body : this.options.container;
     const body = [
       '<div class="form-group note-group-image-url">',
-      '	<label class="note-form-label">' + this.lang.image.url + '</label>',
+      `	<label for="note-dialog-image-url-${this.options.id}" class="note-form-label">${this.lang.image.url}</label>`,
       '	<div class="input-group">',
-      '		<input id="note-image-src" class="note-image-src form-control note-form-control note-input" type="text" />',
+      `		<input id="note-dialog-image-url-${this.options.id}" class="note-image-src form-control note-form-control note-input" type="text" />`,
           this.options.callbacks.onFileBrowse 
             ? `<div class="input-group-append"><button class="btn btn-secondary btn-browse" type="button">${this.lang.link.browse}...</button></div>`
             : '',
       '	</div>',
       '</div>',
       '<div class="form-group note-form-group form-group-text">',
-      '	<label class="note-form-label">Alt</label>',
-      '	<input class="note-image-alt form-control note-form-control note-input" type="text" />',
+      `	<label for="note-dialog-image-alt-${this.options.id}" class="note-form-label">Alt</label>`,
+      `	<input id="note-dialog-image-alt-${this.options.id}" class="note-image-alt form-control note-form-control note-input" type="text" />`,
       '</div>',
       '<div class="form-group note-form-group form-group-text">',
-      '	<label class="note-form-label">Title</label>',
-      '	<input class="note-image-title form-control note-form-control note-input" type="text" />',
+      `	<label for="note-dialog-image-title-${this.options.id}" class="note-form-label">Title</label>`,
+      `	<input id="note-dialog-image-title-${this.options.id}" class="note-image-title form-control note-form-control note-input" type="text" />`,
       '</div>',
       '<div class="form-group note-form-group">',
-      '	<label class="note-form-label">' + this.lang.attrs.cssClass + '</label>',
-      '	<input class="note-image-class form-control note-form-control note-input" type="text" />',
+      `	<label for="note-dialog-image-class-${this.options.id}" class="note-form-label">${this.lang.attrs.cssClass}</label>`,
+      `	<input id="note-dialog-image-class-${this.options.id}" class="note-image-class form-control note-form-control note-input" type="text" />`,
       '</div>',
       '<div class="form-group note-form-group">',
-      '	<label class="note-form-label">' + this.lang.attrs.cssStyle + '</label>',
-      '	<input class="note-image-style form-control note-form-control note-input" type="text" />',
+      `	<label for="note-dialog-image-style-${this.options.id}" class="note-form-label">${this.lang.attrs.cssStyle}</label>`,
+      `	<input id="note-dialog-image-style-${this.options.id}" class="note-image-style form-control note-form-control note-input" type="text" />`,
       '</div>'
     ].join('');
     const footer = [
@@ -87,14 +88,6 @@ export default class ImageDialog {
     });
   }
 
-  setAttribute(img, el, name) {
-    var val = el.val();
-    if (val)
-      img.attr(name, val)
-    else
-      img.removeAttr(name);
-  }
-
   show() {
     let imgInfo = {},
         img = $(this.context.layoutInfo.editable.data('target'));
@@ -118,13 +111,13 @@ export default class ImageDialog {
 
       const setAttrs = (img, withSrc) => {
         if (withSrc) {
-          this.setAttribute(img, this.$dialog.find('.note-image-src'), 'src');
+          dom.setAttribute(img, 'src', this.$dialog.find('.note-image-src').val());
         }
         
-        this.setAttribute(img, this.$dialog.find('.note-image-alt'), 'alt');
-        this.setAttribute(img, this.$dialog.find('.note-image-title'), 'title');
-        this.setAttribute(img, this.$dialog.find('.note-image-class'), 'class');
-        this.setAttribute(img, this.$dialog.find('.note-image-style'), 'style');
+        dom.setAttribute(img, 'alt', this.$dialog.find('.note-image-alt').val());
+        dom.setAttribute(img, 'title', this.$dialog.find('.note-image-title').val());
+        dom.setAttribute(img, 'class', this.$dialog.find('.note-image-class').val());
+        dom.setAttribute(img, 'style', this.$dialog.find('.note-image-style').val());
       }
 
       if (!imgInfo.img) {
@@ -132,7 +125,7 @@ export default class ImageDialog {
         this.context.invoke('editor.insertImage', this.$dialog.find('.note-image-src').val(), setAttrs);
       }
       else {
-        // edit mode
+        // Edit mode
         setAttrs(imgInfo.img, true);
 
         // Ensure that SN saves the change

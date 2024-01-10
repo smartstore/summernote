@@ -1150,6 +1150,26 @@ function isCustomStyleTag(node) {
   return node && !isText(node) && lists.contains(node.classList, 'note-styletag');
 }
 
+/**
+ * @method setAttribute
+ *
+ * Sets an HTML attribute
+ *
+ * @param {any} an HTML DOM node or jQuery object
+ * @param {String} the attribute name
+ * @param {String} the attribute value. If null or undefined, attribute will be removed.
+ * @return {Boolean}
+ */
+function setAttribute(node, name, value) {
+  node = node?.length ? node[0] : node;
+  if (node) {
+    if (!!value)
+      node.setAttribute(name, value)
+    else
+      node.removeAttribute(name);
+  }
+}
+
 export default {
   /** @property {String} NBSP_CHAR */
   NBSP_CHAR,
@@ -1243,4 +1263,5 @@ export default {
   attachEvents,
   detachEvents,
   isCustomStyleTag,
+  setAttribute
 };

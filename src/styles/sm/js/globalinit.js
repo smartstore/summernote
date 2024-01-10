@@ -10,21 +10,7 @@ export var summernote_global_config = {
   height: 300,
   prettifyHtml: true,
   popatmouse: true,
-  onCreateLink: function (url) {
-    // Prevents that summernote prepends "http://" to our links (WTF!!!)
-    var c = url[0];
-    if (c === "/" || c === "~" || c === "\\" || c === "." || c === "#") {
-      return url;
-    }
-
-    if (/^[A-Za-z][A-Za-z0-9+-.]*\:[\/\/]?/.test(url)) {
-      // starts with a valid protocol
-      return url;
-    }
-
-    // if url doesn't match a URL schema, set http:// as default
-    return "http://" + url;
-  },
+  hideArrow: false,
   callbacks: {
     onBlurCodeview(code, e) {
       // Summernote does not update WYSIWYG content on codable blur,

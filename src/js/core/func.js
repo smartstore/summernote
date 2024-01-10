@@ -1,5 +1,7 @@
 import $ from 'jquery';
 
+const WHITESPACE_PATTERN = /\s/;
+
 /**
  * @class core.func
  *
@@ -156,18 +158,21 @@ function debounce(func, wait, immediate) {
 
 /**
  *
+ * @param {String} str
+ * @return {Boolean}
+ */
+function hasWhiteSpace(str) {
+  return str && WHITESPACE_PATTERN.test(str);
+}
+
+/**
+ *
  * @param {String} url
  * @return {Boolean}
  */
 function isValidUrl(url) {
   if (!url) {
     return false;
-  }
-
-  var c = url[0];
-  if (c === "/" || c === "~" || c === "\\" || c === "." || c === "#") {
-    // Is an app (relative or absolute) path
-    return true;
   }
 
   if (/^[A-Za-z][A-Za-z0-9+-.]*\:[\/\/]?/.test(url)) {
@@ -196,4 +201,5 @@ export default {
   namespaceToCamel,
   debounce,
   isValidUrl,
+  hasWhiteSpace
 };

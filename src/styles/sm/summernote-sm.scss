@@ -553,6 +553,11 @@ $img-margin-right: 10px;
   --btn-padding-x: 9px;
   min-width: 32px;
 
+  &:not(.dropdown-toggle) {
+    // Emulate .btn-icon
+    width: var(--btn-height);
+  }
+
   >i,
   >svg {
     //font-size: 16px !important;
@@ -568,11 +573,12 @@ $img-margin-right: 10px;
   position: relative;
 }
 
-.note-editor>.note-toolbar {
+.note-editor>.note-toolbar,
+.note-popover>.popover-content,
+.note-toolbar .note-dropdown-menu {
 
   // INFO: Must have high specificty, therefore .note-editor > .note-toolbar
-  // Apply flat style only to buttons in toolbar
-  >.note-btn-group {
+  > .note-btn-group {
     column-gap: 1px;
     border: 0 solid rgba($black, 0.12);
     border-inline-end-width: 1px;
@@ -581,6 +587,7 @@ $img-margin-right: 10px;
     &:last-of-type {
       border-inline-end-width: 0;
       padding-inline-end: 0;
+      margin-inline-start: auto;
     }
 
     >.note-btn,
