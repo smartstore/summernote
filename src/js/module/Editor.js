@@ -325,15 +325,23 @@ export default class Editor {
      */
     this.resize = this.wrapCommand((value) => {
       const $target = $(this.restoreTarget());
+      $target.css('width', '').css('height', '').removeClass('w-100 w-50 w-25');
+
       value = parseFloat(value);
-      if (value === 0) {
-        $target.css('width', '');
-      } else {
-        $target.css({
-          width: value * 100 + '%',
-          height: '',
-        });
-      }
+      if (value > 0) {
+        if (value === 0.25) {
+          $target.addClass('w-25');
+        }
+        else if (value === 0.5) {
+          $target.addClass('w-50');
+        }
+        else if (value === 1) {
+          $target.addClass('w-100');
+        }
+        else {
+          $target.css({width: value * 100 + '%'}); 
+        }
+      }    
     });
   }
 
