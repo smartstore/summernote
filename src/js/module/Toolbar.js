@@ -41,6 +41,12 @@ export default class Toolbar {
       this.context.invoke('buttons.updateCurrentStyle');
     });
 
+    this.$note.on('summernote.change', () => {
+      let history = this.context.modules.editor.history;
+      this.$toolbar.find('.note-undo').toggleClass('disabled', !history.canUndo());
+      this.$toolbar.find('.note-redo').toggleClass('disabled', !history.canRedo());
+    });
+
     this.context.invoke('buttons.updateCurrentStyle');
     if (this.options.followingToolbar) {
       this.$window.on('scroll resize', this.followScroll);

@@ -619,6 +619,7 @@ export default class Buttons {
 
     this.context.memo('button.redo', () => {
       return this.button({
+        className: 'note-redo disabled',
         contents: this.ui.icon(this.options.icons.redo),
         tooltip: this.lang.history.redo + this.representShortcut('redo'),
         click: this.context.createInvokeHandler('editor.redo'),
@@ -627,6 +628,7 @@ export default class Buttons {
 
     this.context.memo('button.undo', () => {
       return this.button({
+        className: 'note-undo disabled',
         contents: this.ui.icon(this.options.icons.undo),
         tooltip: this.lang.history.undo + this.representShortcut('undo'),
         click: this.context.createInvokeHandler('editor.undo'),

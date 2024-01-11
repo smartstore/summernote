@@ -79,6 +79,10 @@ export default class History {
     this.recordUndo();
   }
 
+  canUndo() {
+    return this.stackOffset > 0;
+  }
+
   /**
    * undo
    */
@@ -92,6 +96,10 @@ export default class History {
       this.stackOffset--;
       this.applySnapshot(this.stack[this.stackOffset]);
     }
+  }
+
+  canRedo() {
+    return this.stack.length - 1 > this.stackOffset;
   }
 
   /**

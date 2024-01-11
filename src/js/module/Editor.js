@@ -383,7 +383,8 @@ export default class Editor {
       this.context.triggerEvent('mousedown', event);
     }).on('mouseup', (event) => {
       this.setLastRange();
-      this.history.recordUndo();
+      // Don't record undo on simple mouseup (?). Too noisy.
+      //this.history.recordUndo();
       this.context.triggerEvent('mouseup', event);
     }).on('scroll', (event) => {
       this.context.triggerEvent('scroll', event);
