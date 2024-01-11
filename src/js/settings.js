@@ -388,6 +388,7 @@ $.summernote = $.extend($.summernote, {
       'circle': 'note-icon-circle',
       'close': 'note-icon-close',
       'code': 'note-icon-code',
+      'inlineCode': 'note-icon-code',
       'eraser': 'note-icon-eraser',
       'floatLeft': 'note-icon-float-left',
       'floatRight': 'note-icon-float-right',

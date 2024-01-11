@@ -51,7 +51,15 @@ export default class ImagePopover {
 
   update(target, event) {
     if (dom.isImg(target)) {
-      const position = $(target).offset();
+      const $target = $(target);
+      const $btnUnlink = this.$popover.find('.note-unlink');
+      if ($btnUnlink.length) {
+        const isLinkedImage = $target.parent().is('a');
+        // Toggle the unlink button visibility depending on current selection
+        $btnUnlink.toggle(isLinkedImage);
+      }  
+
+      const position = $target.offset();
       const containerOffset = $(this.options.container).offset();
       let pos = {};
       if (this.options.popatmouse) {

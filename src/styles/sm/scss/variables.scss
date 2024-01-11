@@ -9,6 +9,9 @@ $input-border-radius:       0.375rem;
 $input-focus-border-color:  #689de8;
 $zindex-sticky:             1020;
 $zindex-tooltip:            1070;
+$btn-border-width:          1px;
+$btn-line-height-sm:        1.429;
+$btn-padding-y-sm:          0.375rem; // --> 6px
 
 @function valid-radius($radius) {
     $return: ();

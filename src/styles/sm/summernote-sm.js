@@ -5,7 +5,7 @@ import './summernote-sm.scss';
 import { summernote_global_config } from './js/globalinit';
 
 const editor = renderer.create('<div class="note-editor note-frame card"></div>');
-const toolbar = renderer.create('<div class="note-toolbar card-header" role="toolbar"></div>');
+const toolbar = renderer.create('<div class="note-toolbar note-toolbar-main card-header" role="toolbar"></div>');
 const editingArea = renderer.create('<div class="note-editing-area"></div>');
 const codable = renderer.create('<textarea class="note-codable" aria-multiline="true"></textarea>');
 const editable = renderer.create('<div class="note-editable card-block" contentEditable="true" role="textbox" aria-multiline="true"></div>');
@@ -87,7 +87,7 @@ const dialog = renderer.create('<div class="modal note-modal" aria-hidden="false
 const popover = renderer.create([
   '<div class="note-popover popover show">',
     '<div class="arrow"></div>',
-    '<div class="popover-content note-children-container"></div>',
+    '<div class="popover-content note-toolbar note-children-container"></div>',
   '</div>',
 ].join(''), function($node, options) {
   const direction = typeof options.direction !== 'undefined' ? options.direction : 'bottom';

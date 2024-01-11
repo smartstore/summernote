@@ -339,7 +339,7 @@ export default class Buttons {
 
     const inlineCode = this.button({
       className: 'note-btn-inlinecode',
-      contents: this.ui.icon(this.options.icons.code),
+      contents: this.ui.icon(this.options.icons.inlineCode),
       tooltip: this.lang.font.code,
       click: this.context.createInvokeHandlerAndUpdateState('editor.inlineCode'),
     });
@@ -348,13 +348,14 @@ export default class Buttons {
     this.context.memo('button.moreFontStyles', () => {
       return this.ui.buttonGroup([
         this.button({
+          className: 'dropdown-toggle no-chevron',
           contents: this.ui.dropdownButtonContents(this.ui.icon(this.options.icons.ellipsis), this.options),
-          //tooltip: this.lang.paragraph.paragraph,
           data: {
             toggle: 'dropdown',
           },
         }),
         this.ui.dropdown({
+          className: 'note-toolbar',
           css: { 'min-width': 'auto' },
           items: this.ui.buttonGroup({
             className: 'note-more-fontstyles',
@@ -526,16 +527,20 @@ export default class Buttons {
             toggle: 'dropdown',
           },
         }),
-        this.ui.dropdown([
-          this.ui.buttonGroup({
-            className: 'note-align',
-            children: [justifyLeft, justifyCenter, justifyRight, justifyFull],
-          }),
-          this.ui.buttonGroup({
-            className: 'note-list',
-            children: [outdent, indent],
-          }),
-        ]),
+        this.ui.dropdown({          
+          className: 'note-toolbar',
+          css: { 'min-width': 'auto' },
+          children: [
+            this.ui.buttonGroup({
+              className: 'note-align',
+              children: [justifyLeft, justifyCenter, justifyRight, justifyFull],
+            }),
+            this.ui.buttonGroup({
+              className: 'note-list',
+              children: [outdent, indent],
+            })
+          ]
+        })
       ]).render();
     });
 
@@ -754,6 +759,7 @@ export default class Buttons {
 
     this.context.memo('button.unlink', () => {
       return this.button({
+        className: 'note-unlink',
         contents: this.ui.icon(this.options.icons.unlink),
         tooltip: this.lang.link.unlink,
         click: this.context.createInvokeHandler('editor.unlink'),

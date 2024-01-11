@@ -534,19 +534,36 @@ $img-margin-right: 10px;
   }
 }
 
-.popover-content,
 .note-toolbar {
-  margin: 0;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  padding: 5px;
-  gap: 5px;
-}
+  $btn-height: calc((#{$btn-line-height-sm} * 1em) + (#{$btn-padding-y-sm} * 2) + (#{$btn-border-width} * 2));
+  --note-toolbar-gap: 5px;
+  --note-toolbar-rowheight: calc(#{$btn-height} + (var(--note-toolbar-gap) * 2) - 1px);
 
-.popover-content {
-  padding: 6px;
+  margin: 0;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  padding: var(--note-toolbar-gap);
+  column-gap: var(--note-toolbar-gap);
+  row-gap: calc(var(--note-toolbar-gap) * 2);
+
+  &.note-toolbar-main {
+    // Main toolbar
+    position: relative;
+    flex-wrap: wrap;
+    border-bottom-width: 0;
+    background-image: linear-gradient(rgba(0,0,0, 0.1) 1px, transparent 1px);
+    background-size: 100% var(--note-toolbar-rowheight);
+    background-position: 0 -1px;
+  }
+
+  &:not(.dropdown-menu) {
+    display: flex;
+  }
+
+  &.dropdown-menu.show {
+    display: flex;
+  }
 }
 
 .note-btn {
@@ -570,14 +587,6 @@ $img-margin-right: 10px;
 }
 
 .note-toolbar {
-  position: relative;
-}
-
-.note-editor>.note-toolbar,
-.note-popover>.popover-content,
-.note-toolbar .note-dropdown-menu {
-
-  // INFO: Must have high specificty, therefore .note-editor > .note-toolbar
   > .note-btn-group {
     column-gap: 1px;
     border: 0 solid rgba($black, 0.12);
@@ -587,17 +596,16 @@ $img-margin-right: 10px;
     &:last-of-type {
       border-inline-end-width: 0;
       padding-inline-end: 0;
-      margin-inline-start: auto;
     }
 
     >.note-btn,
     >.note-btn-group>.note-btn {
       @include button-flat();
+      // INFO: Must have high specificty, .btn-group will kill radius otherwise.
+      border-radius: var(--btn-border-radius) !important;
       margin-inline-start: 0;
     }
   }
-
-
   .scrollable-menu {
     --scrollbar-track-color: #fff;
     --scrollbar-track-hover-color: #fff;
@@ -606,6 +614,10 @@ $img-margin-right: 10px;
     min-width: 280px;
     overflow-x: hidden;
   }
+}
+
+.note-toolbar-main > .note-btn-group:last-of-type {
+  margin-inline-start: auto;
 }
 
 
@@ -701,10 +713,6 @@ $img-margin-right: 10px;
 
 // Misc
 // -----------------------
-
-.note-btn-group.note-list {
-  margin-left: 5px;
-}
 
 .note-fontsize-10 {
   font-size: 10px;
