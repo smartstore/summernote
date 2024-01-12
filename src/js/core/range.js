@@ -137,25 +137,11 @@ class WrappedRange {
 
   // nativeRange: get nativeRange from sc, so, ec, eo
   nativeRange() {
-    if (env.isW3CRangeSupport) {
       const w3cRange = document.createRange();
       w3cRange.setStart(this.sc, this.so);
       w3cRange.setEnd(this.ec, this.eo);
 
       return w3cRange;
-    } else {
-      const textRange = pointToTextRange({
-        node: this.sc,
-        offset: this.so,
-      });
-
-      textRange.setEndPoint('EndToEnd', pointToTextRange({
-        node: this.ec,
-        offset: this.eo,
-      }));
-
-      return textRange;
-    }
   }
 
   getPoints() {
@@ -600,7 +586,7 @@ class WrappedRange {
    */
   toString() {
     const nativeRng = this.nativeRange();
-    return env.isW3CRangeSupport ? nativeRng.toString() : nativeRng.text;
+    return nativeRng.toString();
   }
 
   /**
@@ -801,43 +787,22 @@ export default {
 
   createFromSelection: function() {
     let sc, so, ec, eo;
-    if (env.isW3CRangeSupport) {
-      const selection = document.getSelection();
-      if (!selection || selection.rangeCount === 0) {
-        return null;
-      } else if (dom.isBody(selection.anchorNode)) {
-        // Firefox: returns entire body as range on initialization.
-        // We won't never need it.
-        return null;
-      }
 
-      const nativeRng = selection.getRangeAt(0);
-      sc = nativeRng.startContainer;
-      so = nativeRng.startOffset;
-      ec = nativeRng.endContainer;
-      eo = nativeRng.endOffset;
-    } else { // IE8: TextRange
-      const textRange = document.selection.createRange();
-      const textRangeEnd = textRange.duplicate();
-      textRangeEnd.collapse(false);
-      const textRangeStart = textRange;
-      textRangeStart.collapse(true);
-
-      let startPoint = textRangeToPoint(textRangeStart, true);
-      let endPoint = textRangeToPoint(textRangeEnd, false);
-
-      // same visible point case: range was collapsed.
-      if (dom.isText(startPoint.node) && dom.isLeftEdgePoint(startPoint) &&
-        dom.isTextNode(endPoint.node) && dom.isRightEdgePoint(endPoint) &&
-        endPoint.node.nextSibling === startPoint.node) {
-        startPoint = endPoint;
-      }
-
-      sc = startPoint.cont;
-      so = startPoint.offset;
-      ec = endPoint.cont;
-      eo = endPoint.offset;
+    const selection = document.getSelection();
+    if (!selection || selection.rangeCount === 0) {
+      return null;
+    } 
+    else if (dom.isBody(selection.anchorNode)) {
+      // Firefox: returns entire body as range on initialization.
+      // We won't never need it.
+      return null;
     }
+
+    const nativeRng = selection.getRangeAt(0);
+    sc = nativeRng.startContainer;
+    so = nativeRng.startOffset;
+    ec = nativeRng.endContainer;
+    eo = nativeRng.endOffset;
 
     return new WrappedRange(sc, so, ec, eo);
   },
