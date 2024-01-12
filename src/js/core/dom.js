@@ -108,7 +108,11 @@ function isPara(node) {
   }
 
   // Chrome(v31.0), FF(v25.0.1) use DIV for paragraph
-  return node && /^DIV|^P|^LI|^H[1-7]/.test(node.nodeName.toUpperCase());
+  return node && /^DIV|^P|^H[1-7]|^BLOCKQUOTE|^PRE|^SECTION|^LI/.test(node.nodeName.toUpperCase());
+}
+
+function findPara(node) {
+  return this.ancestor(node, isPara);
 }
 
 function isHeading(node) {
@@ -1058,16 +1062,38 @@ function replace(node, nodeName) {
 
   const newNode = create(nodeName);
 
-  if (node.style.cssText) {
-    newNode.style.cssText = node.style.cssText;
+  // Copy attributes
+  [...node.attributes].map(({ name, value }) => {
+    newNode.setAttribute(name, value);
+  });
+
+  // Copy children
+  while (node.firstChild) {
+    newNode.appendChild(node.firstChild);
   }
+  //newNode.innerHTML = node.innerHTML;
 
-  appendChildNodes(newNode, lists.from(node.childNodes));
-  insertAfter(newNode, node);
-  remove(node);
-
+  // Replace node
+  node.parentNode.replaceChild(newNode, node);
   return newNode;
 }
+// function replace(node, nodeName) {
+//   if (node.nodeName.toUpperCase() === nodeName.toUpperCase()) {
+//     return node;
+//   }
+
+//   const newNode = create(nodeName);
+
+//   if (node.style.cssText) {
+//     newNode.style.cssText = node.style.cssText;
+//   }
+
+//   appendChildNodes(newNode, lists.from(node.childNodes));
+//   insertAfter(newNode, node);
+//   remove(node);
+
+//   return newNode;
+// }
 
 const isTextarea = makePredByNodeName('TEXTAREA');
 
@@ -1187,6 +1213,7 @@ export default {
   isVoid,
   isTag,
   isPara,
+  findPara,
   isPurePara,
   isHeading,
   isInline,

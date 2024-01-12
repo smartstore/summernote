@@ -62,7 +62,8 @@ export default class Typing {
         // toggle UL/OL and escape
         this.bullet.toggleList(splitRoot.parentNode.nodeName);
         return;
-      } else {
+      } 
+      else {
         let blockquote = null;
         if (this.options.blockquoteBreakingLevel === 1) {
           blockquote = dom.ancestor(splitRoot, dom.isBlockquote);
@@ -81,10 +82,12 @@ export default class Typing {
           const split = dom.splitTree(blockquote, rng.getStartPoint(), { isDiscardEmptySplits: true });
           if (split) {
             split.parentNode.insertBefore(nextPara, split);
-          } else {
+          } 
+          else {
             dom.insertAfter(nextPara, blockquote); // There's no split if we were at the end of the blockquote
           }
-        } else {
+        }
+        else {
           nextPara = dom.splitTree(splitRoot, rng.getStartPoint());
 
           // not a blockquote, just insert the paragraph
@@ -102,12 +105,14 @@ export default class Typing {
         }
       }
     // no paragraph: insert empty paragraph
-    } else {
+    } 
+    else {
       const next = rng.sc.childNodes[rng.so];
       nextPara = $(dom.emptyPara)[0];
       if (next) {
         rng.sc.insertBefore(nextPara, next);
-      } else {
+      } 
+      else {
         rng.sc.appendChild(nextPara);
       }
     }

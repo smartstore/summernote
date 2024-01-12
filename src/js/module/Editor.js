@@ -341,7 +341,20 @@ export default class Editor {
         else {
           $target.css({width: value * 100 + '%'}); 
         }
-      }    
+      }
+      
+      this.cleanEmptyStyling($target);
+    });
+  }
+
+  cleanEmptyStyling(node) {
+    $(node).each((i, el) => {
+      if (!el.className) {
+        el.removeAttribute("class");
+      }
+      if (!el.style.cssText) {
+        el.removeAttribute("style");
+      }
     });
   }
 
@@ -853,27 +866,99 @@ export default class Editor {
   }
 
   onFormatBlock(tagName, $target) {
+    let rng = this.createRange();
+    let paraNode = dom.findPara(rng.sc);
+    let newNode;
+    
+    if (paraNode) {
+      const currentTagName = paraNode.tagName.toUpperCase();
+
+      if (currentTagName == 'LI') {
+        // TODO: wrap inner HTML with new tag
+      }
+      else if (currentTagName != tagName.toUpperCase()) {
+        const currentStyleClass = this.getTagStyleClass(currentTagName);
+        //console.log(currentStyleClass);
+        // Change tag name of found para
+        newNode = dom.replace(paraNode, tagName);
+        if (newNode && currentStyleClass) {
+          // Remove tag styling class
+          $(newNode).removeClass(currentStyleClass);
+        }
+
+        rng.select();
+
+        // TODO: Implement custom class support.
+      }
+    }
+    else {
+      // TODO: What now?
+    }
+
+    // Support custom class
+    if (newNode) {
+      const newStyleClass = this.getTagStyleClass(tagName);
+      if (newStyleClass) {
+        $(newNode).addClass(newStyleClass);
+      }
+    }
+
+    // TODO: Creating a new block with ENTER should not copy all attributes from prev block
+  }
+
+  /**
+   * Finds the custom css class to apply to tagName nodes.
+   */
+  getTagStyleClass(tagName) {
+    let styleTag = lists.find(this.options.styleTags, x => $.isPlainObject(x) && x.tag.toUpperCase() == tagName.toUpperCase());
+    return styleTag?.className;
+  }
+
+  onFormatBlock_Old(tagName, $target) {
+    let currentRange = this.createRange();
+    let $block = $([currentRange.sc, currentRange.ec]).closest(tagName);
+
+    // Memoize all attributes of current block before command execution,
+    // most of them will be lost after command.
+    let attrs = {};
+    if ($block.length) {
+      for (const attr of $block[0].attributes) {
+        if (attr.value) {
+          attrs[attr.name] = attr.value;
+        }
+      }
+    }
+
     // [workaround] for MSIE, IE need `<`
     document.execCommand('FormatBlock', false, env.isMSIE ? '<' + tagName + '>' : tagName);
 
-    // support custom class
-    if ($target && $target.length) {
-      // find the exact element has given tagName
+    currentRange = this.createRange();
+    $block = $([currentRange.sc, currentRange.ec]).closest(tagName);
+
+    // Apply all memoized attributes to new block
+    if (attrs.hasOwnProperty() && $block?.length) {
+      Object.keys(attrs).forEach((key) => {
+        $block[0].setAttribute(key, attrs[key]);
+      });
+    }
+
+    // Support custom class
+    if ($target?.length) {
+      // Find the exact element that has given tagName
       if ($target[0].tagName.toUpperCase() !== tagName.toUpperCase()) {
         $target = $target.find(tagName);
       }
 
-      if ($target && $target.length) {
-        const currentRange = this.createRange();
-        const $parent = $([currentRange.sc, currentRange.ec]).closest(tagName);
-        // remove class added for current block
-        $parent.removeClass();
+      if ($target?.length) {
         const className = $target[0].className || '';
         if (className) {
-          $parent.addClass(className);
+          $block.addClass(className);
         }
       }
     }
+
+    // Cleam empty class or style
+    this.cleanEmptyStyling($block);
   }
 
   formatPara() {

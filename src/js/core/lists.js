@@ -37,7 +37,7 @@ function tail(array) {
 }
 
 /**
- * returns item of array
+ * returns first found item
  */
 function find(array, pred) {
   for (let idx = 0, len = array.length; idx < len; idx++) {
