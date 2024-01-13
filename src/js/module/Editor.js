@@ -34,7 +34,7 @@ export default class Editor {
     this.lastRange = null;
     this.snapshot = null;
 
-    this.style = new Style();
+    this.style = new Style(context);
     this.table = new Table();
     this.typing = new Typing(context);
     this.bullet = new Bullet();
@@ -659,6 +659,7 @@ export default class Editor {
     if (rng) {
       rng = rng.normalize();
     }
+
     return rng ? this.style.current(rng) : this.style.fromNode(this.$editable);
   }
 
@@ -703,6 +704,8 @@ export default class Editor {
    * before command
    */
   beforeCommand() {
+    let rng = this.getLastRange();
+
     this.context.triggerEvent('before.command', this.$editable.html());
 
     // Set styleWithCSS before run a command
@@ -865,6 +868,14 @@ export default class Editor {
     return rng.toString();
   }
 
+  /**
+   * Finds the custom css class to apply to tagName nodes.
+   */
+  getTagStyleClass(tagName) {
+    let styleTag = lists.find(this.options.styleTags, x => $.isPlainObject(x) && x.tag.toUpperCase() == tagName.toUpperCase());
+    return styleTag?.className;
+  }
+
   onFormatBlock(tagName, $target) {
     let rng = this.createRange();
     let paraNode = dom.findPara(rng.sc);
@@ -906,15 +917,8 @@ export default class Editor {
     // TODO: Creating a new block with ENTER should not copy all attributes from prev block
   }
 
-  /**
-   * Finds the custom css class to apply to tagName nodes.
-   */
-  getTagStyleClass(tagName) {
-    let styleTag = lists.find(this.options.styleTags, x => $.isPlainObject(x) && x.tag.toUpperCase() == tagName.toUpperCase());
-    return styleTag?.className;
-  }
-
   onFormatBlock_Old(tagName, $target) {
+    // Remove onFormatBlock_Old method
     let currentRange = this.createRange();
     let $block = $([currentRange.sc, currentRange.ec]).closest(tagName);
 

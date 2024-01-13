@@ -184,6 +184,16 @@ function isValidUrl(url) {
   return expression.test(url);
 }
 
+/**
+ * Check if test matches strOrPattern  
+ * @param {String|RegExp} strOrPattern
+ * @param {String} test
+ * @return {boolean}
+ */
+function matches(strOrPattern, test) {
+  return strOrPattern instanceof RegExp ? strOrPattern.test(test) : strOrPattern == test;
+}
+
 export default {
   eq,
   eq2,
@@ -201,5 +211,6 @@ export default {
   namespaceToCamel,
   debounce,
   isValidUrl,
-  hasWhiteSpace
+  hasWhiteSpace,
+  matches
 };

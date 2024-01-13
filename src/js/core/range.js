@@ -172,15 +172,11 @@ class WrappedRange {
    */
   select() {
     const nativeRng = this.nativeRange();
-    if (env.isW3CRangeSupport) {
-      const selection = document.getSelection();
-      if (selection.rangeCount > 0) {
-        selection.removeAllRanges();
-      }
-      selection.addRange(nativeRng);
-    } else {
-      nativeRng.select();
+    const selection = document.getSelection();
+    if (selection.rangeCount > 0) {
+      selection.removeAllRanges();
     }
+    selection.addRange(nativeRng);
 
     return this;
   }
@@ -326,7 +322,7 @@ class WrappedRange {
    * @return {Element} - commonAncestor
    */
   commonAncestor() {
-    return dom.commonAncestor(this.sc, this.ec);
+    return this.nativeRange().commonAncestorContainer;
   }
 
   /**
@@ -470,7 +466,14 @@ class WrappedRange {
   }
 
   /**
-   * returns whether range was collapsed or not
+   * Checks whether range is within a single container
+   */
+  isSingleContainer() {
+    return this.sc === this.ec;
+  }
+
+  /**
+   * Checks whether range is collapsed
    */
   isCollapsed() {
     return this.sc === this.ec && this.so === this.eo;

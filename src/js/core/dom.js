@@ -56,14 +56,21 @@ function isControlSizing(node) {
  *
  * returns predicate which judge whether nodeName is same
  *
- * @param {String} nodeName
+ * @param {String|Array} nodeName
  * @return {Function}
  */
 function makePredByNodeName(nodeName) {
   nodeName = nodeName.toUpperCase();
-  return function(node) {
-    return node && node.nodeName.toUpperCase() === nodeName;
-  };
+  if (typeof nodeName == "string") {
+    return function(node) {
+      return node && node.nodeName.toUpperCase() === nodeName;
+    };
+  }
+  else if (nodeName instanceof Array) {
+    return function(node) {
+      return node && lists.contains(nodeName, node.nodeName.toUpperCase());
+    };
+  }
 }
 
 /**
@@ -90,8 +97,23 @@ function isElement(node) {
   return node && node.nodeType === 1;
 }
 
+/**
+ * @method Checks whether node is given tag
+ *
+ * @param {Node} node
+ * @param {String|Array} tagName - Either a single tag as string or an array of tag names to check
+ */
 function isTag(node, tagName) {
-  return node && node.nodeName.toUpperCase() == tagName.toUpperCase();
+  if (node) {
+    if (typeof tagName == "string") {
+      return tagName.toUpperCase() == node.nodeName.toUpperCase();
+    }
+    else if (tagName instanceof Array) {
+      return lists.contains(tagName, node.nodeName.toLowerCase());
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -1071,29 +1093,11 @@ function replace(node, nodeName) {
   while (node.firstChild) {
     newNode.appendChild(node.firstChild);
   }
-  //newNode.innerHTML = node.innerHTML;
 
   // Replace node
   node.parentNode.replaceChild(newNode, node);
   return newNode;
 }
-// function replace(node, nodeName) {
-//   if (node.nodeName.toUpperCase() === nodeName.toUpperCase()) {
-//     return node;
-//   }
-
-//   const newNode = create(nodeName);
-
-//   if (node.style.cssText) {
-//     newNode.style.cssText = node.style.cssText;
-//   }
-
-//   appendChildNodes(newNode, lists.from(node.childNodes));
-//   insertAfter(newNode, node);
-//   remove(node);
-
-//   return newNode;
-// }
 
 const isTextarea = makePredByNodeName('TEXTAREA');
 

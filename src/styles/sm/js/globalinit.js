@@ -12,6 +12,8 @@ export var summernote_global_config = {
   popatmouse: true,
   hideArrow: false,
   recordEveryKeystroke: false,
+  // TODO: Turn on spellCheck again
+  spellCheck: false,
   callbacks: {
     onBlurCodeview(code, e) {
       // Summernote does not update WYSIWYG content on codable blur,
@@ -41,7 +43,7 @@ export var summernote_global_config = {
   },
   toolbar: [
     ['edit', ['undo', 'redo']],
-    ['text', ['bold', 'italic', 'underline', 'strikethrough', 'clear']],
+    ['text', ['bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'clear']],
     //['font', ['forecolor', 'backcolor']],
     ['font', ['fontname', 'color', 'fontsize']],
     ['para', ['style', 'cssclass', 'ul', 'ol', 'paragraph']],
