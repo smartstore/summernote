@@ -113,10 +113,17 @@ export default class Handle {
       const origImageObj = new Image();
       origImageObj.src = $image.attr('src');
 
-      const sizingText = imageRect.width + 'x' + imageRect.height + ' (' + this.lang.image.original + ': ' + origImageObj.width + 'x' + origImageObj.height + ')';
-      $selection.find('.note-control-selection-info').text(sizingText);
+      let sizingText = Math.ceil(imageRect.width) + 'x' + Math.ceil(imageRect.height);
+      if (origImageObj.width > 0 && origImageObj.height > 0) {
+        sizingText += ' (' + this.lang.image.original + ': ' + origImageObj.width + 'x' + origImageObj.height + ')';
+      }
+      const $info = $selection.find('.note-control-selection-info').text(sizingText);
+      const exceeds = $info.outerWidth() > imageRect.width - 10 || $info.outerHeight() > imageRect.height - 10;
+
+      $info.toggle(!exceeds);
       this.context.invoke('editor.saveTarget', target);
-    } else {
+    } 
+    else {
       this.hide();
     }
 

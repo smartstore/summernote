@@ -1012,10 +1012,8 @@ export default class Editor {
       // Special handling for image unlinking
       this.beforeCommand();
       img.unwrap();
-      this.afterCommand();
-
-      let rng = this.createFromNode(img[0]);
-      rng.select();
+      this.afterCommand(true);
+      this.context.modules.imagePopover.hide();
     }
     else {
       let rng = this.getLastRange();

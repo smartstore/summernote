@@ -140,7 +140,7 @@ export default class Style {
       // eslint-disable-next-line
     }
 
-    const node = rng.sc; // rng.commonAncestor();
+    const node = rng.sc; // rng.commonAncestor(); 
     const ancestors = dom.listAncestor(node, dom.isBlock);
     styleInfo = $.extend(styleInfo, {
       'font-bold': this.queryStyleCommand('bold', ancestors) ? 'bold' : 'normal',
@@ -156,7 +156,8 @@ export default class Style {
     // list-style-type to list-style(unordered, ordered)
     if (!rng.isOnList()) {
       styleInfo['list-style'] = 'none';
-    } else {
+    } 
+    else {
       const orderedTypes = ['circle', 'disc', 'disc-leading-zero', 'square'];
       const isUnordered = orderedTypes.indexOf(styleInfo['list-style-type']) > -1;
       styleInfo['list-style'] = isUnordered ? 'unordered' : 'ordered';

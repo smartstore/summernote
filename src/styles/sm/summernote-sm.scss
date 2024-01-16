@@ -102,6 +102,11 @@ $img-margin-right: 10px;
   overflow: auto;
   word-wrap: break-word;
 
+  // Reset
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+
   a {
     text-decoration: underline;
   }
@@ -528,9 +533,13 @@ $img-margin-right: 10px;
 .note-popover.popover {
   display: none;
   max-width: none;
+  border-color: var(--gray-300);
 
   .arrow {
     left: 20px !important;
+    &:before {
+      border-bottom-color: var(--gray-300);
+    }
   }
 }
 

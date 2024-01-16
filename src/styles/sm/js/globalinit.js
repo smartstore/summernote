@@ -52,7 +52,7 @@ export var summernote_global_config = {
   ],
   popover: {
     image: [
-      ['custom', ['imageAttributes', 'link', 'unlinkImage', 'unlink', 'imageShapes']],
+      ['custom', ['imageAttributes', 'link', 'unlink', 'imageShapes']],
       ['imagesize', ['resizeFull', 'resizeHalf', 'resizeQuarter', 'resizeNone']],
       ['float', ['floatLeft', 'floatRight', 'floatNone']],
       ['remove', ['removeMedia']]

@@ -37,7 +37,7 @@ export default class ImagePopover {
 
   initialize() {
     this.$popover = this.ui.popover({
-      className: 'note-image-popover',
+      className: 'note-image-popover'
     }).render().appendTo(this.options.container);
     const $content = this.$popover.find('.popover-content,.note-popover-content');
     this.context.invoke('buttons.build', $content, this.options.popover.image);
@@ -78,7 +78,8 @@ export default class ImagePopover {
         left: pos.left,
         top: pos.top,
       });
-    } else {
+    } 
+    else {
       this.hide();
     }
   }

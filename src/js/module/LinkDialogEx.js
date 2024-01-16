@@ -33,23 +33,6 @@ export default class LinkDialog {
         }
       }).render();
     });
-
-    // Create custom "unlink image" button for the image popover
-    context.memo('button.unlinkImage', () => {
-      return this.ui.button({
-        contents: this.ui.icon(this.options.icons.unlink),
-        className: 'btn-unlink-image',
-        callback: function (btn) {
-          btn.data("placement", "bottom");
-          btn.data("trigger", "hover");
-          //btn.attr("title", this.lang.link.unlink);
-          btn.tooltip();
-        },
-        click: () => {
-          this.unlinkImage();
-        }
-      }).render();
-    });
   }
 
   initialize() {
