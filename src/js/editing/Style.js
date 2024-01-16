@@ -140,7 +140,7 @@ export default class Style {
       // eslint-disable-next-line
     }
 
-    const node = rng.commonAncestor();
+    const node = rng.sc; // rng.commonAncestor();
     const ancestors = dom.listAncestor(node, dom.isBlock);
     styleInfo = $.extend(styleInfo, {
       'font-bold': this.queryStyleCommand('bold', ancestors) ? 'bold' : 'normal',

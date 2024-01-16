@@ -1014,33 +1014,8 @@ export default class Editor {
       img.unwrap();
       this.afterCommand();
 
-      // let rng = this.createRange();
-      // rng.sc = img[0];
-      // rng.so = 0;
-      // rng.ec = img[0];
-      // rng.eo = 0;
-      // console.log(rng);
-      // rng.select();
-      // //this.setLastRange();
-
-      var s = window.getSelection();
-      var r = document.createRange();
-      r.setStart(img[0], 0);
-      r.setEnd(img[0], 0);
-      r.collapse();
-      //r.selectNode(img[0]);
-      //s.addRange(r);
-
-      // Force handler update
-      this.$editable.trigger('mousedown');
-      //this.$note.trigger('mousedown');
-      
-      // Ensure that SN saves the change
-      //this.context.layoutInfo.note.val(this.context.invoke('code'));
-      //this.context.layoutInfo.note.change();
-
-      // Hide the popover
-      //this.context.modules.imagePopover.hide();
+      let rng = this.createFromNode(img[0]);
+      rng.select();
     }
     else {
       let rng = this.getLastRange();

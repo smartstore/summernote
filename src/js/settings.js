@@ -65,7 +65,7 @@ $.summernote = $.extend($.summernote, {
         tagOrStyle: true
       },
       'strikethrough': {
-        tag: ['del', 's', 'strike'], 
+        tag: ['s', 'del', 'strike'], 
         style: 'text-decoration',
         styleMatch: 'line-through',
         styleInvert: 'none',
