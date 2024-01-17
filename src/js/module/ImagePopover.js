@@ -51,7 +51,7 @@ export default class ImagePopover {
     this.$popover.remove();
   }
 
-  update(target, event) {
+  update(target, e) {
     if (dom.isImg(target)) {
       const $target = $(target);
       const $btnUnlink = this.$popover.find('.note-unlink');

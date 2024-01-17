@@ -1174,7 +1174,8 @@ export default class Editor {
         modifiers: {
           computeStyle: { gpuAcceleration: false },
           arrow: { element: '.arrow' },
-          preventOverflow: { boundariesElement: this.$editable[0] }
+          preventOverflow: { boundariesElement: this.$editable[0] },
+          //inner: { enabled: true }
         }
       });
 

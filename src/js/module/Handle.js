@@ -15,8 +15,9 @@ export default class Handle {
           e.preventDefault();
         }
       },
-      'summernote.keyup summernote.scroll summernote.change summernote.dialog.shown': () => {
-        this.update();
+      'summernote.keyup summernote.scroll summernote.change summernote.dialog.shown': (we, e) => {
+        // TODO: react to summernote.change?
+        this.update(e?.target, e);
       },
       'summernote.disable summernote.blur': () => {
         this.hide();
@@ -86,15 +87,24 @@ export default class Handle {
     this.$handle.remove();
   }
 
-  update(target, event) {
+  update(target, e) {
     if (this.context.isDisabled()) {
       return false;
+    }
+
+    target = target || this.context.layoutInfo.editable.data('target');
+
+    const isScroll = e?.type == 'scroll';
+    if (isScroll) {
+      target = this.context.layoutInfo.editable.data('target');
     }
 
     const isImage = dom.isImg(target);
     const $selection = this.$handle.find('.note-control-selection');
 
-    this.context.invoke('imagePopover.update', target, event);
+    if (!isScroll) {
+      this.context.invoke('imagePopover.update', target, e);
+    }   
 
     if (isImage) {
       const $image = $(target);

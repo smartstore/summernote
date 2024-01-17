@@ -65,13 +65,13 @@ export var summernote_global_config = {
       ['delete', ['deleteRow', 'deleteCol', 'deleteTable']],
       //['custom', ['tableStyles']]
     ],
-    air: [
-      ['color', ['color']],
-      ['font', ['bold', 'underline', 'clear']],
-      ['para', ['ul', 'paragraph']],
-      ['table', ['table']],
-      ['insert', ['link', 'picture']]
-    ]
+    // air: [
+    //   ['color', ['color']],
+    //   ['font', ['bold', 'underline', 'clear']],
+    //   ['para', ['ul', 'paragraph']],
+    //   ['table', ['table']],
+    //   ['insert', ['link', 'picture']]
+    // ]
   },
   styleTags: [
     'p',
