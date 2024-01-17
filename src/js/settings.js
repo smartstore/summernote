@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import '../lang/summernote-en-US';
 import './summernote';
+import icons from './icons';
 import dom from './core/dom';
 import range from './core/range';
 import lists from './core/lists';
@@ -368,57 +369,6 @@ $.summernote = $.extend($.summernote, {
         'CMD+K': 'linkDialog.show',
       },
     },
-    icons: {
-      'align': 'note-icon-align',
-      'alignCenter': 'note-icon-align-center',
-      'alignJustify': 'note-icon-align-justify',
-      'alignLeft': 'note-icon-align-left',
-      'alignRight': 'note-icon-align-right',
-      'rowBelow': 'note-icon-row-below',
-      'colBefore': 'note-icon-col-before',
-      'colAfter': 'note-icon-col-after',
-      'rowAbove': 'note-icon-row-above',
-      'rowRemove': 'note-icon-row-remove',
-      'colRemove': 'note-icon-col-remove',
-      'indent': 'note-icon-align-indent',
-      'outdent': 'note-icon-align-outdent',
-      'arrowsAlt': 'note-icon-arrows-alt',
-      'bold': 'note-icon-bold',
-      'caret': 'note-icon-caret',
-      'circle': 'note-icon-circle',
-      'close': 'note-icon-close',
-      'code': 'note-icon-code',
-      'inlineCode': 'note-icon-code',
-      'eraser': 'note-icon-eraser',
-      'floatLeft': 'note-icon-float-left',
-      'floatRight': 'note-icon-float-right',
-      'floatNone': 'note-icon-rollback',
-      'font': 'note-icon-font',
-      'frame': 'note-icon-frame',
-      'italic': 'note-icon-italic',
-      'link': 'note-icon-link',
-      'unlink': 'note-icon-chain-broken',
-      'magic': 'note-icon-magic',
-      'menuCheck': 'note-icon-menu-check',
-      'minus': 'note-icon-minus',
-      'orderedlist': 'note-icon-orderedlist',
-      'pencil': 'note-icon-pencil',
-      'picture': 'note-icon-picture',
-      'question': 'note-icon-question',
-      'redo': 'note-icon-redo',
-      'rollback': 'note-icon-rollback',
-      'square': 'note-icon-square',
-      'strikethrough': 'note-icon-strikethrough',
-      'subscript': 'note-icon-subscript',
-      'superscript': 'note-icon-superscript',
-      'table': 'note-icon-table',
-      'textHeight': 'note-icon-text-height',
-      'trash': 'note-icon-trash',
-      'underline': 'note-icon-underline',
-      'undo': 'note-icon-undo',
-      'unorderedlist': 'note-icon-unorderedlist',
-      'video': 'note-icon-video',
-      'ellipsis': 'note-icon-ellipsis'
-    },
+    icons: icons
   },
 });

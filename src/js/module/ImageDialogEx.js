@@ -14,7 +14,7 @@ export default class ImageDialog {
 
     this.context.memo('button.imageAttributes', () => {
       var button = this.ui.button({
-        contents: '<i class="fa fa-pencil"></i>',
+        contents: this.ui.icon(this.options.icons.pencil),
         callback: (btn) => {
           btn.data("placement", "bottom");
           btn.data("trigger", "hover");

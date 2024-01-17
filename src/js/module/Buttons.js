@@ -233,7 +233,7 @@ export default class Buttons {
         this.button({
           className: 'dropdown-toggle',
           contents: this.ui.dropdownButtonContents(
-            this.ui.icon(this.options.icons.magic), this.options
+            this.ui.icon(this.options.icons.paragraph), this.options
           ),
           tooltip: this.lang.style.style,
           data: {

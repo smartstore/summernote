@@ -581,17 +581,18 @@ $img-margin-right: 10px;
 
   &:not(.dropdown-toggle) {
     // Emulate .btn-icon
-    width: var(--btn-height);
+    //width: var(--btn-height);
   }
 
   >i,
   >svg {
-    //font-size: 16px !important;
+    font-size: 16px !important;
     fill: currentColor;
   }
 
   >svg {
     height: 14px;
+    height: 16px;
   }
 }
 
@@ -725,11 +726,6 @@ $img-margin-right: 10px;
 
 .note-fontsize-10 {
   font-size: 10px;
-}
-
-.note-codeview-keep.active>.fa-expand:before {
-  // Swap icon: expand --> compress
-  content: "\f066";
 }
 
 .note-current-fontsize {
