@@ -6,6 +6,7 @@ export default class LinkPopover {
   constructor(context) {
     this.context = context;
 
+    this.editor = context.modules.editor;
     this.ui = $.summernote.ui;
     this.options = context.options;
     this.events = {
@@ -66,24 +67,14 @@ export default class LinkPopover {
         .attr('title', href)
         .text(href);
 
-      const pos = dom.posFromPlaceholder(anchor);
-      const containerOffset = $(this.options.container).offset();
-      pos.top -= containerOffset.top;
-      pos.left -= containerOffset.left;
-
-      this.context.triggerEvent('popover.shown');
-
-       this.$popover.css({
-        display: 'block',
-        left: pos.left,
-        top: pos.top,
-      });
-    } else {
+      this.editor.showPopover(this.$popover, anchor);
+    } 
+    else {
       this.hide();
     }
   }
 
   hide() {
-    this.$popover.hide();
+    this.editor.hidePopover(this.$popover);
   }
 }

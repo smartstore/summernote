@@ -10,6 +10,7 @@ import dom from '../core/dom';
 export default class ImagePopover {
   constructor(context) {
     this.context = context;
+    this.editor = context.modules.editor;
     this.ui = $.summernote.ui;
 
     this.editable = context.layoutInfo.editable[0];
@@ -24,7 +25,8 @@ export default class ImagePopover {
           if (!this.$popover[0].contains(event.originalEvent.relatedTarget)) {
             this.hide();
           }
-        } else {
+        } 
+        else {
           this.hide();
         }
       },
@@ -59,25 +61,7 @@ export default class ImagePopover {
         $btnUnlink.toggle(isLinkedImage);
       }  
 
-      const position = $target.offset();
-      const containerOffset = $(this.options.container).offset();
-      let pos = {};
-      if (this.options.popatmouse) {
-        pos.left = event.pageX - 20;
-        pos.top = event.pageY;
-      } else {
-        pos = position;
-      }
-      pos.top -= containerOffset.top;
-      pos.left -= containerOffset.left;
-
-      this.context.triggerEvent('popover.shown');
-
-      this.$popover.css({
-        display: 'block',
-        left: pos.left,
-        top: pos.top,
-      });
+      this.editor.showPopover(this.$popover, target);
     } 
     else {
       this.hide();
@@ -85,6 +69,6 @@ export default class ImagePopover {
   }
 
   hide() {
-    this.$popover.hide();
+    this.editor.hidePopover(this.$popover);
   }
 }

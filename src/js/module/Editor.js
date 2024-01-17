@@ -1166,4 +1166,33 @@ export default class Editor {
   normalizeContent() {
     this.$editable[0].normalize();
   }
+
+  showPopover($popover, target) {
+    if ($popover?.length) {
+      const popper = new Popper(target, $popover[0], {
+        placement: 'top',
+        modifiers: {
+          computeStyle: { gpuAcceleration: false },
+          arrow: { element: '.arrow' },
+          preventOverflow: { boundariesElement: this.$editable[0] }
+        }
+      });
+
+      popper.scheduleUpdate();
+      this.context.triggerEvent('popover.shown');
+      $popover.data('popper', popper).show();
+    }
+  }
+
+  hidePopover($popover) {
+    if ($popover?.length) {
+      const popper = $popover.data('popper');
+      if (popper) {
+        popper.destroy();
+        $popover.removeData('popper');     
+      }
+  
+      $popover.hide();
+    }
+  }
 }

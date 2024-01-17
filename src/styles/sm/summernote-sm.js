@@ -85,7 +85,7 @@ const dialog = renderer.create('<div class="modal note-modal" aria-hidden="false
 });
 
 const popover = renderer.create([
-  '<div class="note-popover popover bs-popover-auto show">',
+  '<div class="note-popover popover bs-popover-auto show" x-arrow="arrow">',
     '<div class="arrow"></div>',
     '<div class="popover-content note-toolbar note-children-container"></div>',
   '</div>',
@@ -94,7 +94,7 @@ const popover = renderer.create([
 
   //$node.addClass(direction);
   //$node.addClass('bs-popover-' + direction);
-  $node.attr('x-placement', direction);
+  //$node.attr('x-placement', direction);
 
   if (options.hideArrow) {
     $node.find('.arrow').hide();

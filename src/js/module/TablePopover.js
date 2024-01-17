@@ -7,6 +7,7 @@ export default class TablePopover {
   constructor(context) {
     this.context = context;
 
+    this.editor = context.modules.editor;
     this.ui = $.summernote.ui;
     this.options = context.options;
     this.events = {
@@ -66,18 +67,10 @@ export default class TablePopover {
       const isVoidOrLink = dom.isVoid(target) || dom.isAnchor(target) || dom.isAnchor(target?.parentElement);
 
       if (!isVoidOrLink) {
-        const pos = dom.posFromPlaceholder(target);
-        const containerOffset = $(this.options.container).offset();
-        pos.top -= containerOffset.top;
-        pos.left -= containerOffset.left;
-  
-        this.context.triggerEvent('popover.shown');
-  
-        this.$popover.css({
-          display: 'block',
-          left: pos.left,
-          top: pos.top,
-        });
+        const table = dom.ancestor(target, dom.isTable);
+        if (table) {
+          this.editor.showPopover(this.$popover, table);
+        }
 
         return true;
       }
@@ -88,6 +81,6 @@ export default class TablePopover {
   }
 
   hide() {
-    this.$popover.hide();
+    this.editor.hidePopover(this.$popover);
   }
 }
