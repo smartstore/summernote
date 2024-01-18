@@ -1169,7 +1169,11 @@ export default class Editor {
 
   showPopover($popover, target) {
     if ($popover?.length) {
-      const popper = new Popper(target, $popover[0], {
+      let popper = $popover.data('popper');
+      if (popper) {
+        popper.destroy();
+      }
+      popper = new Popper(target, $popover[0], {
         placement: 'top',
         modifiers: {
           computeStyle: { gpuAcceleration: false },

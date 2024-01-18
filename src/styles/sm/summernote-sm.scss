@@ -534,6 +534,7 @@ $img-margin-right: 10px;
   display: none;
   max-width: none;
   border-color: var(--gray-300);
+  z-index: $zindex-tooltip + 1;
 
   .arrow {
     //left: 20px !important;
@@ -576,13 +577,13 @@ $img-margin-right: 10px;
 }
 
 .note-btn {
-  --btn-padding-x: 9px;
+  --btn-padding-x: 6px;
   min-width: 32px;
 
-  &:not(.dropdown-toggle) {
+  //&:not(.dropdown-toggle) {
     // Emulate .btn-icon
     //width: var(--btn-height);
-  }
+  //}
 
   >i,
   >svg {
@@ -591,7 +592,6 @@ $img-margin-right: 10px;
   }
 
   >svg {
-    height: 14px;
     height: 16px;
   }
 }

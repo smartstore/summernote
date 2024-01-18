@@ -11,18 +11,18 @@ export default class TablePopover {
     this.ui = $.summernote.ui;
     this.options = context.options;
     this.events = {
-      'summernote.mousedown': (we, event) => {
-        this.update(event.target);
+      'summernote.mousedown': (we, e) => {
+        this.update(e?.target, e);
       },
-      'summernote.keyup summernote.scroll summernote.change': () => {
-        this.update();
+      'summernote.keyup summernote.scroll summernote.change': (we, e) => {
+        this.update(e?.target, e);
       },
       'summernote.disable summernote.dialog.shown summernote.popover.shown': () => {
         this.hide();
       },
-      'summernote.blur': (we, event) => {
-        if (event.originalEvent && event.originalEvent.relatedTarget) {
-          if (!this.$popover[0].contains(event.originalEvent.relatedTarget)) {
+      'summernote.blur': (we, e) => {
+        if (e.originalEvent && e.originalEvent.relatedTarget) {
+          if (!this.$popover[0].contains(e.originalEvent.relatedTarget)) {
             this.hide();
           }
         } else {
@@ -56,8 +56,13 @@ export default class TablePopover {
     this.$popover.remove();
   }
 
-  update(target) {
+  update(target, e) {
     if (this.context.isDisabled()) {
+      return false;
+    }
+
+    const isScroll = e?.type == 'scroll';
+    if (isScroll) {
       return false;
     }
 
