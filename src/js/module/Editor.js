@@ -13,9 +13,6 @@ import Table from '../editing/Table';
 import Bullet from '../editing/Bullet';
 
 const KEY_BOGUS = 'bogus';
-const MAILTO_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-const TEL_PATTERN = /^(\+?\d{1,3}[\s-]?)?(\d{1,4})[\s-]?(\d{1,4})[\s-]?(\d{1,4})$/;
-const URL_SCHEME_PATTERN = /^([A-Za-z][A-Za-z0-9+-.]*\:|#|\/)/;
 
 /**
  * @class Editor
@@ -199,18 +196,10 @@ export default class Editor {
      * @param {Object} linkInfo
      */
     this.createLink = this.wrapCommand((linkInfo) => {
-      let rel = [];
+      let rels = [];
       let linkUrl = linkInfo.url;
       const linkText = linkInfo.text;
       const isNewWindow = linkInfo.isNewWindow;
-      const addNoReferrer = this.options.linkAddNoReferrer;
-      const addNoOpener = this.options.linkAddNoOpener;
-      let rng = linkInfo.range || this.getLastRange();
-      const additionalTextLength = linkText.length - rng.toString().length;
-      if (additionalTextLength > 0 && this.isLimited(additionalTextLength)) {
-        return;
-      }
-      const isTextChanged = rng.toString() !== linkText;
 
       // handle spaced urls from input
       if (typeof linkUrl === 'string') {
@@ -219,38 +208,78 @@ export default class Editor {
 
       if (this.options.onCreateLink) {
         linkUrl = this.options.onCreateLink(linkUrl);
-      } else {
-        linkUrl = this.checkLinkUrl(linkUrl);
+      } 
+      else {
+        linkUrl = this.checkLinkUrl(linkUrl) || linkUrl;
       }
 
       let anchors = [];
-      if (isTextChanged) {
-        rng = rng.deleteContents();
-        const anchor = rng.insertNode($('<A></A>').text(linkText)[0]);
-        anchors.push(anchor);
-      } else {
-        anchors = this.style.styleNodes(rng, {
-          nodeName: 'A',
-          expandClosestSibling: true,
-          onlyPartialContains: true,
-        });
+
+      if (linkInfo.img && !linkInfo.a) {
+        // UNlinked image selected
+        $(linkInfo.img).wrap('<a href="' + linkUrl + '"></a>');
+        linkInfo.a = linkInfo.img.parentElement;
+        anchors.push(linkInfo.a);
+      }
+      else if (linkInfo.img && linkInfo.a) {
+        // linked image selected
+        anchors.push(linkInfo.a);
+      }
+      else {
+        let rng = linkInfo.range || this.getLastRange();
+        const additionalTextLength = linkText.length - rng.toString().length;
+        if (additionalTextLength > 0 && this.isLimited(additionalTextLength)) {
+          return;
+        }
+        const isTextChanged = rng.toString() !== linkText;
+
+        // Text selected
+        if (isTextChanged) {
+          rng = rng.deleteContents();
+          const anchor = rng.insertNode($('<A></A>').text(linkText)[0]);
+          anchors.push(anchor);
+        } 
+        else {
+          anchors = this.style.styleNodes(rng, {
+            nodeName: 'A',
+            expandClosestSibling: true,
+            onlyPartialContains: true,
+          });
+        }
       }
 
-      $.each(anchors, (idx, anchor) => {
-        $(anchor).attr('href', linkUrl);
+      $.each(anchors, (idx, a) => {
+        a.setAttribute('href', linkUrl);
+
+        if (linkInfo.rel) {
+          a.rel = linkInfo.rel;
+        }
+
+        if (linkInfo.cssClasss) {
+          a.className = linkInfo.cssClasss;
+        }
+
+        if (linkInfo.cssStyle) {
+          a.style.cssText = linkInfo.cssStyle;
+        }
+
         if (isNewWindow) {
-          $(anchor).attr('target', '_blank');
-          if (addNoReferrer) {
-            rel.push('noreferrer');
+          a.target = '_blank';
+          
+          if (!linkInfo.rel) {
+            if (this.options.linkAddNoReferrer) {
+              rels.push('noreferrer');
+            }
+            if (this.options.linkAddNoOpener) {
+              rels.push('noopener');
+            }
+            if (rels.length) {
+              a.rel = rels.join(' ');
+            }
           }
-          if (addNoOpener) {
-            rel.push('noopener');
-          }
-          if (rel.length) {
-            $(anchor).attr('rel', rel.join(' '));
-          }
-        } else {
-          $(anchor).removeAttr('target');
+        } 
+        else {
+          a.removeAttribute('target');
         }
       });
 
@@ -539,15 +568,42 @@ export default class Editor {
     return false;
   }
 
-  checkLinkUrl(linkUrl) {
-    if (MAILTO_PATTERN.test(linkUrl)) {
-      return 'mailto://' + linkUrl;
-    } else if (TEL_PATTERN.test(linkUrl)) {
-      return 'tel://' + linkUrl;
-    } else if (!URL_SCHEME_PATTERN.test(linkUrl)) {
-      return 'http://' + linkUrl;
+  /**
+   * Checks link url. Returns empty string if url is valid.
+   * @return {String}
+   */
+  checkLinkUrl(url) {
+    url = url?.trim();
+
+    if (url) {
+      if (func.isValidEmail(url)) {
+        return 'mailto://' + url;
+      } 
+      else if (func.isValidTel(url)) {
+        return 'tel://' + url;
+      } 
+      else if (!func.startsWithUrlScheme(url)) {
+        // Grab only first part
+        let url2 = url;
+        let slashIndex = url2.indexOf('/');
+        if (slashIndex > 1) {
+          url2 = url2.substring(0, slashIndex);
+        }
+
+        if (func.isValidHost(url2)) {
+          return 'https://' + url;
+        }
+        else {
+          var c = url[0];
+          if (c === "/" || c === "~" || c === "\\" || c === "." || c === "#") {
+            // Is an app (relative or absolute) path
+            return url;
+          }
+        }
+      }
     }
-    return linkUrl;
+
+    return '';
   }
 
   /**
@@ -591,7 +647,8 @@ export default class Editor {
   setLastRange(rng) {
     if (rng) {
       this.lastRange = rng;
-    } else {
+    } 
+    else {
       this.lastRange = range.create(this.editable);
 
       if ($(this.lastRange.sc).closest('.note-editable').length === 0) {
@@ -1040,21 +1097,39 @@ export default class Editor {
    * @return {String} [return.url=""]
    */
   getLinkInfo() {
-    const rng = this.getLastRange().expand(dom.isAnchor);
-    // Get the first anchor on range(for edit).
-    const $anchor = $(lists.head(rng.nodes(dom.isAnchor)));
-    const linkInfo = {
-      range: rng,
-      text: rng.toString(),
-      url: $anchor.length ? $anchor.attr('href') : '',
-    };
+    let img, a, rng;
 
-    // When anchor exists,
-    if ($anchor.length) {
-      // Set isNewWindow by checking its target.
-      linkInfo.isNewWindow = $anchor.attr('target') === '_blank';
+    img = this.$editable.data('target')
+    if (img?.parentElement?.matches('a')) {
+      // First check if a linked image is selected
+      a = img.parentElement;
+      rng = range.create(a, 0, a, a.childNodes.length);
     }
 
+    if (!rng) {
+      rng = this.getLastRange().expand(dom.isAnchor);
+    }
+
+    if (!a) {
+      // Get the first anchor on range (for edit).
+      a = lists.head(rng.nodes(dom.isAnchor));
+    }
+
+    const linkInfo = {
+      range: rng,
+      a: a,
+      img: img,
+      text: img ? null : rng.toString()
+    };
+
+    if (a) {
+      linkInfo.url = a.getAttribute('href');
+      linkInfo.cssClass = a.className;
+      linkInfo.cssStyle = a.style.cssText;
+      linkInfo.rel = a.rel;
+      linkInfo.isNewWindow = a.target == '_blank';
+    }
+    console.log(linkInfo);
     return linkInfo;
   }
 
@@ -1167,19 +1242,18 @@ export default class Editor {
     this.$editable[0].normalize();
   }
 
-  showPopover($popover, target) {
+  showPopover($popover, target, placement = 'top') {
     if ($popover?.length) {
       let popper = $popover.data('popper');
       if (popper) {
         popper.destroy();
       }
       popper = new Popper(target, $popover[0], {
-        placement: 'top',
+        placement: placement,
         modifiers: {
           computeStyle: { gpuAcceleration: false },
           arrow: { element: '.arrow' },
-          preventOverflow: { boundariesElement: this.$editable[0] },
-          //inner: { enabled: true }
+          preventOverflow: { boundariesElement: this.$editable[0] }
         }
       });
 

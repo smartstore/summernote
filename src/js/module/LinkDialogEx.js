@@ -1,8 +1,6 @@
 import $ from 'jquery';
 import env from '../core/env';
 import key from '../core/key';
-import func from '../core/func';
-import dom from '../core/dom';
 
 export default class LinkDialog {
   constructor(context) {
@@ -85,45 +83,6 @@ export default class LinkDialog {
       body: body,
       footer: footer,
     }).render().appendTo($container);
-
-    this.handleUnlinkButtonState();
-  }
-
-  // Hack: toggle our custom "unlink image" button when
-  // imagePopover is about to be shown.
-  handleUnlinkButtonState() {
-    const popover = this.context.modules.imagePopover;
-
-    // save the original summernote method
-    const fnImagePopoverUpdate = popover.update;
-
-    // decorate the original method with our cusrom stuff
-    popover.update = (target, e) => {
-      const btn = popover.$popover.find('.btn-unlink-image');
-      const isLinkedImage = $(target).is('img') && $(target).parent().is('a');
-
-      // hide/show the unlink button depending on current selection
-      btn.toggle(isLinkedImage);
-
-      // Call the original summernote method
-      fnImagePopoverUpdate.apply(popover, [target, e]);
-    };
-  }
-
-  // Unlinks a linked image from image popover
-  unlinkImage(btn) {
-    var img = $(this.context.layoutInfo.editable.data('target'));
-    
-    if (img.is('img') && img.parent().is('a')) {
-      img.unwrap();
-      
-      // Ensure that SN saves the change
-      this.context.layoutInfo.note.val(this.context.invoke('code'));
-      this.context.layoutInfo.note.change();
-
-      // Hide the popover
-      this.context.modules.imagePopover.hide();
-    }
   }
 
   destroy() {
@@ -142,60 +101,9 @@ export default class LinkDialog {
     });
   }
 
-  createLinkRange(a) {
-    var sc = a[0];
-    var so = 0;
-    var ec = a[0];
-    var eo = a[0].childNodes.length;
-
-    // Create range and assign points again.
-    // Something is wrong with Summernote's createRange method.
-    var rng = this.editor.createRange(sc, so, ec, eo);
-    rng.sc = sc;
-    rng.so = so;
-    rng.ec = ec;
-    rng.eo = eo;
-
-    return rng;
-  }
-
-  checkLinkUrl(url) {
-    url = url?.trim();
-
-    if (url) {
-      if (func.isValidEmail(url)) {
-        return 'mailto://' + url;
-      } 
-      else if (func.isValidTel(url)) {
-        return 'tel://' + url;
-      } 
-      else if (!func.startsWithUrlScheme(url)) {
-        // Grab only first part
-        let url2 = url;
-        let slashIndex = url2.indexOf('/');
-        if (slashIndex > 1) {
-          url2 = url2.substring(0, slashIndex);
-        }
-
-        if (func.isValidHost(url2)) {
-          return 'https://' + url;
-        }
-        else {
-          var c = url[0];
-          if (c === "/" || c === "~" || c === "\\" || c === "." || c === "#") {
-            // Is an app (relative or absolute) path
-            return url;
-          }
-        }
-      }
-    }
-
-    return "";
-  }
-
   onCheckLinkUrl($input) {
     $input.on('blur', (e) => {
-      let url = this.checkLinkUrl(e.target.value);
+      let url = this.editor.checkLinkUrl(e.target.value);
       if (url) {
         e.target.value = url;
       }
@@ -331,98 +239,18 @@ export default class LinkDialog {
    * @param {Object} layoutInfo
    */
   show () {
-    let linkInfo, a;
-    let img = $(this.context.layoutInfo.editable.data('target'));
-    if (img.length) {
-      // Hide "text" control
-      this.$dialog.find('.form-group-text').hide();
-
-      a = img.parent();
-      if (a.is("a")) {
-        linkInfo = {
-          a: a, // indicates that an existing link should be edited
-          img: img,
-          range: this.createLinkRange(a),
-          url: a.attr('href'),
-          cssClass: a.attr("class"),
-          cssStyle: a.attr("style"),
-          rel: a.attr("rel"),
-          isNewWindow: a.attr('target') === '_blank'
-        };
-      }
-    }
-    else {
-      this.$dialog.find('.form-group-text').show();
-    }
-
-    if (!linkInfo) {
-      linkInfo = this.context.invoke('editor.getLinkInfo');
-      if (img.length) {
-        linkInfo.img = img;
-      }
-      a = $(this.findLinkInRange(linkInfo.range));
-      if (a.length) {
-        linkInfo.cssClass = a.attr("class");
-        linkInfo.cssStyle = a.attr("style");
-        linkInfo.rel = a.attr("rel");
-      }
-    }
+    const linkInfo = this.context.invoke('editor.getLinkInfo');
+    // Hide "text" control if img is selected
+    this.$dialog.find('.form-group-text').toggle(!linkInfo.img);
 
     this.context.invoke('editor.saveRange');
+
     this.showLinkDialog(linkInfo).then((linkInfo) => {
-      let enteredUrl = this.$dialog.find('.note-link-url').val();
-
-      if (this.options.onCreateLink) {
-        enteredUrl = this.options.onCreateLink(enteredUrl);
-      }
-
       this.context.invoke('editor.restoreRange');
+      this.context.invoke('editor.createLink', linkInfo);
 
-      if (linkInfo.img && !linkInfo.a) {
-        // UNlinked image selected
-        linkInfo.img.wrap('<a href="' + enteredUrl + '"></a>');
-        a = linkInfo.a = linkInfo.img.parent();
-        linkInfo.range = this.createLinkRange(a);
-      }
-      else if (linkInfo.img && linkInfo.a) {
-        // linked image selected
-        a = linkInfo.a;
-        a.attr("href", enteredUrl);
-      }
-      else {
-        // (Un)linked selected text... let SN process the link
-        this.context.invoke('editor.createLink', linkInfo);
-      }			
-
-      // add our custom attributes
-      if (a.length) {
-        dom.setAttribute(a, 'class', this.$dialog.find('.note-link-class').val());
-        dom.setAttribute(a, 'style', this.$dialog.find('.note-link-style').val());
-        dom.setAttribute(a, 'rel', this.$dialog.find('.note-link-rel').val());
-        if (linkInfo.img) {
-          dom.setAttribute(a, 'target', linkInfo.isNewWindow ? '_blank' : null);
-        }
-      }
-
-      if (linkInfo.img) {
-        // Ensure that SN saves the change
-        this.context.layoutInfo.note.val(this.context.invoke('code'));
-        this.context.layoutInfo.note.change();
-      }
     }).fail(() => {
       this.context.invoke('editor.restoreRange');
     });
   };
-
-  findLinkInRange(rng) {
-    var test = [rng.sc, rng.ec, rng.sc.nextSibling, rng.ec.nextSibling, rng.ec.parentNode, rng.ec.parentNode];
-
-    for (var i = 0; i < test.length; i++) {
-      if (test[i]) {
-        if ($(test[i]).is("a")) {
-          return test[i];
-        }
-      }
-    }
-  }
 }
