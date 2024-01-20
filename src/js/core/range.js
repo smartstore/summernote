@@ -769,7 +769,8 @@ export default {
       ec = sc;
       eo = so;
       return new WrappedRange(sc, so, ec, eo);
-    } else {
+    } 
+    else {
       let wrappedRange = this.createFromSelection();
 
       if (!wrappedRange && arguments.length === 1) {

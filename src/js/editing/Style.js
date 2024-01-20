@@ -141,16 +141,16 @@ export default class Style {
     }
 
     const node = rng.sc; // rng.commonAncestor(); 
-    const ancestors = dom.listAncestor(node, dom.isBlock);
+    const ancestors = dom.listAncestor(node/*, dom.isBlock*/);
     styleInfo = $.extend(styleInfo, {
-      'font-bold': this.queryStyleCommand('bold', ancestors) ? 'bold' : 'normal',
-      'font-italic': this.queryStyleCommand('italic', ancestors) ? 'italic' : 'normal',
-      'font-underline': this.queryStyleCommand('underline', ancestors) ? 'underline' : 'normal',
-      'font-strikethrough': this.queryStyleCommand('strikethrough', ancestors) ? 'strikethrough' : 'normal',
-      'font-subscript': this.queryStyleCommand('subscript', ancestors) ? 'subscript' : 'normal',
-      'font-superscript': this.queryStyleCommand('superscript', ancestors) ? 'superscript' : 'normal',
-      'font-code': this.queryStyleCommand('code', ancestors) ? 'code' : 'normal',
-      'font-family': this.queryStyleCommand('fontname', ancestors)?.styleMatch
+      'font-bold': this.queryStyleCommand('bold', rng, ancestors) ? 'bold' : 'normal',
+      'font-italic': this.queryStyleCommand('italic', rng, ancestors) ? 'italic' : 'normal',
+      'font-underline': this.queryStyleCommand('underline', rng, ancestors) ? 'underline' : 'normal',
+      'font-strikethrough': this.queryStyleCommand('strikethrough', rng, ancestors) ? 'strikethrough' : 'normal',
+      'font-subscript': this.queryStyleCommand('subscript', rng, ancestors) ? 'subscript' : 'normal',
+      'font-superscript': this.queryStyleCommand('superscript', rng, ancestors) ? 'superscript' : 'normal',
+      'font-code': this.queryStyleCommand('code', rng, ancestors) ? 'code' : 'normal',
+      'font-family': this.queryStyleCommand('fontname', rng, ancestors)?.styleMatch
     });
 
     // list-style-type to list-style(unordered, ordered)
@@ -180,24 +180,23 @@ export default class Style {
 
   /**
    * Queries a style command by name.
-   * @param {String} commandName
+   * @param {String|Object} command - Command object or name
+   * @param {WrappedRange} rng - The range to query within
    * @param {null|Array} ancestors - Array of ancestor nodes to walk up. If null, ancestors are resolved from the current selection range.
    * @return {null|boolean|Object}
    */
-  queryStyleCommand(commandName, ancestors = null) {
+  queryStyleCommand(command, rng, ancestors = null) {
     // TODO: Add "Default" to FontName and FontSize tools (to remove font-family)
-    const command = this.options.commands[commandName];
+    command = this.getStyleCommand(command);
     if (!command) {
-      console.error(`The command ${commandName} does not exist. Add a command object to the options.commands list.`);
       return null;
     }
 
     if (!ancestors) {
-      let rng = range.create();
       if (rng) {
         rng = rng.normalize();
         const node = !dom.isElement(rng.sc) ? rng.sc.parentNode : rng.sc;
-        ancestors = dom.listAncestor(node, dom.isBlock);
+        ancestors = dom.listAncestor(node /*, dom.isBlock */);
       }
       else {
         return null;
@@ -214,6 +213,84 @@ export default class Style {
     }
 
     return match;
+  }
+
+  /**
+   * Applies a style style command to the current selection.
+   * @param {String|Object} command - Command object or name
+   * @param {WrappedRange} rng - The range to query within
+   * @param {String} variant - Optional command variant (or command argument) as defined by the command metadata.
+   */
+  applyStyleCommand(command, rng, variant = null) {
+    command = this.getStyleCommand(command);
+    if (!command) {
+      return null;
+    }
+
+    const self = this;
+    const originalRange = rng;
+    const match = this.queryStyleCommand(command, rng);
+
+    // If command is not active in current selection, we gonna apply it, strip it down otherwise.
+    const enable = match == null;
+
+    if (rng.isCollapsed()) {
+      if (enable) {
+        // Applying a command to a collapsed selection will do nothing. Find the word around the cursor.
+        rng = rng.getWordRange(true);
+      }
+      else {
+        rng = range.createFromNode(match.node);
+      }
+    }
+
+    // Make predicate for matchesCommand function
+    let pred = (n) => this.matchesCommand(n, command);
+
+    const preferredTagName = Array.isArray(command.tag) ? command.tag[0] : command.tag;
+
+    // Walk and resolve all text nodes in selection
+    rng = rng.splitText();
+    const nodes = rng.nodes(dom.isText, { fullyContains: true }).map((textNode) => {
+      const singleAncestor = dom.singleChildAncestor(textNode, pred);
+      if (singleAncestor) {
+        //console.log(singleAncestor);
+        return enable ? singleAncestor : dom.unwrap(textNode);
+      }
+
+      return processNode(textNode);
+    });
+
+    console.log(nodes);
+
+    function processNode(node) {
+      if (dom.isText(node)) {
+        if (enable) {
+          return dom.wrap(node, preferredTagName);
+        }
+        else {
+          return dom.unwrap(node);
+        } 
+      }
+      else {
+        return node;
+      }
+    };
+  }
+
+  /**
+   * Gets style command object.
+   * @param {String} commandName - Name of command to return.
+   * @return {null|Object}
+   */
+  getStyleCommand(commandName) {
+    const command = typeof commandName == "string" ? this.options.commands[commandName] : commandName;
+    if (!command) {
+      console.error(`The command ${commandName} does not exist. Add a command object to the options.commands list.`);
+      return null;
+    }
+
+    return command;
   }
 
   matchesCommand(node, command) {
@@ -283,8 +360,8 @@ export default class Style {
     }
     
     if ($.isEmptyObject(result)) {
-      // No match, return false for proper checks
-      return false;
+      // No match, return null for proper checks
+      return null;
     }
 
     result.node = node;

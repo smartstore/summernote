@@ -45,7 +45,7 @@ export var summernote_global_config = {
     ['edit', ['undo', 'redo']],
     ['text', ['bold', 'italic', 'underline', 'moreFontStyles']],
     //['color', ['forecolor', 'backcolor']],
-    //['font', ['fontname', 'color', 'fontsize']],
+    ['font', ['fontname', 'xcolor', 'fontsize']],
     ['para', ['style', 'cssclass', 'ul', 'ol', 'paragraph', 'clear']],
     ['insert', ['link', 'image', 'video', 'table', 'hr']],
     ['view', ['codeview', 'fullscreen', 'help']]

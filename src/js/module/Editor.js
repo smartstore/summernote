@@ -53,7 +53,7 @@ export default class Editor {
 
     // native commands(with execCommand), generate function for execCommand
     const commands = [
-      'bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript',
+      /*'bold', */'italic', 'underline', 'strikethrough', 'superscript', 'subscript',
       'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull',
       'formatBlock', 'removeFormat', 'backColor',
     ];
@@ -69,8 +69,12 @@ export default class Editor {
       this.context.memo('help.' + commands[idx], this.lang.help[commands[idx]]);
     }
 
+    this.bold = this.wrapCommand((value) => {
+      this.style.applyStyleCommand('bold', this.getLastRange(), value);
+    });
+
     this.inlineCode = this.wrapCommand((value) => {
-      // TODO: Implement
+      this.style.applyStyleCommand('code', this.getLastRange(), value);
     });
 
     this.fontName = this.wrapCommand((value) => {
@@ -1129,7 +1133,7 @@ export default class Editor {
       linkInfo.rel = a.rel;
       linkInfo.isNewWindow = a.target == '_blank';
     }
-    console.log(linkInfo);
+
     return linkInfo;
   }
 

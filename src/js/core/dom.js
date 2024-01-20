@@ -449,6 +449,20 @@ function wrap(node, wrapperName) {
 }
 
 /**
+ * Unwrap node.
+ *
+ * @param {Node} node
+ * @return {NodeList} - The unwrapped child nodes.
+ */
+function unwrap(node) {
+  const parent = node.parentNode;
+  const children = parent.childNodes;
+  parent.replaceWith(...children);
+
+  return children.length == 1 ? children.item(0) : node;
+}
+
+/**
  * insert node after preceding
  *
  * @param {Node} node
@@ -1275,6 +1289,7 @@ export default {
   listDescendant,
   commonAncestor,
   wrap,
+  unwrap,
   insertAfter,
   appendChildNodes,
   position,

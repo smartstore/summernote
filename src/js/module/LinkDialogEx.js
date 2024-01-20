@@ -13,24 +13,7 @@ export default class LinkDialog {
     this.lang = this.options.langInfo;
     this.editor = context.modules.editor;
 
-    const buttons = context.modules.buttons;
-
     context.memo('help.linkDialog.show', this.options.langInfo.help['linkDialog.show']);
-
-    context.memo('button.link', () => {
-      return this.ui.button({
-        contents: this.ui.icon(this.options.icons.link),
-        callback: function (btn) {
-          btn.data("placement", "bottom");
-          btn.data("trigger", "hover");
-          btn.attr("title", this.lang.link.link + buttons.representShortcut('linkDialog.show'));
-          btn.tooltip();
-        },
-        click: function () {
-          this.show();
-        }
-      }).render();
-    });
   }
 
   initialize() {
@@ -145,7 +128,7 @@ export default class LinkDialog {
 
       // if no url was given, copy text to url
       if (!linkInfo.url && linkInfo.text) {
-        linkInfo.url = this.checkLinkUrl(linkInfo.text);
+        linkInfo.url = this.editor.checkLinkUrl(linkInfo.text);
       }
 
       $linkText.val(linkInfo.text);
