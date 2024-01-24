@@ -228,6 +228,34 @@ function isNumber(val) {
   return typeof val === 'number';
 }
 
+function isString(val) {
+  return typeof val === 'string';
+}
+
+function constant(val) {
+  return () => val;
+}
+
+const checkRange = (str, substr, start) =>
+  substr === '' || str.length >= substr.length && str.substr(start, start + substr.length) === substr;
+
+function startsWith(str, prefix) {
+  return checkRange(str, prefix, 0);
+}
+
+function endsWith(str, prefix) {
+  return checkRange(str, suffix, str.length - suffix.length);
+}
+
+/**
+ * Checksa whether given object has a particular property.
+ * @param {Object} obj - Object to check
+ * @param {String} propName - Property name to check.
+ */
+function has(obj, propName) {
+  return obj && obj.hasOwnProperty(propName);
+}
+
 export default {
   eq,
   eq2,
@@ -252,5 +280,10 @@ export default {
   hasWhiteSpace,
   matches,
   clamp,
-  isNumber
+  isNumber,
+  isString,
+  constant,
+  startsWith,
+  endsWith,
+  has
 };

@@ -1,5 +1,7 @@
 import func from './func';
 
+const isArrayLike = (o) => o.length !== undefined;
+
 /**
  * returns the first item of an array.
  *
@@ -49,6 +51,20 @@ function find(array, pred) {
 }
 
 /**
+ * Returns index of first found item or -1.
+ */
+function findIndex(array, pred) {
+  scope = scope || array;
+  for (let i = 0, l = array.length; i < l; i++) {
+    if (pred(array[i], i, array)) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+/**
  * returns true if all of the values in the array pass the predicate truth test.
  */
 function all(array, pred) {
@@ -89,8 +105,8 @@ function sum(array, fn) {
 }
 
 /**
- * returns a copy of the collection with array type.
- * @param {Collection} collection - collection eg) node.childNodes, ...
+ * Returns an array copy of an array-like collection.
+ * @param {Collection} collection - collection e.g. node.childNodes, ...
  */
 function from(collection) {
   const result = [];
@@ -103,7 +119,7 @@ function from(collection) {
 }
 
 /**
- * returns whether list is empty or not
+ * returns whether collection is empty or not
  */
 function isEmpty(array) {
   return !array || !array.length;
@@ -185,6 +201,103 @@ function prev(array, item) {
   return null;
 }
 
+  /**
+   * Performs an iteration of all items in a collection such as an object or array. This method will execute the
+   * callback function for each item in the collection, if the callback returns false the iteration will terminate.
+   * The callback has the following format: `cb(value, key_or_index)`.
+   *
+   * @method each
+   * @param {Array|Object} collection Array or collection to iterate over.
+   * @param {Function} callback Callback function to execute for each item.
+   * @param {Object} scope Optional scope to execute the callback in.
+   */
+function each(collection, callback, scope = null) {
+  if (!collection) {
+    return false;
+  }
+
+  scope = scope || collection;
+
+  if (isArrayLike(collection)) {
+    // Indexed arrays
+    for (let n = 0, l = o.length; n < l; n++) {
+      if (callback?.call(scope, collection[n], n, collection) === false) {
+        return false;
+      }
+    }
+  } else {
+    // Plain objects
+    for (const n in collection) {
+      if (collection.hasOwnProperty(n)) {
+        if (callback?.call(scope, collection[n], n, collection) === false) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
+  /**
+   * Creates a new array by the return value of each iteration function call. This enables you to convert
+   * one array list into another.
+   *
+   * @method map
+   * @param {Array} array Array of items to iterate.
+   * @param {Function} callback Function to call for each item. It's return value will be the new value.
+   * @return {Array} Array with new values based on function return values.
+   */
+function map(array, callback) {
+  const out = [];
+
+  each(array, (item, index) => {
+    out.push(callback(item, index, array));
+  });
+
+  return out;
+}
+
+/**
+ * Splits a string but removes the whitespace before and after each value.
+ *
+ * @method explode
+ * @param {String|Array} s String to split.
+ * @param {String|RegExp} d Delimiter to split by.
+ * @example
+ * // Split a string into an array with [a,b,c]
+ * const arr = func.explode('a, b,   c');
+ */
+function explode(s, d = null) {
+  if (Array.isArray(s)) {
+    return s;
+  } else if (s === '') {
+    return [];
+  } else {
+    return map(s.split(d || ','), x => x.trim());
+  }
+}
+
+/**
+ * Makes a name/object map out of an array with names.
+ *
+ * @method makeMap
+ * @param {Array|String} array Items to make map out of.
+ * @param {String} delim Optional delimiter to split string by.
+ * @param {Object} map Optional map to add items to.
+ * @return {Object} Name/value map of items.
+ */
+function makeMap(array, delim = null, map = null) {
+  const resolvedItems = func.isString(items) ? items.split(delim || ',') : (items || []);
+  map = map || {};
+  let i = resolvedItems.length;
+  while (i--) {
+    map[resolvedItems[i]] = {};
+  }
+
+  return map;
+}
+
 /**
  * @class core.list
  *
@@ -201,6 +314,7 @@ export default {
   prev,
   next,
   find,
+  findIndex,
   contains,
   all,
   sum,
@@ -209,4 +323,8 @@ export default {
   clusterBy,
   compact,
   unique,
+  each,
+  map,
+  explode,
+  makeMap
 };

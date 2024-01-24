@@ -2,6 +2,7 @@ import $ from 'jquery';
 import func from './func';
 import lists from './lists';
 import env from './env';
+import Schema from './schema';
 
 const NBSP_CHAR = String.fromCharCode(160);
 const ZERO_WIDTH_NBSP_CHAR = '\ufeff';
