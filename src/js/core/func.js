@@ -220,6 +220,14 @@ function matches(strOrPattern, test) {
   return strOrPattern instanceof RegExp ? strOrPattern.test(test) : strOrPattern == test;
 }
 
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function isNumber(val) {
+  return typeof val === 'number';
+}
+
 export default {
   eq,
   eq2,
@@ -242,5 +250,7 @@ export default {
   startsWithUrlScheme,
   isValidUrl,
   hasWhiteSpace,
-  matches
+  matches,
+  clamp,
+  isNumber
 };

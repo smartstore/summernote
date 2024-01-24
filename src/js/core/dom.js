@@ -27,6 +27,10 @@ const beautifyOpts = {
   indent_empty_lines: false
 };
 
+function getRoot(node) {
+  return $(node).closest('note-editable')[0];
+}
+
 /**
  * @method isEditable
  *
@@ -73,6 +77,10 @@ function makePredByNodeName(nodeName) {
   }
 }
 
+function isNode(node) {
+  return func.isNumber(node?.nodeType);
+}
+
 /**
  * @method isText
  *
@@ -95,6 +103,10 @@ function isText(node) {
  */
 function isElement(node) {
   return node && node.nodeType === 1;
+}
+
+function isBookmarkNode(node) {
+  return node && isElement(node) && node.tagName === 'SPAN' && node.getAttribute('data-note-type') === 'bookmark';
 }
 
 /**
@@ -369,7 +381,7 @@ function commonAncestor(nodeA, nodeB) {
   for (let n = nodeB; n; n = n.parentNode) {
     if (ancestors.indexOf(n) > -1) return n;
   }
-  return null; // difference document area
+  return null; // different document area
 }
 
 /**
@@ -429,6 +441,10 @@ function listDescendant(node, pred) {
   })(node);
 
   return descendants;
+}
+
+function isDescendantOf(node, parent) {
+  return node === parent || parent.contains(node);
 }
 
 /**
@@ -786,7 +802,7 @@ function nextPointUntil(point, pred) {
 }
 
 /**
- * returns whether point has character or not.
+ * Returns whether point has character or not.
  *
  * @param {Point} point
  * @return {Boolean}
@@ -797,7 +813,7 @@ function isCharPoint(point) {
   }
 
   const ch = point.node.nodeValue.charAt(point.offset - 1);
-  return ch && (ch !== ' ' && ch !== NBSP_CHAR);
+  return ch && (ch !== ' ' && ch !== NBSP_CHAR && !/^\p{P}$/u.test(ch));
 }
 
 /**
@@ -871,6 +887,17 @@ function fromOffsetPath(ancestor, offsets) {
     }
   }
   return current;
+}
+
+function getRangeNode(container, offset) {
+  if (isElement(container) && container.hasChildNodes()) {
+    const childNodes = container.childNodes;
+    const safeOffset = func.clamp(offset, 0, childNodes.length - 1);
+    return childNodes[safeOffset];
+  }
+  else {
+    return container;
+  }
 }
 
 /**
@@ -1040,17 +1067,17 @@ function createText(text) {
 /**
  * @method remove
  *
- * remove node, (isRemoveChild: remove child or not)
+ * remove node, (removeChildren: remove children also?)
  *
  * @param {Node} node
- * @param {Boolean} isRemoveChild
+ * @param {Boolean} removeChildren
  */
-function remove(node, isRemoveChild) {
+function remove(node, removeChildren) {
   if (!node || !node.parentNode) { return; }
-  if (node.removeNode) { return node.removeNode(isRemoveChild); }
+  if (node.removeNode) { return node.removeNode(removeChildren); }
 
   const parent = node.parentNode;
-  if (!isRemoveChild) {
+  if (!removeChildren) {
     const nodes = [];
     for (let i = 0, len = node.childNodes.length; i < len; i++) {
       nodes.push(node.childNodes[i]);
@@ -1092,7 +1119,8 @@ function removeWhile(node, pred) {
  * @return {Node} - new node
  */
 function replace(node, nodeName) {
-  if (node.nodeName.toUpperCase() === nodeName.toUpperCase()) {
+  // TODO: Rename dom.replace --> dom.rename
+  if (!isElement(node) || node.nodeName.toUpperCase() === nodeName.toUpperCase()) {
     return node;
   }
 
@@ -1223,11 +1251,14 @@ export default {
   blank: blankHTML,
   /** @property {String} emptyPara */
   emptyPara: `<p>${blankHTML}</p>`,
+  getRoot,
   makePredByNodeName,
   isEditable,
   isControlSizing,
+  isNode,
   isText,
   isElement,
+  isBookmarkNode,
   isVoid,
   isTag,
   isPara,
@@ -1287,6 +1318,7 @@ export default {
   listNext,
   listPrev,
   listDescendant,
+  isDescendantOf,
   commonAncestor,
   wrap,
   unwrap,
@@ -1296,6 +1328,7 @@ export default {
   hasChildren,
   makeOffsetPath,
   fromOffsetPath,
+  getRangeNode,
   splitTree,
   splitPoint,
   create,

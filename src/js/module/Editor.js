@@ -8,6 +8,7 @@ import range from '../core/range';
 import { readFileAsDataURL, createImage } from '../core/async';
 import History from '../editing/History';
 import Style from '../editing/Style';
+import CommandController from '../command/Controller';
 import Typing from '../editing/Typing';
 import Table from '../editing/Table';
 import Bullet from '../editing/Bullet';
@@ -31,11 +32,12 @@ export default class Editor {
     this.lastRange = null;
     this.snapshot = null;
 
-    this.style = new Style(context);
     this.table = new Table();
     this.typing = new Typing(context);
     this.bullet = new Bullet();
     this.history = new History(context);
+    this.commandController = new CommandController(context);
+    this.style = new Style(context, this.commandController);
 
     this.context.memo('help.escape', this.lang.help.escape);
     this.context.memo('help.undo', this.lang.help.undo);
@@ -70,11 +72,11 @@ export default class Editor {
     }
 
     this.bold = this.wrapCommand((value) => {
-      this.style.applyStyleCommand('bold', this.getLastRange(), value);
+      this.commandController.toggle('bold', this.getLastRange(), value);
     });
 
     this.inlineCode = this.wrapCommand((value) => {
-      this.style.applyStyleCommand('code', this.getLastRange(), value);
+      this.commandController.toggle('code', this.getLastRange(), value);
     });
 
     this.fontName = this.wrapCommand((value) => {

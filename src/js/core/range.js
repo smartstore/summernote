@@ -1,111 +1,7 @@
 import $ from 'jquery';
-import env from './env';
 import func from './func';
 import lists from './lists';
 import dom from './dom';
-
-/**
- * return boundaryPoint from TextRange, inspired by Andy Na's HuskyRange.js
- *
- * @param {TextRange} textRange
- * @param {Boolean} isStart
- * @return {BoundaryPoint}
- *
- * @see http://msdn.microsoft.com/en-us/library/ie/ms535872(v=vs.85).aspx
- */
-function textRangeToPoint(textRange, isStart) {
-  let container = textRange.parentElement();
-  let offset;
-
-  const tester = document.body.createTextRange();
-  let prevContainer;
-  const childNodes = lists.from(container.childNodes);
-  for (offset = 0; offset < childNodes.length; offset++) {
-    if (dom.isText(childNodes[offset])) {
-      continue;
-    }
-    tester.moveToElementText(childNodes[offset]);
-    if (tester.compareEndPoints('StartToStart', textRange) >= 0) {
-      break;
-    }
-    prevContainer = childNodes[offset];
-  }
-
-  if (offset !== 0 && dom.isText(childNodes[offset - 1])) {
-    const textRangeStart = document.body.createTextRange();
-    let curTextNode = null;
-    textRangeStart.moveToElementText(prevContainer || container);
-    textRangeStart.collapse(!prevContainer);
-    curTextNode = prevContainer ? prevContainer.nextSibling : container.firstChild;
-
-    const pointTester = textRange.duplicate();
-    pointTester.setEndPoint('StartToStart', textRangeStart);
-    let textCount = pointTester.text.replace(/[\r\n]/g, '').length;
-
-    while (textCount > curTextNode.nodeValue.length && curTextNode.nextSibling) {
-      textCount -= curTextNode.nodeValue.length;
-      curTextNode = curTextNode.nextSibling;
-    }
-
-    // [workaround] enforce IE to re-reference curTextNode, hack
-    const dummy = curTextNode.nodeValue; // eslint-disable-line
-
-    if (isStart && curTextNode.nextSibling && dom.isText(curTextNode.nextSibling) &&
-      textCount === curTextNode.nodeValue.length) {
-      textCount -= curTextNode.nodeValue.length;
-      curTextNode = curTextNode.nextSibling;
-    }
-
-    container = curTextNode;
-    offset = textCount;
-  }
-
-  return {
-    cont: container,
-    offset: offset,
-  };
-}
-
-/**
- * return TextRange from boundary point (inspired by google closure-library)
- * @param {BoundaryPoint} point
- * @return {TextRange}
- */
-function pointToTextRange(point) {
-  const textRangeInfo = function(container, offset) {
-    let node, isCollapseToStart;
-
-    if (dom.isText(container)) {
-      const prevTextNodes = dom.listPrev(container, func.not(dom.isText));
-      const prevContainer = lists.last(prevTextNodes).previousSibling;
-      node = prevContainer || container.parentNode;
-      offset += lists.sum(lists.tail(prevTextNodes), dom.nodeLength);
-      isCollapseToStart = !prevContainer;
-    } else {
-      node = container.childNodes[offset] || container;
-      if (dom.isText(node)) {
-        return textRangeInfo(node, 0);
-      }
-
-      offset = 0;
-      isCollapseToStart = false;
-    }
-
-    return {
-      node: node,
-      collapseToStart: isCollapseToStart,
-      offset: offset,
-    };
-  };
-
-  const textRange = document.body.createTextRange();
-  const info = textRangeInfo(point.node, point.offset);
-
-  textRange.moveToElementText(info.node);
-  textRange.collapse(info.collapseToStart);
-  textRange.moveStart('character', info.offset);
-  return textRange;
-}
 
 /**
    * Wrapped Range
@@ -166,6 +62,108 @@ class WrappedRange {
       offset: this.eo,
     };
   }
+
+  walk(callback) {
+    const startOffset = this.so;
+    const startContainer = dom.getRangeNode(this.sc, startOffset);
+    const endOffset = this.eo;
+    const endContainer = dom.getRangeNode(this.ec, endOffset - 1);
+
+    /**
+     * Excludes start/end text node if they are out side the range
+     *
+     * @private
+     * @param {Array} nodes Nodes to exclude items from.
+     * @return {Array} Array with nodes excluding the start/end container if needed.
+     */
+    const exclude = (nodes) => {
+      // First node is excluded
+      const firstNode = nodes[0];
+      if (dom.isText(firstNode) && firstNode === startContainer && startOffset >= firstNode.data.length) {
+        nodes.splice(0, 1);
+      }
+
+      // Last node is excluded
+      const lastNode = nodes[nodes.length - 1];
+      if (endOffset === 0 && nodes.length > 0 && lastNode === endContainer && dom.isText(lastNode)) {
+        nodes.splice(nodes.length - 1, 1);
+      }
+
+      return nodes;
+    };
+
+    const collectSiblings = (node, name = 'nextSibling' | 'previousSibling', endNode) => {
+      const siblings = [];
+  
+      for (; node && node !== endNode; node = node[name]) {
+        siblings.push(node);
+      }
+      
+      return siblings;
+    };
+
+    const findEndPoint = (node, root) => {
+      return dom.ancestor(node, (n) => n.parentNode === root);
+    };
+      
+    const walkBoundary = (startNode, endNode, next) => {
+      const siblingName = next ? 'nextSibling' : 'previousSibling';
+  
+      for (let node = startNode, parent = node.parentNode; node && node !== endNode; node = parent) {
+        parent = node.parentNode;
+        const siblings = collectSiblings(node === startNode ? node : node[siblingName], siblingName);
+  
+        if (siblings.length) {
+          if (!next) {
+            siblings.reverse();
+          }
+          
+          callback(exclude(siblings));
+        }
+      }
+    };
+
+    // Same container
+    if (startContainer === endContainer) {
+      return callback(exclude([ startContainer ]));
+    }
+
+    // Find common ancestor and end points
+    const ancestor = dom.commonAncestor(startContainer, endContainer) || dom.getRoot(startContainer);
+
+    // Process left side
+    if (dom.isDescendantOf(startContainer, endContainer)) {
+      return walkBoundary(startContainer, ancestor, true);
+    }
+
+    // Process right side
+    if (dom.isDescendantOf(endContainer, startContainer)) {
+      return walkBoundary(endContainer, ancestor);
+    }
+
+    // Find start/end point
+    const startPoint = findEndPoint(startContainer, ancestor) || startContainer;
+    const endPoint = findEndPoint(endContainer, ancestor) || endContainer;
+
+    // Walk left leaf
+    walkBoundary(startContainer, startPoint, true);
+
+    // Walk the middle from start to end point
+    const siblings = collectSiblings(
+      startPoint === startContainer ? startPoint : startPoint.nextSibling,
+      'nextSibling',
+      endPoint === endContainer ? endPoint.nextSibling : endPoint
+    );
+
+    if (siblings.length) {
+      callback(exclude(siblings));
+    }
+
+    // Walk right leaf
+    walkBoundary(endContainer, endPoint);
+  }
+
+
 
   /**
    * select update visible range
@@ -595,10 +593,11 @@ class WrappedRange {
   /**
    * returns range for word before cursor
    *
-   * @param {Boolean} [findAfter] - find after cursor, default: false
+   * @param {Boolean} [findAfter] - find after cursor also, default: false
    * @return {WrappedRange}
    */
   getWordRange(findAfter) {
+    // TODO: Stop at interpunctuation in range.getWordRange
     let endPoint = this.getEndPoint();
 
     if (!dom.isCharPoint(endPoint)) {
