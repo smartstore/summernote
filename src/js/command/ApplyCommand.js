@@ -10,8 +10,6 @@ const yodele = (command, rng) => {
   const nativeRange = rng.nativeRange();
   const fragment = nativeRange.extractContents();
 
-  console.log(fragment.childElementCount);
-
   const checkForStrong = (node) => {
     if (node.nodeType === Node.ELEMENT_NODE && (node.nodeName === 'STRONG' || node.nodeName === 'B')) {
       return true;

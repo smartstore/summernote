@@ -243,8 +243,17 @@ function startsWith(str, prefix) {
   return checkRange(str, prefix, 0);
 }
 
-function endsWith(str, prefix) {
+function endsWith(str, suffix) {
   return checkRange(str, suffix, str.length - suffix.length);
+}
+
+function valueOrDefault(value, def) {
+  return value === undefined || value === null ? def : value;
+}
+
+const whiteSpaceRegExp = /^[ \t\r\n]*$/;
+function isWhitespaceText(text) {
+  return whiteSpaceRegExp.test(text);
 }
 
 /**
@@ -254,6 +263,10 @@ function endsWith(str, prefix) {
  */
 function has(obj, propName) {
   return obj && obj.hasOwnProperty(propName);
+}
+
+function isFunction(value) {
+  return typeof value === 'function';
 }
 
 export default {
@@ -285,5 +298,8 @@ export default {
   constant,
   startsWith,
   endsWith,
-  has
+  valueOrDefault,
+  isWhitespaceText,
+  has,
+  isFunction
 };

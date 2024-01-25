@@ -38,6 +38,10 @@ function tail(array) {
   return array.slice(1);
 }
 
+function exists(array, pred) {
+  return !!find(array, pred);
+}
+
 /**
  * returns first found item
  */
@@ -220,7 +224,7 @@ function each(collection, callback, scope = null) {
 
   if (isArrayLike(collection)) {
     // Indexed arrays
-    for (let n = 0, l = o.length; n < l; n++) {
+    for (let n = 0, l = collection.length; n < l; n++) {
       if (callback?.call(scope, collection[n], n, collection) === false) {
         return false;
       }
@@ -288,7 +292,7 @@ function explode(s, d = null) {
  * @return {Object} Name/value map of items.
  */
 function makeMap(array, delim = null, map = null) {
-  const resolvedItems = func.isString(items) ? items.split(delim || ',') : (items || []);
+  const resolvedItems = func.isString(array) ? array.split(delim || ',') : (array || []);
   map = map || {};
   let i = resolvedItems.length;
   while (i--) {
@@ -313,6 +317,7 @@ export default {
   tail,
   prev,
   next,
+  exists,
   find,
   findIndex,
   contains,

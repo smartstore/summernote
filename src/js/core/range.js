@@ -597,9 +597,9 @@ class WrappedRange {
    * @return {WrappedRange}
    */
   getWordRange(findAfter) {
-    // TODO: Stop at interpunctuation in range.getWordRange
     let endPoint = this.getEndPoint();
-
+    const endOffset = endPoint.offset;
+    
     if (!dom.isCharPoint(endPoint)) {
       return this;
     }
@@ -618,7 +618,7 @@ class WrappedRange {
       startPoint.node,
       startPoint.offset,
       endPoint.node,
-      endPoint.offset
+      Math.max(endPoint.offset - 1, endOffset)
     );
   }
 

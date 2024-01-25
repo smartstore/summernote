@@ -111,13 +111,13 @@ export default class ImageDialog {
 
       const setAttrs = (img, withSrc) => {
         if (withSrc) {
-          dom.setAttribute(img, 'src', this.$dialog.find('.note-image-src').val());
+          dom.setAttr(img, 'src', this.$dialog.find('.note-image-src').val());
         }
         
-        dom.setAttribute(img, 'alt', this.$dialog.find('.note-image-alt').val());
-        dom.setAttribute(img, 'title', this.$dialog.find('.note-image-title').val());
-        dom.setAttribute(img, 'class', this.$dialog.find('.note-image-class').val());
-        dom.setAttribute(img, 'style', this.$dialog.find('.note-image-style').val());
+        dom.setAttr(img, 'alt', this.$dialog.find('.note-image-alt').val());
+        dom.setAttr(img, 'title', this.$dialog.find('.note-image-title').val());
+        dom.setAttr(img, 'class', this.$dialog.find('.note-image-class').val());
+        dom.setAttr(img, 'style', this.$dialog.find('.note-image-style').val());
       }
 
       if (!imgInfo.img) {

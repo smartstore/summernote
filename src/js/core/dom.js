@@ -2,10 +2,17 @@ import $ from 'jquery';
 import func from './func';
 import lists from './lists';
 import env from './env';
-import Schema from './schema';
+import schema from './schema';
 
 const NBSP_CHAR = String.fromCharCode(160);
 const ZERO_WIDTH_NBSP_CHAR = '\ufeff';
+
+const CharTypes = {
+  UNKNOWN: -1,
+  CHAR: 0,
+  PUNC: 1,
+  SPACE: 2
+};
 
 const beautifyOpts = {
   indent_size: 2,
@@ -68,12 +75,12 @@ function makePredByNodeName(nodeName) {
   nodeName = nodeName.toUpperCase();
   if (typeof nodeName == "string") {
     return function(node) {
-      return node && node.nodeName.toUpperCase() === nodeName;
+      return node && node.nodeName === nodeName;
     };
   }
   else if (nodeName instanceof Array) {
     return function(node) {
-      return node && lists.contains(nodeName, node.nodeName.toUpperCase());
+      return node && lists.contains(nodeName, node.nodeName);
     };
   }
 }
@@ -119,10 +126,10 @@ function isBookmarkNode(node) {
 function isTag(node, tagName) {
   if (node) {
     if (typeof tagName == "string") {
-      return tagName.toUpperCase() == node.nodeName.toUpperCase();
+      return tagName.toUpperCase() == node.nodeName;
     }
     else if (tagName instanceof Array) {
-      return lists.contains(tagName, node.nodeName.toLowerCase());
+      return lists.contains(tagName, node.nodeName);
     }
   }
 
@@ -134,7 +141,7 @@ function isTag(node, tagName) {
  * @see http://www.w3.org/html/wg/drafts/html/master/syntax.html#void-elements
  */
 function isVoid(node) {
-  return node && /^BR|^IMG|^HR|^IFRAME|^BUTTON|^INPUT|^AUDIO|^VIDEO|^EMBED/.test(node.nodeName.toUpperCase());
+  return node && schema.isVoid(node.nodeName);
 }
 
 function isPara(node) {
@@ -142,8 +149,7 @@ function isPara(node) {
     return false;
   }
 
-  // Chrome(v31.0), FF(v25.0.1) use DIV for paragraph
-  return node && /^DIV|^P|^H[1-7]|^BLOCKQUOTE|^PRE|^SECTION|^LI/.test(node.nodeName.toUpperCase());
+  return node && func.has(schema.getTextBlockElements(), node.nodeName);
 }
 
 function findPara(node) {
@@ -151,7 +157,12 @@ function findPara(node) {
 }
 
 function isHeading(node) {
-  return node && /^H[1-7]/.test(node.nodeName.toUpperCase());
+  if (node?.nodeName?.length === 2 && node.nodeName[0] === 'H') {
+      const num = parseInt(node.nodeName[1]);
+      return num > 0 && num < 7;
+  }
+
+  return false;
 }
 
 const isPre = makePredByNodeName('PRE');
@@ -167,23 +178,17 @@ const isTable = makePredByNodeName('TABLE');
 const isData = makePredByNodeName('DATA');
 
 function isInline(node) {
-  return !isBodyContainer(node) &&
-         !isList(node) &&
-         !isHr(node) &&
-         !isPara(node) &&
-         !isTable(node) &&
-         !isBlockquote(node) &&
-         !isData(node);
+  return schema.isInline(node.nodeName);
 }
 
 function isList(node) {
-  return node && /^UL|^OL/.test(node.nodeName.toUpperCase());
+  return node && isTag(node, ['UL', 'OL']);
 }
 
 const isHr = makePredByNodeName('HR');
 
 function isCell(node) {
-  return node && /^TD|^TH/.test(node.nodeName.toUpperCase());
+  return node && isTag(node, ['TD', 'TH']);
 }
 
 const isBlockquote = makePredByNodeName('BLOCKQUOTE');
@@ -803,33 +808,50 @@ function nextPointUntil(point, pred) {
 }
 
 /**
+ * Gets the char type at given point.
+ *
+ * @param {Point} point
+ * @return {Number} - -1 = unknown, 0 = char, 1 = interpunctuation, 2 = space
+ */
+function getCharType(point) {
+  if (!isText(point.node)) {
+    return CharTypes.UNKNOWN;
+  }
+
+  const ch = point.node.nodeValue.charAt(point.offset - 1);
+
+  if (ch === ' ' || ch === NBSP_CHAR) {
+    return CharTypes.SPACE;
+  }
+  else if (ch === '_') {
+    return CharTypes.CHAR;
+  }
+  else if (/^\p{P}$/u.test(ch)) {
+    return CharTypes.PUNC;
+  }
+  else {
+    return CharTypes.CHAR;
+  }
+}
+
+/**
  * Returns whether point has character or not.
  *
  * @param {Point} point
  * @return {Boolean}
  */
 function isCharPoint(point) {
-  if (!isText(point.node)) {
-    return false;
-  }
-
-  const ch = point.node.nodeValue.charAt(point.offset - 1);
-  return ch && (ch !== ' ' && ch !== NBSP_CHAR && !/^\p{P}$/u.test(ch));
+  return getCharType(point) == CharTypes.CHAR;
 }
 
 /**
- * returns whether point has space or not.
+ * Returns whether point has space or not.
  *
  * @param {Point} point
  * @return {Boolean}
  */
 function isSpacePoint(point) {
-  if (!isText(point.node)) {
-    return false;
-  }
-
-  const ch = point.node.nodeValue.charAt(point.offset - 1);
-  return ch === ' ' || ch === NBSP_CHAR;
+  return getCharType(point) == CharTypes.SPACE;
 }
 
 /**
@@ -1213,7 +1235,6 @@ function detachEvents($node, events) {
 
 /**
  * @method isCustomStyleTag
- *
  * assert if a node contains a "note-styletag" class,
  * which implies that's a custom-made style tag node
  *
@@ -1224,8 +1245,7 @@ function isCustomStyleTag(node) {
 }
 
 /**
- * @method setAttribute
- *
+ * @method setAttr
  * Sets an HTML attribute
  *
  * @param {any} an HTML DOM node or jQuery object
@@ -1233,7 +1253,7 @@ function isCustomStyleTag(node) {
  * @param {String} the attribute value. If null or undefined, attribute will be removed.
  * @return {Boolean}
  */
-function setAttribute(node, name, value) {
+function setAttr(node, name, value) {
   node = node?.length ? node[0] : node;
   if (node) {
     if (!!value)
@@ -1243,7 +1263,25 @@ function setAttribute(node, name, value) {
   }
 }
 
+/**
+ * @method getAttr
+ * Gets the value of an HTML attribute
+ *
+ * @param {any} an HTML DOM node or jQuery object
+ * @param {String} the attribute name
+ * @return {String|null}
+ */
+function getAttr(node, name) {
+  node = node?.length ? node[0] : node;
+  if (node) {
+    return node.getAttribute(name);
+  }
+
+  return null;
+}
+
 export default {
+  CharTypes,
   /** @property {String} NBSP_CHAR */
   NBSP_CHAR,
   /** @property {String} ZERO_WIDTH_NBSP_CHAR */
@@ -1309,6 +1347,7 @@ export default {
   isVisiblePoint,
   prevPointUntil,
   nextPointUntil,
+  getCharType,
   isCharPoint,
   isSpacePoint,
   walkPoint,
@@ -1343,5 +1382,6 @@ export default {
   attachEvents,
   detachEvents,
   isCustomStyleTag,
-  setAttribute
+  setAttr,
+  getAttr
 };
