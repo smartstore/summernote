@@ -11,7 +11,7 @@ export const FormatRegistry = (options) => {
 
   const register = (name, format) => {
     if (name) {
-      if (!func.isString(name)) {
+      if (!Type.isString(name)) {
         lists.each(name, (format, name) => {
           register(name, format);
         });
@@ -45,7 +45,7 @@ export const FormatRegistry = (options) => {
           }
 
           // Split classes if needed
-          if (func.isString(format.classes)) {
+          if (Type.isString(format.classes)) {
             format.classes = format.classes.split(/\s+/);
           }
         });

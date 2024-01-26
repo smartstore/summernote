@@ -1,11 +1,4 @@
-import $ from 'jquery';
-
-const WHITESPACE_PATTERN = /\s/;
-const HOST_PATTERN = /^(?!-)([a-zA-Z0-9-]{1,63}\.)+[a-zA-Z]{2,6}$/;
-const IP_PATTERN = /^(([01]?[0-9]?[0-9]|2([0-4][0-9]|5[0-5]))\.){3}([01]?[0-9]?[0-9]|2([0-4][0-9]|5[0-5]))$/;
-const PROTOCOL_PATTERN = /^[A-Za-z][A-Za-z0-9+-.]*\:[\/\/]?/;
-const MAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-const TEL_PATTERN = /^(\+?\d{1,3}[\s-]?)?(\d{1,4})[\s-]?(\d{1,4})[\s-]?(\d{1,4})$/;
+import _ from 'underscore';
 
 /**
  * @class core.func
@@ -15,29 +8,24 @@ const TEL_PATTERN = /^(\+?\d{1,3}[\s-]?)?(\d{1,4})[\s-]?(\d{1,4})[\s-]?(\d{1,4})
  * @singleton
  * @alternateClassName func
  */
-function eq(itemA) {
+const eq = (itemA) => {
   return function(itemB) {
     return itemA === itemB;
   };
 }
 
-function eq2(itemA, itemB) {
-  return itemA === itemB;
-}
+const eq2 = (itemA, itemB) =>
+  itemA === itemB;
 
-function peq2(propName) {
+const peq2 = (propName) => {
   return function(itemA, itemB) {
     return itemA[propName] === itemB[propName];
   };
 }
 
-function ok() {
-  return true;
-}
-
-function fail() {
-  return false;
-}
+const ok = () => true;
+const fail = () => false;
+const self = (a) => a;
 
 function not(f) {
   return function() {
@@ -45,14 +33,36 @@ function not(f) {
   };
 }
 
-function and(fA, fB) {
+function and() {
+  var args = arguments;
+  var len = args.length;
+
+  if (len === 0) return false;
   return function(item) {
-    return fA(item) && fB(item);
+    for (var i = 0; i < len; i++) {
+      if (!args[i](item)) {
+        return false;
+      }
+    }
+
+    return true;
   };
 }
 
-function self(a) {
-  return a;
+function or() {
+  var args = arguments;
+  var len = args.length;
+
+  if (len === 0) return false;
+  return function(item) {
+    for (var i = 0; i < len; i++) {
+      if (args[i](item)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
 }
 
 function invoke(obj, method) {
@@ -82,191 +92,52 @@ function uniqueId(prefix) {
 }
 
 /**
- * returns bnd (bounds) from rect
+ * Creates and returns a new debounced version of the passed function which will postpone its execution until after wait milliseconds 
+ * have elapsed since the last time it was invoked. Useful for implementing behavior that should only happen after the 
+ * input has stopped arriving. For example: rendering a preview of a Markdown comment, 
+ * recalculating a layout after the window has stopped being resized, and so on.
  *
- * - IE Compatibility Issue: http://goo.gl/sRLOAo
- * - Scroll Issue: http://goo.gl/sNjUc
+ * At the end of the wait interval, the function will be called with the arguments that were passed most recently to the debounced function.
  *
- * @param {Rect} rect
- * @return {Object} bounds
- * @return {Number} bounds.top
- * @return {Number} bounds.left
- * @return {Number} bounds.width
- * @return {Number} bounds.height
- */
-function rect2bnd(rect) {
-  const $document = $(document);
-  return {
-    top: rect.top + $document.scrollTop(),
-    left: rect.left + $document.scrollLeft(),
-    width: rect.right - rect.left,
-    height: rect.bottom - rect.top,
-  };
-}
-
-/**
- * returns a copy of the object where the keys have become the values and the values the keys.
- * @param {Object} obj
- * @return {Object}
- */
-function invertObject(obj) {
-  const inverted = {};
-  for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      inverted[obj[key]] = key;
-    }
-  }
-  return inverted;
-}
-
-/**
- * @param {String} namespace
- * @param {String} [prefix]
- * @return {String}
- */
-function namespaceToCamel(namespace, prefix) {
-  prefix = prefix || '';
-  return prefix + namespace.split('.').map(function(name) {
-    return name.substring(0, 1).toUpperCase() + name.substring(1);
-  }).join('');
-}
-
-/**
- * Returns a function, that, as long as it continues to be invoked, will not
- * be triggered. The function will be called after it stops being called for
- * N milliseconds. If `immediate` is passed, trigger the function on the
- * leading edge, instead of the trailing.
+ * Pass true for the immediate argument to cause debounce to trigger the function on the 
+ * leading instead of the trailing edge of the wait interval. 
+ * Useful in circumstances like preventing accidental double-clicks on a "submit" button from firing a second time.
  * @param {Function} func
  * @param {Number} wait
  * @param {Boolean} immediate
  * @return {Function}
  */
-function debounce(func, wait, immediate) {
-  let timeout;
-  return function() {
-    const context = this;
-    const args = arguments;
-    const later = () => {
-      timeout = null;
-      if (!immediate) {
-        func.apply(context, args);
-      }
-    };
-    const callNow = immediate && !timeout;
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-    if (callNow) {
-      func.apply(context, args);
-    }
-  };
-}
+const debounce = (func, wait, immediate) =>
+  _.debounce(func, wait, immediate);
+
+const delay = (func, wait, args) =>
+  _.delay(func, wait, args);
+
+const defer = (func, args) =>
+  _.defer(func, args);
 
 /**
- *
- * @param {String} str
- * @return {Boolean}
+ * Creates and returns a new, throttled version of the passed function, that, when invoked repeatedly, 
+ * will only actually call the original function at most once per every wait milliseconds.
+ * 
+ * By default, throttle will execute the function as soon as you call it for the first time, and, 
+ * if you call it again any number of times during the wait period, as soon as that period is over. 
+ * If you'd like to disable the leading-edge call, pass {leading: false}, and if you'd like to disable the execution on the trailing-edge, pass
+ * {trailing: false}
+ * @param {Function} func
+ * @param {Number} wait
+ * @param {Object|null} options
+ * @return {Function}
  */
-function hasWhiteSpace(str) {
-  return str && WHITESPACE_PATTERN.test(str);
-}
-
-/**
- * @param {String} host
- * @return {Boolean}
- */
-function isValidHost(host) {
-  return host && (HOST_PATTERN.test(host) || IP_PATTERN.test(host));
-}
-
-/**
- * @param {String} email
- * @return {Boolean}
- */
-function isValidEmail(email) {
-  return email && MAIL_PATTERN.test(email);
-}
-
-/**
- * @param {String} tel
- * @return {Boolean}
- */
-function isValidTel(tel) {
-  return tel && TEL_PATTERN.test(tel);
-}
-
-/**
- * @param {String} url
- * @return {Boolean}
- */
-function startsWithUrlScheme(url) {
-  return url && PROTOCOL_PATTERN.test(url);
-}
-
-/**
- * @param {String} url
- * @return {Boolean}
- */
-function isValidUrl(url) {
-  return url && (PROTOCOL_PATTERN.test(url) || isValidHost(url));
-}
-
-/**
- * Check if test matches strOrPattern  
- * @param {String|RegExp} strOrPattern
- * @param {String} test
- * @return {boolean}
- */
-function matches(strOrPattern, test) {
-  return strOrPattern instanceof RegExp ? strOrPattern.test(test) : strOrPattern == test;
-}
+const throttle = (func, wait, options) =>
+  _.throttle(func, wait, options);
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-function isNumber(val) {
-  return typeof val === 'number';
-}
-
-function isString(val) {
-  return typeof val === 'string';
-}
-
 function constant(val) {
   return () => val;
-}
-
-const checkRange = (str, substr, start) =>
-  substr === '' || str.length >= substr.length && str.substr(start, start + substr.length) === substr;
-
-function startsWith(str, prefix) {
-  return checkRange(str, prefix, 0);
-}
-
-function endsWith(str, suffix) {
-  return checkRange(str, suffix, str.length - suffix.length);
-}
-
-function valueOrDefault(value, def) {
-  return value === undefined || value === null ? def : value;
-}
-
-const whiteSpaceRegExp = /^[ \t\r\n]*$/;
-function isWhitespaceText(text) {
-  return whiteSpaceRegExp.test(text);
-}
-
-/**
- * Checksa whether given object has a particular property.
- * @param {Object} obj - Object to check
- * @param {String} propName - Property name to check.
- */
-function has(obj, propName) {
-  return obj && obj.hasOwnProperty(propName);
-}
-
-function isFunction(value) {
-  return typeof value === 'function';
 }
 
 export default {
@@ -278,28 +149,14 @@ export default {
   self,
   not,
   and,
+  or,
   invoke,
   resetUniqueId,
   uniqueId,
-  rect2bnd,
-  invertObject,
-  namespaceToCamel,
   debounce,
-  isValidHost,
-  isValidEmail,
-  isValidTel,
-  startsWithUrlScheme,
-  isValidUrl,
-  hasWhiteSpace,
-  matches,
+  delay,
+  defer,
+  throttle,
   clamp,
-  isNumber,
-  isString,
   constant,
-  startsWith,
-  endsWith,
-  valueOrDefault,
-  isWhitespaceText,
-  has,
-  isFunction
 };

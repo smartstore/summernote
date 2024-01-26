@@ -1,3 +1,6 @@
+import Type from '../core/Type';
+import Str from '../core/Str';
+import Obj from '../core/Obj';
 import func from '../core/func';
 import lists from '../core/lists';
 import dom from '../core/dom';
@@ -22,7 +25,7 @@ const isElementDirectlySelected = (node) => {
 };
 
 const isBlockFormat = (format) =>
-  func.isString(format.block);
+  Type.isString(format.block);
 
 const isWrappingBlockFormat = (format) =>
   isBlockFormat(format) && format.wrapper === true;
@@ -31,13 +34,13 @@ const isNonWrappingBlockFormat = (format) =>
   isBlockFormat(format) && format.wrapper !== true;
 
 const isSelectorFormat = (format) =>
-  func.isString(format.selector);
+  Type.isString(format.selector);
 
 const isInlineFormat = (format) =>
-  func.isString(format.inline);
+  Type.isString(format.inline);
 
 const isMixedFormat = (format) =>
-  isSelectorFormat(format) && isInlineFormat(format) && func.valueOrDefault(format.mixed, true);
+  isSelectorFormat(format) && isInlineFormat(format) && Obj.valueOrDefault(format.mixed, true);
 
 const shouldExpandToSelector = (format) =>
   isSelectorFormat(format) && format.expand !== false && !isInlineFormat(format);
@@ -55,14 +58,14 @@ const isWhiteSpaceNode = (node, allowSpaces = false) => {
   if (node && dom.isText(node)) {
     // If spaces are allowed, treat them as a non-breaking space
     const data = allowSpaces ? node.data.replace(/ /g, '\u00a0') : node.data;
-    return func.isWhitespaceText(data);
+    return Str.isAllWhitespace(data);
   } else {
     return false;
   }
 };
 
 const replaceVars = (value, vars = null) => {
-  if (func.isFunction(value)) {
+  if (Type.isFunction(value)) {
     return value(vars);
   } else if (vars) {
     value = value.replace(/%(\w+)/g, (str, name) => {
@@ -105,7 +108,7 @@ const isFormatPredicate = (editor, formatName, pred) => {
 
 const isVariableFormatName = (editor, formatName) => {
   const hasVariableValues = format => {
-    const isVariableValue = val => func.isFunction(val) || val.length > 1 && val.charAt(0) === '%';
+    const isVariableValue = val => Type.isFunction(val) || val.length > 1 && val.charAt(0) === '%';
     return lists.exists(['styles', 'attributes'], key => format[key].exists(field => {
       const fieldValues = Array.isArray(field) ? field : values(field);
       return lists.exists(fieldValues, isVariableValue);

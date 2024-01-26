@@ -1,9 +1,12 @@
 import $ from 'jquery';
+import Type from './Type';
+import Str from './Str';
+import Obj from './Obj';
 import func from './func';
 import lists from './lists';
 
 const mapCache = {};
-const makeMap = lists.makeMap, each = lists.each, explode = lists.explode;
+const makeMap = lists.makeMap, each = lists.each, explode = Str.explode;
 
 const elements = {};
 const children = {};
@@ -19,7 +22,7 @@ const createMap = (defaultValue, extendWith) => {
 const compileElementMap = (value, mode) => {
   if (value) {
     const styles = {};
-    if (func.isString(value)) {
+    if (Type.isString(value)) {
       value = { '*': value };
     }
     each(value, (value, key) => {
@@ -56,6 +59,7 @@ const nonEmptyElementsMap = createLookupTable('non_empty_elements', nonEmptyOrMo
 const moveCaretBeforeOnEnterElementsMap = createLookupTable('move_caret_before_on_enter_elements', nonEmptyOrMoveCaretBeforeOnEnter + ' table', voidElementsMap);
 
 const headings = 'h1 h2 h3 h4 h5 h6';
+const headingElementsMap = createLookupTable('heading_elements', headings);
 const textBlockElementsMap = createLookupTable('text_block_elements', headings + ' p div address pre form ' +
   'blockquote center dir fieldset header footer article section hgroup aside main nav figure');
 const blockElementsMap = createLookupTable('block_elements', 'hr table tbody thead tfoot ' +
@@ -74,6 +78,10 @@ each(('script noscript iframe noframes noembed title style textarea xmp plaintex
   specialElements[name] = new RegExp('<\/' + name + '[^>]*>', 'gi');
 });
 
+/**
+ * Returns a map with heading elements.
+ */
+const getHeadingElements = func.constant(headingElementsMap);
 /**
  * Returns a map with block elements.
  */
@@ -154,15 +162,16 @@ const isValid = (name, attr = null) => {
   return true;
 }
 
-const isBlock = (name) => func.has(blockElementsMap, name);
+const isBlock = (name) => Obj.has(blockElementsMap, name);
 
 // Check if name starts with # to detect non-element node names like #text and #comment
-const isInline = (name) => !func.startsWith(name, '#') && isValid(name) && !isBlock(name);
+const isInline = (name) => !Str.startsWith(name, '#') && isValid(name) && !isBlock(name);
 
-const isWrapper = (name) => func.has(wrapBlockElementsMap, name) || isInline(name);
-const isVoid = (name) => func.has(voidElementsMap, name);
+const isWrapper = (name) => Obj.has(wrapBlockElementsMap, name) || isInline(name);
+const isVoid = (name) => Obj.has(voidElementsMap, name);
 
 export default {
+  getHeadingElements,
   getBlockElements,
   getVoidElements,
   getTextBlockElements,

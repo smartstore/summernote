@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import Str from '../core/Str';
 import env from '../core/env';
 import key from '../core/key';
 import func from '../core/func';
@@ -27,7 +28,7 @@ export default class Editor {
     this.$editable = context.layoutInfo.editable;
     this.options = context.options;
     this.lang = this.options.langInfo;
-
+    
     this.editable = this.$editable[0];
     this.lastRange = null;
     this.snapshot = null;
@@ -582,13 +583,13 @@ export default class Editor {
     url = url?.trim();
 
     if (url) {
-      if (func.isValidEmail(url)) {
+      if (Str.isValidEmail(url)) {
         return 'mailto://' + url;
       } 
-      else if (func.isValidTel(url)) {
+      else if (Str.isValidTel(url)) {
         return 'tel://' + url;
       } 
-      else if (!func.startsWithUrlScheme(url)) {
+      else if (!Str.startsWithUrlScheme(url)) {
         // Grab only first part
         let url2 = url;
         let slashIndex = url2.indexOf('/');
@@ -596,7 +597,7 @@ export default class Editor {
           url2 = url2.substring(0, slashIndex);
         }
 
-        if (func.isValidHost(url2)) {
+        if (Str.isValidHost(url2)) {
           return 'https://' + url;
         }
         else {

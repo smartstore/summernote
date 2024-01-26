@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import Str from './core/Str';
 import func from './core/func';
 import lists from './core/lists';
 import dom from './core/dom';
@@ -137,7 +138,7 @@ export default class Context {
     const namespace = lists.head(arguments);
     const args = lists.tail(lists.from(arguments));
 
-    const callback = this.options.callbacks[func.namespaceToCamel(namespace, 'on')];
+    const callback = this.options.callbacks[Str.namespaceToCamel(namespace, 'on')];
     if (callback) {
       callback.apply(this.$note[0], args);
     }

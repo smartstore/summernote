@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import Str from '../core/Str';
 import env from '../core/env';
 import key from '../core/key';
 import func from '../core/func';
@@ -109,7 +110,7 @@ export default class LinkDialog {
         this.context.triggerEvent('dialog.shown');
 
         // If no url was given and given text is valid URL then copy that into URL Field
-        if (!linkInfo.url && func.isValidUrl(linkInfo.text)) {
+        if (!linkInfo.url && Str.isValidUrl(linkInfo.text)) {
           linkInfo.url = this.checkLinkUrl(linkInfo.text);
         }
 

@@ -1,7 +1,6 @@
 import $ from 'jquery';
+import Str from '../core/Str';
 import func from '../core/func';
-import lists from '../core/lists';
-import range from '../core/range';
 import dom from '../core/dom';
 
 const matchNode = (command, node) => {
@@ -25,7 +24,7 @@ const matchNode = (command, node) => {
       const value = node.style.getPropertyValue(command.style);
       if (value) {
         if (command.styleMatch) {
-          if (func.matches(command.styleMatch, value)) {
+          if (Str.matches(command.styleMatch, value)) {
             result.styleMatch = value;
           }
         }
@@ -51,7 +50,7 @@ const matchNode = (command, node) => {
   
           // Enumerate all current node classes
           for (const value of node.classList.values()) {
-            if (func.matches(command.classMatch, value)) {
+            if (Str.matches(command.classMatch, value)) {
               // Add matched class to the result list
               classMatches.push(value);
     

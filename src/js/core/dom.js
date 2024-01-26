@@ -1,4 +1,7 @@
 import $ from 'jquery';
+import Type from './Type';
+import Obj from './Obj';
+import Str from './Str';
 import func from './func';
 import lists from './lists';
 import env from './env';
@@ -35,87 +38,166 @@ const beautifyOpts = {
   indent_empty_lines: false
 };
 
-function getRoot(node) {
-  return $(node).closest('note-editable')[0];
-}
+const getNode = (node) =>
+  Type.isJquery(node) ? node.get(0) : node;
 
-/**
- * @method isEditable
- *
- * returns whether node is `note-editable` or not.
- *
- * @param {Node} node
- * @return {Boolean}
- */
-function isEditable(node) {
-  return node && $(node).hasClass('note-editable');
-}
+const isNodeType = (type) => {
+  return (node) => !!node && node.nodeType === type;
+};
 
-/**
- * @method isControlSizing
- *
- * returns whether node is `note-control-sizing` or not.
- *
- * @param {Node} node
- * @return {Boolean}
- */
-function isControlSizing(node) {
-  return node && $(node).hasClass('note-control-sizing');
-}
+const matchNodeName = (name) => {
+  const upperCasedName = name.toUpperCase();
 
-/**
- * @method makePredByNodeName
- *
- * returns predicate which judge whether nodeName is same
- *
- * @param {String|Array} nodeName
- * @return {Function}
- */
-function makePredByNodeName(nodeName) {
-  nodeName = nodeName.toUpperCase();
-  if (typeof nodeName == "string") {
-    return function(node) {
-      return node && node.nodeName === nodeName;
-    };
+  return (node) =>
+    Type.isAssigned(node) && node.nodeName === upperCasedName;
+};
+
+const matchNodeNames = (names) => {
+  if (Type.isString(names)) {
+    names = Str.explode(names, ' ');
   }
-  else if (nodeName instanceof Array) {
-    return function(node) {
-      return node && lists.contains(nodeName, node.nodeName);
-    };
+
+  if (names.length === 0) {
+    return func.fail;
+  } else if (names.length == 1) {
+    return matchNodeName(names[0]);
   }
-}
 
-function isNode(node) {
-  return func.isNumber(node?.nodeType);
-}
+  const upperCasedNames = names.map((s) => s.toUpperCase());
 
-/**
- * @method isText
- *
- *
- *
- * @param {Node} node
- * @return {Boolean} true if node's type is text(3)
- */
-function isText(node) {
-  return node && node.nodeType === 3;
-}
+  return (node) => {
+    if (node && node.nodeName) {
+      return lists.contains(upperCasedNames, node.nodeName);
+    }
 
-/**
- * @method isElement
- *
- *
- *
- * @param {Node} node
- * @return {Boolean} true if node's type is element(1)
- */
-function isElement(node) {
-  return node && node.nodeType === 1;
-}
+    return false;
+  };
+};
 
-function isBookmarkNode(node) {
-  return node && isElement(node) && node.tagName === 'SPAN' && node.getAttribute('data-note-type') === 'bookmark';
-}
+const isInMap = (map) => {
+  return (node) =>
+    node && Obj.has(map, node.nodeName)
+};
+
+const isNode = node => Type.isNumber(node?.nodeType);
+const isElement = isNodeType(1);
+const isText = isNodeType(3);
+const isCData = isNodeType(4);
+const isPi = isNodeType(7);
+const isComment = isNodeType(8);
+const isDocument = isNodeType(9);
+const isDocumentFragment = isNodeType(11);
+const isSVGElement = node => isElement(node) && node.namespaceURI === 'http://www.w3.org/2000/svg';
+const isHTMLElement = func.and(isElement, func.not(isSVGElement));
+
+// Firefox can allow you to get a selection on a restricted node, such as file/number inputs. These nodes
+// won't implement the Object prototype, so Object.getPrototypeOf() will return null or something similar.
+const isRestrictedNode = (node) => !!node && !Object.getPrototypeOf(node);
+
+const isBody = matchNodeName('BODY');
+const isPre = matchNodeName('PRE');
+const isLi = matchNodeName('LI');
+const isTable = matchNodeName('TABLE');
+const isData = matchNodeName('DATA');
+const isHr = matchNodeName('HR');
+const isListItem = matchNodeName('LI');
+const isDetails = matchNodeName('DETAILS');
+const isSummary = matchNodeName('SUMMARY');
+const isBlockquote = matchNodeName('BLOCKQUOTE');
+const isAnchor = matchNodeName('A');
+const isDiv = matchNodeName('DIV');
+const isSpan = matchNodeName('SPAN');
+const isB = matchNodeName('B');
+const isBR = matchNodeName('BR');
+const isImg = matchNodeName('IMG');
+const isFigure = matchNodeName('FIGURE');
+const isTextarea = matchNodeName('TEXTAREA');
+
+const isTextareaOrInput = matchNodeNames(['TEXTAREA', 'INPUT', 'SELECT']);
+const isList = matchNodeNames(['UL', 'OL']);
+const isCell = matchNodeNames(['TD', 'TH']);
+const isCellOrCaption = matchNodeNames(['TD', 'TH', 'CAPTION']);
+const isMedia = matchNodeNames(['VIDEO', 'AUDIO', 'OBJECT', 'EMBED']);
+const isHeading = isInMap(schema.getHeadingElements());
+const isPara = (node) => !isEditable && Obj.has(schema.getTextBlockElements(), node.nodeName);
+const isPurePara = (node) => isPara(node) && !isLi(node);
+const isInline = (node) => schema.isInline(node.nodeName);
+const isBlock = (node) => !schema.isInline(node.nodeName);
+const isParaInline = (node) => isInline(node) && !!closest(node, isPara);
+const isBodyInline = (node) => isInline(node) && !closest(node, isPara);
+const isBodyContainer = (node) => isCell(node) || isBlockquote(node) || isEditable(node);
+
+const getComputedStyle = (node, name) => {
+  if (isElement(node)) {
+    const win = node.ownerDocument.defaultView;
+    if (win) {
+      const computed = win.getComputedStyle(node, null);
+      return computed ? computed.getPropertyValue(name) : null;
+    }
+  }
+  return null;
+};
+
+const matchStyleValues = (name, values) => {
+  const items = values.toLowerCase().split(' ');
+
+  return (node) => {
+    const styleValue = getComputedStyle(node, name);
+    return styleValue && lists.contains(items, styleValue);
+  };
+};
+
+const matchClass = (className) => {
+  return (node) => {
+    return node && $(node).hasClass(className);
+  };
+};
+
+const matchAttribute = (attrName) => {
+  return (node) => {
+    return isElement(node) && node.hasAttribute(attrName);
+  };
+};
+
+const matchAttributeValue = (attrName, attrValue) => {
+  return (node) => {
+    return isElement(node) && node.getAttribute(attrName) === attrValue;
+  };
+};
+
+const matchContentEditableState = (value) => {
+  return (node) => {
+    if (isHTMLElement(node)) {
+      if (node.contentEditable === value) {
+        return true;
+      }
+
+      if (node.getAttribute('data-note-contenteditable') === value) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+};
+
+const matchSelector = (selector, strict = false) => {
+  if (Type.isString(selector)) {
+    return selector.length ? (node) => node.matches && node.matches(selector) : (strict ? func.fail : func.ok);
+  } else if (Type.isFunction(selector)) {
+    return (node) => selector(node);
+  } else {
+    return strict ? func.fail : func.ok;
+  }
+};
+
+const isEditable = matchClass('note-editable');
+const isControlSizing = matchClass('note-control-sizing');
+const isBookmarkNode = func.and(matchAttributeValue('data-note-type', 'bookmark'), matchNodeName('SPAN'))
+const isVoid = (node) => node && schema.isVoid(node.nodeName);
+const isEmptyAnchor = func.and(isAnchor, isEmpty);
+
+const matches = (node, selector) => matchSelector(selector)(node);
 
 /**
  * @method Checks whether node is given tag
@@ -123,91 +205,15 @@ function isBookmarkNode(node) {
  * @param {Node} node
  * @param {String|Array} tagName - Either a single tag as string or an array of tag names to check
  */
-function isTag(node, tagName) {
-  if (node) {
-    if (typeof tagName == "string") {
-      return tagName.toUpperCase() == node.nodeName;
-    }
-    else if (tagName instanceof Array) {
-      return lists.contains(tagName, node.nodeName);
-    }
-  }
+const isTag = (node, tag) => matchNodeNames(tag)(node);
 
-  return false;
-}
-
-/**
- * ex) br, col, embed, hr, img, input, ...
- * @see http://www.w3.org/html/wg/drafts/html/master/syntax.html#void-elements
- */
-function isVoid(node) {
-  return node && schema.isVoid(node.nodeName);
-}
-
-function isPara(node) {
-  if (isEditable(node)) {
-    return false;
-  }
-
-  return node && func.has(schema.getTextBlockElements(), node.nodeName);
+function getRoot(node) {
+  return $(node).closest('.note-editable')[0];
 }
 
 function findPara(node) {
-  return this.ancestor(node, isPara);
+  return closest(node, isPara);
 }
-
-function isHeading(node) {
-  if (node?.nodeName?.length === 2 && node.nodeName[0] === 'H') {
-      const num = parseInt(node.nodeName[1]);
-      return num > 0 && num < 7;
-  }
-
-  return false;
-}
-
-const isPre = makePredByNodeName('PRE');
-
-const isLi = makePredByNodeName('LI');
-
-function isPurePara(node) {
-  return isPara(node) && !isLi(node);
-}
-
-const isTable = makePredByNodeName('TABLE');
-
-const isData = makePredByNodeName('DATA');
-
-function isInline(node) {
-  return schema.isInline(node.nodeName);
-}
-
-function isList(node) {
-  return node && isTag(node, ['UL', 'OL']);
-}
-
-const isHr = makePredByNodeName('HR');
-
-function isCell(node) {
-  return node && isTag(node, ['TD', 'TH']);
-}
-
-const isBlockquote = makePredByNodeName('BLOCKQUOTE');
-
-function isBodyContainer(node) {
-  return isCell(node) || isBlockquote(node) || isEditable(node);
-}
-
-const isAnchor = makePredByNodeName('A');
-
-function isParaInline(node) {
-  return isInline(node) && !!ancestor(node, isPara);
-}
-
-function isBodyInline(node) {
-  return isInline(node) && !ancestor(node, isPara);
-}
-
-const isBody = makePredByNodeName('BODY');
 
 /**
  * returns whether nodeB is closest sibling of nodeA
@@ -314,12 +320,14 @@ function paddingBlankHTML(node) {
 }
 
 /**
- * find nearest ancestor predicate hit
+ * Find closest parent that matches the given selector.
  *
  * @param {Node} node
- * @param {Function} pred - predicate function
+ * @param {Function|String} selector - Selector function or string.
  */
-function ancestor(node, pred) {
+const closest = (node, selector) => {
+  node = getNode(node);
+  const pred = matchSelector(selector);
   while (node) {
     if (pred(node)) { return node; }
     if (isEditable(node)) { break; }
@@ -349,30 +357,57 @@ function singleChildAncestor(node, pred) {
 }
 
 /**
- * returns new array of ancestor nodes (until predicate hit).
+ * Returns array of parent nodes (until selector hit).
  *
  * @param {Node} node
- * @param {Function} [optional] pred - predicate function
+ * @param {Function|String} [optional] selector - Selector function or string.
  */
-function listAncestor(node, pred) {
-  pred = pred || func.fail;
+const getParentsUntil = (node, selector) => {
+  const pred = matchSelector(selector, true);
+  const root = getRoot(node);
 
-  const ancestors = [];
-  ancestor(node, function(el) {
-    if (!isEditable(el)) {
-      ancestors.push(el);
+  const parents = [];
+  closest(node, (el) => {
+    if (el !== root) {
+      parents.push(el);
     }
-
     return pred(el);
   });
-  return ancestors;
+
+  return parents;
+}
+
+/**
+ * Returns array of parent nodes while selector hits until root.
+ *
+ * @param {Node} node
+ * @param {Function|String} [optional] selector - Selector function or string.
+ */
+const getParentsWhile = (node, selector) => {
+  const pred = matchSelector(selector);
+  const root = getRoot(node);
+
+  const parents = [];
+  closest(node, (el) => {
+    if (el == root) {
+      return false;
+    }
+
+    if (pred(el)) {
+      parents.push(el);
+    }
+
+    return true;
+  });
+
+  return parents;
 }
 
 /**
  * find farthest ancestor predicate hit
  */
 function lastAncestor(node, pred) {
-  const ancestors = listAncestor(node);
+  const ancestors = getParentsUntil(node);
   return lists.last(ancestors.filter(pred));
 }
 
@@ -383,7 +418,7 @@ function lastAncestor(node, pred) {
  * @param {Node} nodeB
  */
 function commonAncestor(nodeA, nodeB) {
-  const ancestors = listAncestor(nodeA);
+  const ancestors = getParentsUntil(nodeA);
   for (let n = nodeB; n; n = n.parentNode) {
     if (ancestors.indexOf(n) > -1) return n;
   }
@@ -888,7 +923,7 @@ function walkPoint(startPoint, endPoint, handler, isSkipInnerOffset) {
  * @param {Node} node
  */
 function makeOffsetPath(ancestor, node) {
-  const ancestors = listAncestor(node, func.eq(ancestor));
+  const ancestors = getParentsUntil(node, func.eq(ancestor));
   return ancestors.map(position).reverse();
 }
 
@@ -994,7 +1029,7 @@ function splitNode(point, options) {
  */
 function splitTree(root, point, options) {
   // ex) [#text, <span>, <p>]
-  let ancestors = listAncestor(point.node, func.eq(root));
+  let ancestors = getParentsUntil(point.node, func.eq(root));
 
   if (!ancestors.length) {
     return null;
@@ -1010,7 +1045,7 @@ function splitTree(root, point, options) {
         let textNode;
         if (nestSibling.nodeType == 1) {
             textNode = nestSibling.childNodes[0];
-            ancestors = listAncestor(textNode, func.eq(root));
+            ancestors = getParentsUntil(textNode, func.eq(root));
             point = {
                 node: textNode,
                 offset: 0,
@@ -1018,7 +1053,7 @@ function splitTree(root, point, options) {
         }
         else if (nestSibling.nodeType == 3 && !nestSibling.data.match(/[\n\r]/g)) {
             textNode = nestSibling;
-            ancestors = listAncestor(textNode, func.eq(root));
+            ancestors = getParentsUntil(textNode, func.eq(root));
             point = {
                 node: textNode,
                 offset: 0,
@@ -1050,7 +1085,7 @@ function splitPoint(point, isInline) {
   //  - inline: splitRoot is a child of paragraph
   //  - block: splitRoot is a child of bodyContainer
   const pred = isInline ? isPara : isBodyContainer;
-  const ancestors = listAncestor(point.node, pred);
+  const ancestors = getParentsUntil(point.node, pred);
   const topAncestor = lists.last(ancestors) || point.node;
 
   let splitRoot, container;
@@ -1164,8 +1199,6 @@ function replace(node, nodeName) {
   return newNode;
 }
 
-const isTextarea = makePredByNodeName('TEXTAREA');
-
 /**
  * @param {jQuery} $node
  * @param {Boolean} [stripLinebreaks] - default: false
@@ -1245,16 +1278,30 @@ function isCustomStyleTag(node) {
 }
 
 /**
- * @method setAttr
+ * Gets the value of an HTML attribute
+ *
+ * @param {any} node - an HTML DOM node or jQuery object
+ * @param {String} name - the attribute name
+ * @return {String|null}
+ */
+function getAttr(node, name) {
+  node = getNode(node);
+  if (node) {
+    return node.getAttribute(name);
+  }
+  return null;
+}
+
+/**
  * Sets an HTML attribute
  *
- * @param {any} an HTML DOM node or jQuery object
- * @param {String} the attribute name
- * @param {String} the attribute value. If null or undefined, attribute will be removed.
+ * @param {any} node - an HTML DOM node or jQuery object
+ * @param {String} name - the attribute name
+ * @param {String} value - the attribute value. If null or undefined, attribute will be removed.
  * @return {Boolean}
  */
 function setAttr(node, name, value) {
-  node = node?.length ? node[0] : node;
+  node = getNode(node);
   if (node) {
     if (!!value)
       node.setAttribute(name, value)
@@ -1264,21 +1311,35 @@ function setAttr(node, name, value) {
 }
 
 /**
- * @method getAttr
- * Gets the value of an HTML attribute
+ * Returns the current style or runtime/computed value of an element.
  *
- * @param {any} an HTML DOM node or jQuery object
- * @param {String} the attribute name
- * @return {String|null}
+ * @method getStyle
+ * @param {JQuery/Element} node HTML element or jQuery object to get style from.
+ * @param {String} name Style name to return.
+ * @param {Boolean} computed Get computed style?.
+ * @return {String} Current style or computed style value of an element.
  */
-function getAttr(node, name) {
-  node = node?.length ? node[0] : node;
-  if (node) {
-    return node.getAttribute(name);
+const getStyle = (node, name, computed = false) => {
+  if (computed) {
+    return getComputedStyle(getNode(node), Str.camelCaseToHyphens(name));
+  } else {
+    return $(node).css(name);
   }
+};
 
-  return null;
-}
+/**
+ * Sets the CSS style value on a HTML element. The name can be a camelcase string or the CSS style name like background-color.
+ */
+const setStyle = (node, name, value) => {
+  $(node).css(name, value);
+};
+
+/**
+ * Sets multiple styles on the specified element(s).
+ */
+const setStyles = (node, styleMap) => {
+  $(node).css(styleMap);
+};
 
 export default {
   CharTypes,
@@ -1291,13 +1352,23 @@ export default {
   /** @property {String} emptyPara */
   emptyPara: `<p>${blankHTML}</p>`,
   getRoot,
-  makePredByNodeName,
+  matchNodeNames,
+  matchStyleValues,
+  matches,
   isEditable,
   isControlSizing,
   isNode,
   isText,
   isElement,
   isBookmarkNode,
+  isCData,
+  isPi,
+  isComment,
+  isDocument,
+  isDocumentFragment,
+  isSVGElement,
+  isHTMLElement,
+  isRestrictedNode,
   isVoid,
   isTag,
   isPara,
@@ -1305,7 +1376,7 @@ export default {
   isPurePara,
   isHeading,
   isInline,
-  isBlock: func.not(isInline),
+  isBlock,
   isBodyInline,
   isBody,
   isParaInline,
@@ -1313,24 +1384,29 @@ export default {
   isList,
   isTable,
   isData,
+  isHr,
+  isListItem,
+  isDetails,
+  isSummary,
   isCell,
+  isCellOrCaption,
+  isMedia,
   isBlockquote,
   isBodyContainer,
   isAnchor,
-  isDiv: makePredByNodeName('DIV'),
+  isDiv,
   isLi,
-  isBR: makePredByNodeName('BR'),
-  isSpan: makePredByNodeName('SPAN'),
-  isB: makePredByNodeName('B'),
-  isU: makePredByNodeName('U'),
-  isS: makePredByNodeName('S'),
-  isI: makePredByNodeName('I'),
-  isImg: makePredByNodeName('IMG'),
+  isBR,
+  isSpan,
+  isB,
+  isImg,
+  isFigure,
   isTextarea,
-  deepestChildIsEmpty,
+  isTextareaOrInput,
   isEmpty,
-  isEmptyAnchor: func.and(isAnchor, isEmpty),
+  isEmptyAnchor,
   isClosestSibling,
+  deepestChildIsEmpty,
   withClosestSiblings,
   nodeLength,
   isLeftEdgePoint,
@@ -1351,9 +1427,12 @@ export default {
   isCharPoint,
   isSpacePoint,
   walkPoint,
-  ancestor,
+  closest,
+  ancestor: closest, // Alias
   singleChildAncestor,
-  listAncestor,
+  getParentsWhile,
+  getParentsUntil,
+  listAncestor: getParentsUntil, // Alias
   lastAncestor,
   listNext,
   listPrev,
@@ -1383,5 +1462,8 @@ export default {
   detachEvents,
   isCustomStyleTag,
   setAttr,
-  getAttr
+  getAttr,
+  getStyle,
+  setStyle,
+  setStyles
 };

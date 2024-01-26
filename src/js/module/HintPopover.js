@@ -1,9 +1,9 @@
 import $ from 'jquery';
-import func from '../core/func';
 import lists from '../core/lists';
 import dom from '../core/dom';
 import range from '../core/range';
 import key from '../core/key';
+import Convert from '../core/Convert';
 
 const POPOVER_DIST = 5;
 
@@ -232,7 +232,7 @@ export default class HintPopover {
       if (this.hints.length && keyword) {
         this.$content.empty();
 
-        const bnd = func.rect2bnd(lists.last(wordRange.getClientRects()));
+        const bnd = Convert.rect2bnd(lists.last(wordRange.getClientRects()));
         const containerOffset = $(this.options.container).offset();
         if (bnd) {
           bnd.top -= containerOffset.top;

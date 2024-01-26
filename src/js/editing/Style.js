@@ -83,7 +83,7 @@ export default class Style {
       return [rng.insertNode(dom.create(nodeName))];
     }
 
-    let pred = dom.makePredByNodeName(nodeName);
+    let pred = dom.matchNodeNames(nodeName);
     const nodes = rng.nodes(dom.isText, {
       fullyContains: true,
     }).map((text) => {

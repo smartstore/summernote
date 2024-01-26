@@ -2,6 +2,7 @@ import $ from 'jquery';
 import func from '../core/func';
 import lists from '../core/lists';
 import env from '../core/env';
+import Obj from '../core/Obj';
 
 export default class Buttons {
   constructor(context) {
@@ -10,7 +11,7 @@ export default class Buttons {
     this.$toolbar = context.layoutInfo.toolbar;
     this.options = context.options;
     this.lang = this.options.langInfo;
-    this.invertedKeyMap = func.invertObject(
+    this.invertedKeyMap = Obj.invert(
       this.options.keyMap[env.isMac ? 'mac' : 'pc']
     );
   }

@@ -26,7 +26,7 @@ export default class Bullet {
     const rng = range.create(editable).wrapBodyInlineWithPara();
     
     const paras = rng.nodes(dom.isPara, { includeAncestor: true });
-    const clustereds = lists.clusterBy(paras, func.peq2('parentNode'));
+    const clustereds = lists.clusterBy(paras, 'parentNode');
 
     $.each(clustereds, (idx, paras) => {
       const head = lists.head(paras);
@@ -64,7 +64,7 @@ export default class Bullet {
     const rng = range.create(editable).wrapBodyInlineWithPara();
 
     const paras = rng.nodes(dom.isPara, { includeAncestor: true });
-    const clustereds = lists.clusterBy(paras, func.peq2('parentNode'));
+    const clustereds = lists.clusterBy(paras, 'parentNode');
 
     $.each(clustereds, (idx, paras) => {
       const head = lists.head(paras);
@@ -93,7 +93,7 @@ export default class Bullet {
 
     let paras = rng.nodes(dom.isPara, { includeAncestor: true });
     const bookmark = rng.paraBookmark(paras);
-    const clustereds = lists.clusterBy(paras, func.peq2('parentNode'));
+    const clustereds = lists.clusterBy(paras, 'parentNode');
 
     // paragraph to list
     if (lists.find(paras, dom.isPurePara)) {

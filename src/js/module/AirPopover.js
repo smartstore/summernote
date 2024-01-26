@@ -1,6 +1,6 @@
 import $ from 'jquery';
 import lists from '../core/lists';
-import func from '../core/func';
+import Convert from '../core/Convert';
 
 const AIRMODE_POPOVER_X_OFFSET = -5;
 const AIRMODE_POPOVER_Y_OFFSET = 5;
@@ -34,7 +34,7 @@ export default class AirPopover {
           if (event.type == 'keyup') {
             let range = this.context.invoke('editor.getLastRange');
             let wordRange = range.getWordRange();
-            const bnd = func.rect2bnd(lists.last(wordRange.getClientRects()));
+            const bnd = Convert.rect2bnd(lists.last(wordRange.getClientRects()));
             this.pageX = bnd.left;
             this.pageY = bnd.top;
           } else {

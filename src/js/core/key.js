@@ -1,5 +1,6 @@
 import lists from './lists';
 import func from './func';
+import Obj from './Obj';
 
 const KEY_MAP = {
   'BACKSPACE': 8,
@@ -120,6 +121,6 @@ export default {
    * @property {Object} nameFromCode
    * @property {String} nameFromCode.8 "BACKSPACE"
    */
-  nameFromCode: func.invertObject(KEY_MAP),
+  nameFromCode: Obj.invert(KEY_MAP),
   code: KEY_MAP,
 };
