@@ -1,6 +1,9 @@
 import $ from 'jquery';
+import Obj from '../core/Obj';
+import schema from '../core/schema';
 import dom from '../core/dom';
 import range from '../core/range';
+import Point from '../core/Point';
 import Bullet from '../editing/Bullet';
 
 /**
@@ -23,7 +26,7 @@ export default class Typing {
    * @param {Number} tabsize
    */
   insertTab(rng, tabsize) {
-    const tab = dom.createText(new Array(tabsize + 1).join(dom.NBSP_CHAR));
+    const tab = dom.createText(new Array(tabsize + 1).join(Point.NBSP_CHAR));
     rng = rng.deleteContents();
     rng.insertNode(tab, true);
 
@@ -52,7 +55,7 @@ export default class Typing {
     rng = rng.wrapBodyInlineWithPara();
 
     // finding paragraph
-    const splitRoot = dom.ancestor(rng.sc, dom.isPara);
+    const splitRoot = dom.closest(rng.sc, dom.isPara);
 
     let nextPara;
     // on paragraph: split paragraph
@@ -68,7 +71,7 @@ export default class Typing {
         if (this.options.blockquoteBreakingLevel === 1) {
           blockquote = dom.ancestor(splitRoot, dom.isBlockquote);
         } else if (this.options.blockquoteBreakingLevel === 2) {
-          blockquote = dom.lastAncestor(splitRoot, dom.isBlockquote);
+          blockquote = dom.farthestParent(splitRoot, dom.isBlockquote);
         }
 
         if (blockquote) {
@@ -76,10 +79,10 @@ export default class Typing {
           nextPara = $(dom.emptyPara)[0];
           // If the split is right before a <br>, remove it so that there's no "empty line"
           // after the split in the new blockquote created
-          if (dom.isRightEdgePoint(rng.getStartPoint()) && dom.isBR(rng.sc.nextSibling)) {
+          if (Point.isRightEdgePoint(rng.getStartPoint()) && dom.isBR(rng.sc.nextSibling)) {
             $(rng.sc.nextSibling).remove();
           }
-          const split = dom.splitTree(blockquote, rng.getStartPoint(), { isDiscardEmptySplits: true });
+          const split = Point.splitTree(blockquote, rng.getStartPoint(), { isDiscardEmptySplits: true });
           if (split) {
             split.parentNode.insertBefore(nextPara, split);
           } 
@@ -88,11 +91,11 @@ export default class Typing {
           }
         }
         else {
-          nextPara = dom.splitTree(splitRoot, rng.getStartPoint());
+          nextPara = Point.splitTree(splitRoot, rng.getStartPoint());
 
           // not a blockquote, just insert the paragraph
-          let emptyAnchors = dom.listDescendant(splitRoot, dom.isEmptyAnchor);
-          emptyAnchors = emptyAnchors.concat(dom.listDescendant(nextPara, dom.isEmptyAnchor));
+          let emptyAnchors = dom.children(splitRoot, dom.isEmptyAnchor);
+          emptyAnchors = emptyAnchors.concat(dom.children(nextPara, dom.isEmptyAnchor));
 
           $.each(emptyAnchors, (idx, anchor) => {
             dom.remove(anchor);

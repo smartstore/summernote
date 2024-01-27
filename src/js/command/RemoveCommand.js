@@ -6,7 +6,6 @@ import dom from '../core/dom';
 import MatchCommand from './MatchCommand';
 
 const processNode = (node) => {
-  console.log('processNode', node);
   if (dom.isText(node)) {
     return dom.unwrap(node);
   }
@@ -27,7 +26,7 @@ const remove = (command, rng, match, variant = null) => {
   rng = rng.splitText();
 
   const nodes = rng.nodes(dom.isText, { fullyContains: true }).map((textNode) => {
-    const singleAncestor = dom.singleChildAncestor(textNode, pred);
+    const singleAncestor = dom.closestSingleParent(textNode, pred);
     if (singleAncestor) {
       return dom.unwrap(textNode);
     }

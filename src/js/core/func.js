@@ -33,14 +33,13 @@ function not(f) {
   };
 }
 
-function and() {
-  var args = arguments;
-  var len = args.length;
-
+function and(...functions) {
+  const funcs = functions;
+  const len = funcs.length;
   if (len === 0) return false;
   return function(item) {
     for (var i = 0; i < len; i++) {
-      if (!args[i](item)) {
+      if (funcs[i] && !funcs[i](item)) {
         return false;
       }
     }
@@ -49,14 +48,13 @@ function and() {
   };
 }
 
-function or() {
-  var args = arguments;
-  var len = args.length;
-
+function or(...functions) {
+  const funcs = functions;
+  const len = funcs.length;
   if (len === 0) return false;
   return function(item) {
     for (var i = 0; i < len; i++) {
-      if (args[i](item)) {
+      if (funcs[i] && funcs[i](item)) {
         return true;
       }
     }

@@ -104,7 +104,7 @@ const apply = (command, rng, variant = null) => {
   return;
 
   const nodes = rng.nodes(dom.isText, { fullyContains: true }).map((textNode) => {
-    const singleAncestor = dom.singleChildAncestor(textNode, pred);
+    const singleAncestor = dom.closestSingleParent(textNode, pred);
     if (singleAncestor) {
       //console.log(singleAncestor);
       return singleAncestor;

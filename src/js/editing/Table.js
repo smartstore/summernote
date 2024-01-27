@@ -291,7 +291,7 @@ export default class Table {
   tab(rng, isShift) {
     const cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
     const table = dom.ancestor(cell, dom.isTable);
-    const cells = dom.listDescendant(table, dom.isCell);
+    const cells = dom.children(table, dom.isCell);
 
     const nextCell = lists[isShift ? 'prev' : 'next'](cells, cell);
     if (nextCell) {

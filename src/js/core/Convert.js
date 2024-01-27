@@ -23,6 +23,12 @@ function rect2bnd(rect) {
   };
 }
 
+const rgbaToHexString = (rgba) => {
+  // TODO: Implement Convert.rgbaToHexString()
+  return rgba;
+}
+
 export default {
-  rect2bnd
+  rect2bnd,
+  rgbaToHexString
 };

@@ -161,6 +161,24 @@ const each = (list, callback, scope = null) =>
   _.each(list, callback, scope);
 
   /**
+   * Boils down a list of values into a single value.
+   * Memo is the initial state of the reduction, and each successive step of it should be returned by iteratee. 
+   * The iteratee is passed four arguments: the memo, then the value and index (or key) of the iteration, 
+   * and finally a reference to the entire list.
+   * 
+   * If no memo is passed to the initial invocation of reduce, the iteratee is not invoked 
+   * on the first element of the list. The first element is instead passed as the memo 
+   * in the invocation of the iteratee on the next element in the list.
+   * @method foldl
+   * @param {Array|Object} list Array or collection to iterate over.
+   * @param {Function} callback Callback function to execute for each item.
+   * @param {any} [memo] - Optional memo.
+   * @param {Object} [scope] - Optional scope to execute the callback in.
+   */
+  const foldl = (list, callback, memo, scope) =>
+  _.foldl(list, callback, memo, scope);
+
+  /**
    * Produces a new array of values by mapping each value in list through a transformation function (transformer). 
    * The iteratee is passed three arguments: the value, then the index (or key) of the iteration, and finally a reference to the entire list.
    *
@@ -220,6 +238,8 @@ export default {
   compact,
   unique,
   each,
+  foldl,
   map,
-  makeMap
+  makeMap,
+  isArrayLike
 };

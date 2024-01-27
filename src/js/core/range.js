@@ -2,6 +2,7 @@ import $ from 'jquery';
 import func from './func';
 import lists from './lists';
 import dom from './dom';
+import Point from './Point';
 
 /**
    * Wrapped Range
@@ -20,7 +21,7 @@ class WrappedRange {
     this.eo = eo;
 
     // isOnEditable: judge whether range is on editable or not
-    this.isOnEditable = this.makeIsOn(dom.isEditable);
+    this.isOnEditable = this.makeIsOn(dom.isEditableRoot);
     // isOnList: judge whether range is on list node or not
     this.isOnList = this.makeIsOn(dom.isList);
     // isOnAnchor: judge whether range is on anchor node or not
@@ -129,15 +130,15 @@ class WrappedRange {
     }
 
     // Find common ancestor and end points
-    const ancestor = dom.commonAncestor(startContainer, endContainer) || dom.getRoot(startContainer);
+    const ancestor = dom.commonParent(startContainer, endContainer) || dom.getEditableRoot(startContainer);
 
     // Process left side
-    if (dom.isDescendantOf(startContainer, endContainer)) {
+    if (dom.isChildOf(startContainer, endContainer)) {
       return walkBoundary(startContainer, ancestor, true);
     }
 
     // Process right side
-    if (dom.isDescendantOf(endContainer, startContainer)) {
+    if (dom.isChildOf(endContainer, startContainer)) {
       return walkBoundary(endContainer, ancestor);
     }
 
@@ -215,12 +216,12 @@ class WrappedRange {
       //  - case 04. if the point is on the right edge and prefer to choose right node but the node is void
       //  - case 05. if the point is on the left edge and prefer to choose left node but the node is void
       //  - case 06. if the point is on the block node and there is no children
-      if (dom.isVisiblePoint(point)) {
-        if (!dom.isEdgePoint(point) ||
-            (dom.isRightEdgePoint(point) && !isLeftToRight) ||
-            (dom.isLeftEdgePoint(point) && isLeftToRight) ||
-            (dom.isRightEdgePoint(point) && isLeftToRight && dom.isVoid(point.node.nextSibling)) ||
-            (dom.isLeftEdgePoint(point) && !isLeftToRight && dom.isVoid(point.node.previousSibling)) ||
+      if (Point.isVisiblePoint(point)) {
+        if (!Point.isEdgePoint(point) ||
+            (Point.isRightEdgePoint(point) && !isLeftToRight) ||
+            (Point.isLeftEdgePoint(point) && isLeftToRight) ||
+            (Point.isRightEdgePoint(point) && isLeftToRight && dom.isVoid(point.node.nextSibling)) ||
+            (Point.isLeftEdgePoint(point) && !isLeftToRight && dom.isVoid(point.node.previousSibling)) ||
             (dom.isBlock(point.node) && dom.isEmpty(point.node))) {
           return point;
         }
@@ -231,27 +232,27 @@ class WrappedRange {
       let hasRightNode = false;
 
       if (!hasRightNode) {
-        const prevPoint = dom.prevPoint(point) || { node: null };
-        hasRightNode = (dom.isLeftEdgePointOf(point, block) || dom.isVoid(prevPoint.node)) && !isLeftToRight;
+        const prevPoint = Point.prevPoint(point) || { node: null };
+        hasRightNode = (Point.isLeftEdgePointOf(point, block) || dom.isVoid(prevPoint.node)) && !isLeftToRight;
       }
 
       let hasLeftNode = false;
       if (!hasLeftNode) {
-        const nextPoint = dom.nextPoint(point) || { node: null };
-        hasLeftNode = (dom.isRightEdgePointOf(point, block) || dom.isVoid(nextPoint.node)) && isLeftToRight;
+        const nextPoint = Point.nextPoint(point) || { node: null };
+        hasLeftNode = (Point.isRightEdgePointOf(point, block) || dom.isVoid(nextPoint.node)) && isLeftToRight;
       }
 
       if (hasRightNode || hasLeftNode) {
         // returns point already on visible point
-        if (dom.isVisiblePoint(point)) {
+        if (Point.isVisiblePoint(point)) {
           return point;
         }
         // reverse direction
         isLeftToRight = !isLeftToRight;
       }
 
-      const nextPoint = isLeftToRight ? dom.nextPointUntil(dom.nextPoint(point), dom.isVisiblePoint)
-        : dom.prevPointUntil(dom.prevPoint(point), dom.isVisiblePoint);
+      const nextPoint = isLeftToRight ? Point.nextPointUntil(Point.nextPoint(point), Point.isVisiblePoint)
+        : Point.prevPointUntil(Point.prevPoint(point), Point.isVisiblePoint);
       return nextPoint || point;
     };
 
@@ -288,17 +289,17 @@ class WrappedRange {
     const nodes = [];
     const leftEdgeNodes = [];
 
-    dom.walkPoint(startPoint, endPoint, function(point) {
-      if (dom.isEditable(point.node)) {
+    Point.walkPoint(startPoint, endPoint, function(point) {
+      if (dom.isEditableRoot(point.node)) {
         return;
       }
 
       let node;
       if (fullyContains) {
-        if (dom.isLeftEdgePoint(point)) {
+        if (Point.isLeftEdgePoint(point)) {
           leftEdgeNodes.push(point.node);
         }
-        if (dom.isRightEdgePoint(point) && lists.contains(leftEdgeNodes, point.node)) {
+        if (Point.isRightEdgePoint(point) && lists.contains(leftEdgeNodes, point.node)) {
           node = point.node;
         }
       } else if (includeAncestor) {
@@ -376,11 +377,11 @@ class WrappedRange {
     const isSameContainer = this.sc === this.ec;
     const boundaryPoints = this.getPoints();
 
-    if (dom.isText(this.ec) && !dom.isEdgePoint(this.getEndPoint())) {
+    if (dom.isText(this.ec) && !Point.isEdgePoint(this.getEndPoint())) {
       this.ec.splitText(this.eo);
     }
 
-    if (dom.isText(this.sc) && !dom.isEdgePoint(this.getStartPoint())) {
+    if (dom.isText(this.sc) && !Point.isEdgePoint(this.getStartPoint())) {
       boundaryPoints.sc = this.sc.splitText(this.so);
       boundaryPoints.so = 0;
 
@@ -413,7 +414,7 @@ class WrappedRange {
     });
 
     // find new cursor point
-    const point = dom.prevPointUntil(rng.getStartPoint(), function(point) {
+    const point = Point.prevPointUntil(rng.getStartPoint(), function(point) {
       return !lists.contains(nodes, point.node);
     });
 
@@ -455,7 +456,7 @@ class WrappedRange {
    * @return {Boolean}
    */
   isLeftEdgeOf(pred) {
-    if (!dom.isLeftEdgePoint(this.getStartPoint())) {
+    if (!Point.isLeftEdgePoint(this.getStartPoint())) {
       return false;
     }
 
@@ -501,7 +502,7 @@ class WrappedRange {
     // find inline top ancestor
     let topAncestor;
     if (dom.isInline(rng.sc)) {
-      const ancestors = dom.listAncestor(rng.sc, func.not(dom.isInline));
+      const ancestors = dom.parents(rng.sc, func.not(dom.isInline));
       topAncestor = lists.last(ancestors);
       if (!dom.isInline(topAncestor)) {
         topAncestor = ancestors[ancestors.length - 2] || rng.sc.childNodes[rng.so];
@@ -512,8 +513,8 @@ class WrappedRange {
 
     if (topAncestor) {
       // siblings not in paragraph
-      let inlineSiblings = dom.listPrev(topAncestor, dom.isParaInline).reverse();
-      inlineSiblings = inlineSiblings.concat(dom.listNext(topAncestor.nextSibling, dom.isParaInline));
+      let inlineSiblings = dom.prevSiblings(topAncestor, dom.isParaInline).reverse();
+      inlineSiblings = inlineSiblings.concat(dom.nextSiblings(topAncestor.nextSibling, dom.isParaInline));
 
       // wrap with paragraph
       if (inlineSiblings.length) {
@@ -539,7 +540,7 @@ class WrappedRange {
       rng = this.wrapBodyInlineWithPara().deleteContents();
     }
 
-    const info = dom.splitPoint(rng.getStartPoint(), dom.isInline(node));
+    const info = Point.splitPoint(rng.getStartPoint(), dom.isInline(node));
     if (info.rightNode) {
       info.rightNode.parentNode.insertBefore(node, info.rightNode);
       if (dom.isEmpty(info.rightNode) && (doNotInsertPara || dom.isPara(node))) {
@@ -600,17 +601,17 @@ class WrappedRange {
     let endPoint = this.getEndPoint();
     const endOffset = endPoint.offset;
     
-    if (!dom.isCharPoint(endPoint)) {
+    if (!Point.isCharPoint(endPoint)) {
       return this;
     }
 
-    const startPoint = dom.prevPointUntil(endPoint, function(point) {
-      return !dom.isCharPoint(point);
+    const startPoint = Point.prevPointUntil(endPoint, function(point) {
+      return !Point.isCharPoint(point);
     });
 
     if (findAfter) {
-      endPoint = dom.nextPointUntil(endPoint, function(point) {
-        return !dom.isCharPoint(point);
+      endPoint = Point.nextPointUntil(endPoint, function(point) {
+        return !Point.isCharPoint(point);
       });
     }
 
@@ -632,17 +633,17 @@ class WrappedRange {
     var endPoint = this.getEndPoint();
 
     var isNotTextPoint = function(point) {
-      return !dom.isCharPoint(point) && !dom.isSpacePoint(point);
+      return !Point.isCharPoint(point) && !Point.isSpacePoint(point);
     };
 
     if (isNotTextPoint(endPoint)) {
       return this;
     }
 
-    var startPoint = dom.prevPointUntil(endPoint, isNotTextPoint);
+    var startPoint = Point.prevPointUntil(endPoint, isNotTextPoint);
 
     if (findAfter) {
-      endPoint = dom.nextPointUntil(endPoint, isNotTextPoint);
+      endPoint = Point.nextPointUntil(endPoint, isNotTextPoint);
     }
 
     return new WrappedRange(
@@ -667,8 +668,8 @@ class WrappedRange {
   getWordsMatchRange(regex) {
     var endPoint = this.getEndPoint();
 
-    var startPoint = dom.prevPointUntil(endPoint, function(point) {
-      if (!dom.isCharPoint(point) && !dom.isSpacePoint(point)) {
+    var startPoint = Point.prevPointUntil(endPoint, function(point) {
+      if (!Point.isCharPoint(point) && !Point.isSpacePoint(point)) {
         return true;
       }
       var rng = new WrappedRange(
@@ -774,7 +775,7 @@ export default {
 
       if (!wrappedRange && arguments.length === 1) {
         let bodyElement = arguments[0];
-        if (dom.isEditable(bodyElement)) {
+        if (dom.isEditableRoot(bodyElement)) {
           bodyElement = bodyElement.lastChild;
         }
         return this.createFromBodyElement(bodyElement, dom.emptyPara === arguments[0].innerHTML);
@@ -826,14 +827,14 @@ export default {
 
     // browsers can't target a picture or void node
     if (dom.isVoid(sc)) {
-      so = dom.listPrev(sc).length - 1;
+      so = dom.prevSiblings(sc).length - 1;
       sc = sc.parentNode;
     }
     if (dom.isBR(ec)) {
-      eo = dom.listPrev(ec).length - 1;
+      eo = dom.prevSiblings(ec).length - 1;
       ec = ec.parentNode;
     } else if (dom.isVoid(ec)) {
-      eo = dom.listPrev(ec).length;
+      eo = dom.prevSiblings(ec).length;
       ec = ec.parentNode;
     }
 

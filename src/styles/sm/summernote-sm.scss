@@ -598,7 +598,7 @@ $img-margin-right: 10px;
 
 .note-toolbar {
   > .note-btn-group {
-    column-gap: 1px;
+    column-gap: 2px;
     border: 0 solid rgba($black, 0.12);
     border-inline-end-width: 1px;
     padding-inline-end: 5px;
@@ -614,6 +614,17 @@ $img-margin-right: 10px;
       // INFO: Must have high specificty, .btn-group will kill radius otherwise.
       border-radius: var(--btn-border-radius) !important;
       margin-inline-start: 0;
+
+      // Change color hover/active/pressed styling
+      --btn-active-bg: rgba(var(--primary-bg-subtle-rgb), 0.75);
+      --btn-active-color: var(--primary-text-emphasis);
+      --btn-active-border-color: transparent;
+      --btn-active-shadow: none;
+
+      &:active {
+        --btn-active-bg: var(--primary-bg-subtle);
+        --btn-active-border-color: rgba(var(--primary-rgb), 0.3);
+      }
     }
   }
   .scrollable-menu {

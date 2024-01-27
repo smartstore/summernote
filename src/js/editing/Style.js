@@ -4,8 +4,9 @@ import lists from '../core/lists';
 import dom from '../core/dom';
 
 export default class Style {
-  constructor(context, commandController) {
+  constructor(context, formatter, commandController) {
     this.options = context.options;
+    this.formatter = formatter;
     this.commandController = commandController;
   }
 
@@ -87,7 +88,7 @@ export default class Style {
     const nodes = rng.nodes(dom.isText, {
       fullyContains: true,
     }).map((text) => {
-      return dom.singleChildAncestor(text, pred) || dom.wrap(text, nodeName);
+      return dom.closestSingleParent(text, pred) || dom.wrap(text, nodeName);
     });
 
     if (expandClosestSibling) {
@@ -140,19 +141,24 @@ export default class Style {
       // eslint-disable-next-line
     }
 
-    const controller = this.commandController;
-    const node = rng.sc; // rng.commonAncestor(); 
-    const ancestors = dom.listAncestor(node/*, dom.isBlock*/);
-    styleInfo = $.extend(styleInfo, {
-      'font-bold': controller.matchRange('bold', rng, ancestors) ? 'bold' : 'normal',
-      'font-italic': controller.matchRange('italic', rng, ancestors) ? 'italic' : 'normal',
-      'font-underline': controller.matchRange('underline', rng, ancestors) ? 'underline' : 'normal',
-      'font-strikethrough': controller.matchRange('strikethrough', rng, ancestors) ? 'strikethrough' : 'normal',
-      'font-subscript': controller.matchRange('subscript', rng, ancestors) ? 'subscript' : 'normal',
-      'font-superscript': controller.matchRange('superscript', rng, ancestors) ? 'superscript' : 'normal',
-      'font-code': controller.matchRange('code', rng, ancestors) ? 'code' : 'normal',
-      'font-family': controller.matchRange('fontname', rng, ancestors)?.styleMatch
-    });
+    const formatter = this.formatter;
+    const formats = ['bold', 'italic', 'underline']; // Object.keys(formatter.formats.get());
+    const matches = formatter.matchAll(formats);
+    console.log(matches);
+    
+    // const controller = this.commandController;
+    // const node = rng.sc; // rng.commonAncestor(); 
+    // const ancestors = dom.parents(node/*, dom.isBlock*/);
+    // styleInfo = $.extend(styleInfo, {
+    //   'font-bold': controller.matchRange('bold', rng, ancestors) ? 'bold' : 'normal',
+    //   'font-italic': controller.matchRange('italic', rng, ancestors) ? 'italic' : 'normal',
+    //   'font-underline': controller.matchRange('underline', rng, ancestors) ? 'underline' : 'normal',
+    //   'font-strikethrough': controller.matchRange('strikethrough', rng, ancestors) ? 'strikethrough' : 'normal',
+    //   'font-subscript': controller.matchRange('subscript', rng, ancestors) ? 'subscript' : 'normal',
+    //   'font-superscript': controller.matchRange('superscript', rng, ancestors) ? 'superscript' : 'normal',
+    //   'font-code': controller.matchRange('code', rng, ancestors) ? 'code' : 'normal',
+    //   'font-family': controller.matchRange('fontname', rng, ancestors)?.styleMatch
+    // });
 
     // list-style-type to list-style(unordered, ordered)
     if (!rng.isOnList()) {
@@ -173,7 +179,7 @@ export default class Style {
     }
 
     styleInfo.anchor = rng.isOnAnchor() && dom.ancestor(rng.sc, dom.isAnchor);
-    styleInfo.ancestors = dom.listAncestor(rng.sc, dom.isEditable);
+    styleInfo.ancestors = dom.parents(rng.sc);
     styleInfo.range = rng;
 
     return styleInfo;

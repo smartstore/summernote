@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import lists from '../core/lists';
-import func from '../core/func';
 import dom from '../core/dom';
+import Point from '../core/Point';
 import range from '../core/range';
 
 export default class Bullet {
@@ -166,7 +166,7 @@ export default class Bullet {
       const head = lists.head(paras);
       const last = lists.last(paras);
 
-      const headList = isEscapseToBody ? dom.lastAncestor(head, dom.isList) : head.parentNode;
+      const headList = isEscapseToBody ? dom.farthestParent(head, dom.isList) : head.parentNode;
       const parentItem = headList.parentNode;
 
       if (headList.parentNode.nodeName === 'LI') {
@@ -197,21 +197,21 @@ export default class Bullet {
           parentItem.parentNode.removeChild(parentItem);
         }
       } else {
-        const lastList = headList.childNodes.length > 1 ? dom.splitTree(headList, {
+        const lastList = headList.childNodes.length > 1 ? Point.splitTree(headList, {
           node: last.parentNode,
           offset: dom.position(last) + 1,
         }, {
           isSkipPaddingBlankHTML: true,
         }) : null;
 
-        const middleList = dom.splitTree(headList, {
+        const middleList = Point.splitTree(headList, {
           node: head.parentNode,
           offset: dom.position(head),
         }, {
           isSkipPaddingBlankHTML: true,
         });
 
-        paras = isEscapseToBody ? dom.listDescendant(middleList, dom.isLi)
+        paras = isEscapseToBody ? dom.children(middleList, dom.isLi)
           : lists.from(middleList.childNodes).filter(dom.isLi);
 
         // LI to P
@@ -228,7 +228,7 @@ export default class Bullet {
         // remove empty lists
         const rootLists = lists.compact([headList, middleList, lastList]);
         $.each(rootLists, (idx, rootList) => {
-          const listNodes = [rootList].concat(dom.listDescendant(rootList, dom.isList));
+          const listNodes = [rootList].concat(dom.children(rootList, dom.isList));
           $.each(listNodes.reverse(), (idx, listNode) => {
             if (!dom.nodeLength(listNode)) {
               dom.remove(listNode, true);

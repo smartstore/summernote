@@ -88,7 +88,7 @@ const matchRange = (command, rng, ancestors = null) => {
       if (rng) {
         rng = rng.normalize();
         const node = !dom.isElement(rng.sc) ? rng.sc.parentNode : rng.sc;
-        ancestors = dom.listAncestor(node /*, dom.isBlock */);
+        ancestors = dom.parents(node /*, dom.isBlock */);
       }
       else {
         return null;

@@ -1,5 +1,5 @@
-import func from './func';
-import lists from './lists';
+import func from '../core/func';
+import lists from '../core/lists';
 
 const genericBase = {
   remove_similar: true,

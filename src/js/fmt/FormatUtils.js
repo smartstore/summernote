@@ -1,7 +1,7 @@
 import Type from '../core/Type';
 import Str from '../core/Str';
 import Obj from '../core/Obj';
-import func from '../core/func';
+import Convert from '../core/Convert';
 import lists from '../core/lists';
 import dom from '../core/dom';
 import schema from '../core/schema';
@@ -75,32 +75,6 @@ const replaceVars = (value, vars = null) => {
   return value;
 };
 
-const normalizeStyleValue = (value, name) => {
-  if (!value) {
-    return null;
-  } else {
-    let strValue = String(value);
-
-    // Force the format to hex
-    if (name === 'color' || name === 'backgroundColor') {
-      // TODO: Implement rgbaToHexString
-      //strValue = Transformations.rgbaToHexString(strValue);
-    }
-
-    // Opera will return bold as 700
-    if (name === 'fontWeight' && value === 700) {
-      strValue = 'bold';
-    }
-
-    // Normalize fontFamily so "'Font name', Font" becomes: "Font name,Font"
-    if (name === 'fontFamily') {
-      strValue = strValue.replace(/[\'\"]/g, '').replace(/,\s+/g, ',');
-    }
-
-    return strValue;
-  }
-};
-
 const isFormatPredicate = (editor, formatName, pred) => {
   const formats = editor.formatter.get(formatName);
   return formats && lists.exists(formats, pred);
@@ -119,21 +93,81 @@ const isVariableFormatName = (editor, formatName) => {
 };
 
 const areSimilarFormats = (editor, formatName, otherFormatName) => {
-  return false;
-  // // Note: MatchFormat.matchNode() uses these parameters to check if a format matches a node
-  // // Therefore, these are ideal to check if two formats are similar
-  // const validKeys = [ 'inline', 'block', 'selector', 'attributes', 'styles', 'classes' ];
-  // const filterObj = (format) => Obj.filter(format, (_, key) => lists.exists(validKeys, (validKey) => validKey === key));
-  // return isFormatPredicate(editor, formatName, (fmt1) => {
-  //   const filteredFmt1 = filterObj(fmt1);
-  //   return isFormatPredicate(editor, otherFormatName, (fmt2) => {
-  //     const filteredFmt2 = filterObj(fmt2);
-  //     return Obj.equal(filteredFmt1, filteredFmt2);
-  //   });
-  // });
+  // Note: MatchFormat.matchNode() uses these parameters to check if a format matches a node
+  // Therefore, these are ideal to check if two formats are similar
+  const validKeys = [ 'inline', 'block', 'selector', 'attributes', 'styles', 'classes' ];
+  const filterObj = format =>   Obj.filter(format, (_, key) => lists.exists(validKeys, validKey => validKey === key));
+  return isFormatPredicate(editor, formatName, fmt1 => {
+    const filteredFmt1 = filterObj(fmt1);
+    return isFormatPredicate(editor, otherFormatName, fmt2 => {
+      const filteredFmt2 = filterObj(fmt2);
+      return Obj.isEqual(filteredFmt1, filteredFmt2);
+    });
+  });
 };
 
-// TODO: Implement getStyle, getTextDecoration, getParents, areSimilarFormats
+const getTextDecoration = (node) => {
+  let decoration;
+
+  dom.closest(node, (n) => {
+    if (dom.isElement(n)) {
+      decoration = dom.getStyle(n, 'text-decoration');
+      return !!decoration && decoration !== 'none';
+    } else {
+      return false;
+    }
+  });
+
+  return decoration;
+};
+
+/**
+ * Compares two string/nodes regardless of their case.
+ *
+ * @private
+ * @param {String/Node} str1 Node or string to compare.
+ * @param {String/Node} str2 Node or string to compare.
+ * @return {Boolean} True/false if they match.
+ */
+const isEq = (str1, str2) => {
+  str1 = str1 || '';
+  str2 = str2 || '';
+
+  str1 = '' + (str1?.nodeName || str1);
+  str2 = '' + (str2?.nodeName || str2);
+
+  return str1.toLowerCase() === str2.toLowerCase();
+};
+
+const normalizeStyleValue = (value, name) => {
+  if (Type.isNullOrUndefined(value)) {
+    return null;
+  } else {
+    let strValue = String(value);
+
+    // Force the format to hex
+    if (name === 'color' || name === 'backgroundColor') {
+      strValue = Convert.rgbaToHexString(strValue);
+    }
+
+    // Opera will return bold as 700
+    if (name === 'fontWeight' && value === 700) {
+      strValue = 'bold';
+    }
+
+    // Normalize fontFamily so "'Font name', Font" becomes: "Font name,Font"
+    if (name === 'fontFamily') {
+      strValue = strValue.replace(/[\'\"]/g, '').replace(/,\s+/g, ',');
+    }
+
+    return strValue;
+  }
+};
+
+const getStyle = (node, name) => {
+  const style = dom.getStyle(node, name);
+  return normalizeStyleValue(style, name);
+};
 
 export default {
   isNode,
@@ -150,7 +184,10 @@ export default {
   isValid,
   isWhiteSpaceNode,
   replaceVars,
+  isEq,
   normalizeStyleValue,
   isVariableFormatName,
-  areSimilarFormats
+  areSimilarFormats,
+  getTextDecoration,
+  getStyle
 }

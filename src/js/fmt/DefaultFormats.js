@@ -1,5 +1,6 @@
-import func from './func';
-import lists from './lists';
+import func from '../core/func';
+import lists from '../core/lists';
+import dom from '../core/dom';
 
 const formats = {
   valigntop: [

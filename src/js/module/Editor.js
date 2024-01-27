@@ -6,6 +6,7 @@ import func from '../core/func';
 import lists from '../core/lists';
 import dom from '../core/dom';
 import range from '../core/range';
+import Point from '../core/Point';
 import { readFileAsDataURL, createImage } from '../core/async';
 import History from '../editing/History';
 import Style from '../editing/Style';
@@ -13,6 +14,7 @@ import CommandController from '../command/Controller';
 import Typing from '../editing/Typing';
 import Table from '../editing/Table';
 import Bullet from '../editing/Bullet';
+import Formatter from '../fmt/Formatter';
 
 const KEY_BOGUS = 'bogus';
 
@@ -38,7 +40,8 @@ export default class Editor {
     this.bullet = new Bullet();
     this.history = new History(context);
     this.commandController = new CommandController(context);
-    this.style = new Style(context, this.commandController);
+    this.formatter = new Formatter(context);
+    this.style = new Style(context, this.formatter, this.commandController);
 
     this.context.memo('help.escape', this.lang.help.escape);
     this.context.memo('help.undo', this.lang.help.undo);
@@ -1050,7 +1053,7 @@ export default class Editor {
       if (rng.isCollapsed()) {
         const firstSpan = lists.head(spans);
         if (firstSpan && !dom.nodeLength(firstSpan)) {
-          firstSpan.innerHTML = dom.ZERO_WIDTH_NBSP_CHAR;
+          firstSpan.innerHTML = Point.ZERO_WIDTH_NBSP_CHAR;
           range.createFromNode(firstSpan.firstChild).select();
           this.setLastRange();
           this.$editable.data(KEY_BOGUS, firstSpan);
