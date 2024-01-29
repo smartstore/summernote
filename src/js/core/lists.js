@@ -179,6 +179,29 @@ const each = (list, callback, scope = null) =>
   _.foldl(list, callback, memo, scope);
 
   /**
+   * Looks through each value in `list`, returning an array of
+   * all the values that pass a truth test (`predicate`).
+   * @param list The collection or array to filter.
+   * @param predicate The truth test to apply.
+   * @param scope `this` object in `predicate`, optional.
+   * @returns The set of values that pass the truth test.
+   */
+    const filter = (list, predicate, scope) =>
+      _.filter(list, predicate, scope);
+
+  /**
+   * Returns the values in `list` without the elements that pass a
+   * truth test (`predicate`).
+   * The opposite of filter.
+   * @param list The collection or array to filter.
+   * @param predicate The truth test to apply.
+   * @param scope `this` object in `predicate`, optional.
+   * @returns The set of values that fail the truth test.
+   */
+  const reject = (list, predicate, scope) =>
+    _.reject(list, predicate, scope);
+
+  /**
    * Produces a new array of values by mapping each value in list through a transformation function (transformer). 
    * The iteratee is passed three arguments: the value, then the index (or key) of the iteration, and finally a reference to the entire list.
    *
@@ -239,6 +262,8 @@ export default {
   unique,
   each,
   foldl,
+  filter,
+  reject,
   map,
   makeMap,
   isArrayLike

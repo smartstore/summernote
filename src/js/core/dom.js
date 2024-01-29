@@ -6,6 +6,7 @@ import func from './func';
 import lists from './lists';
 import env from './env';
 import schema from './schema';
+import { contains } from 'underscore';
 
 const beautifyOpts = {
   indent_size: 2,
@@ -318,8 +319,11 @@ const setStyles = (node, styleMap) => {
   $(node).css(styleMap);
 };
 
+/**
+ * Unlike `$.hasClass` this method accepts only a single class name (without whitespace)
+ */
 const hasClass = (node, name) => {
-  $(node).hasClass(name);
+  return node?.classList && node.classList.contains(name);
 };
 
 /**
@@ -977,6 +981,7 @@ export default {
   makeOffsetPath,
   fromOffsetPath,
   getRangeNode,
+  getNextTextNode,
   create,
   createText,
   remove,

@@ -615,6 +615,10 @@ $img-margin-right: 10px;
       border-radius: var(--btn-border-radius) !important;
       margin-inline-start: 0;
 
+      &:not(:hover) {
+        transition: none !important;
+      }
+
       // Change color hover/active/pressed styling
       --btn-active-bg: rgba(var(--primary-bg-subtle-rgb), 0.75);
       --btn-active-color: var(--primary-text-emphasis);
@@ -627,6 +631,7 @@ $img-margin-right: 10px;
       }
     }
   }
+
   .scrollable-menu {
     --scrollbar-track-color: #fff;
     --scrollbar-track-hover-color: #fff;

@@ -9,7 +9,7 @@ export default class Formatter {
     this.formats = new FormatRegistry(context.options);
   }
 
-  editor() {
+  get editor() {
     return this.context.modules.editor;
   }
 
@@ -104,7 +104,7 @@ export default class Formatter {
    * @return {Boolean} true/false if the specified selection/node matches the format.
    */
   match(name, vars, node, similar) {
-    return MatchFormat.match(this.editor(), name, vars, node, similar);
+    return MatchFormat.match(this.editor, name, vars, node, similar);
   }
 
   /**
@@ -115,7 +115,7 @@ export default class Formatter {
    * @return {String} The closest matching format name or null.
    */
   closest(names) {
-    return MatchFormat.closest(this.editor(), names);
+    return MatchFormat.closest(this.editor, names);
   }
 
   /**
@@ -127,8 +127,7 @@ export default class Formatter {
    * @return {Array} Array with matched formats.
    */
   matchAll(names, vars) {
-    console.log(names);
-    return MatchFormat.matchAll(this.editor(), names, vars);
+    return MatchFormat.matchAll(this.editor, names, vars);
   }
 
   /**
@@ -142,7 +141,7 @@ export default class Formatter {
    * @return {Object} Returns the format object it matches or undefined if it doesn't match.
    */
   matchNode(node, name, vars, similar) {
-    return MatchFormat.matchNode(this.editor(), node, name, vars, similar);
+    return MatchFormat.matchNode(this.editor, node, name, vars, similar);
   }
 
   /**
@@ -154,6 +153,6 @@ export default class Formatter {
    * @return {Boolean} true/false if the specified format can be applied to the current selection/node.
    */
   canApply(name) {
-    return MatchFormat.canApply(this.editor(), name);
+    return MatchFormat.canApply(this.editor, name);
   }
 }

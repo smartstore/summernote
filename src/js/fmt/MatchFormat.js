@@ -1,8 +1,5 @@
-import $ from 'jquery';
-import Str from '../core/Str';
 import Obj from '../core/Obj';
 import Type from '../core/Type';
-import func from '../core/func';
 import lists from '../core/lists';
 import dom from '../core/dom';
 import FormatUtils from './FormatUtils';
@@ -25,19 +22,13 @@ const matchesUnInheritedFormatSelector = (editor, node, name) => {
 };
 
 const matchParents = (editor, node, name, vars, similar) => {
-  const root = dom.getEditableRoot(node);
-
-  if (node === root) {
-    return false;
-  }
-
   // Find first node with similar format settings
   const matchedNode = dom.closest(node, (elm) => {
     if (matchesUnInheritedFormatSelector(editor, elm, name)) {
       return true;
     }
 
-    return elm.parentNode === root || !!matchNode(editor, elm, name, vars, true);
+    return !!matchNode(editor, elm, name, vars, true);
   });
 
   // Do an exact check on the similar format element
@@ -145,12 +136,12 @@ const match = (editor, name, vars, node, similar) => {
 
   const rng = editor.getLastRange();
 
-  //// TODO: Implement MatchFormat.match() range.getNode() stuff
-  // // Check selected node
-  // node = editor.selection.getNode();
-  // if (matchParents(editor, node, name, vars, similar)) {
-  //   return true;
-  // }
+  // TODO: Implement MatchFormat.match() range.getNode() stuff
+  // Check selected node
+  node = rng.commonAncestor();
+  if (matchParents(editor, node, name, vars, similar)) {
+    return true;
+  }
 
   // Check start node if it's different
   const startNode = rng.sc;
@@ -166,7 +157,7 @@ const match = (editor, name, vars, node, similar) => {
 const matchAll = (editor, names, vars) => {
   const matchedFormatNames = [];
   const checkedMap = {};
-
+  
   // Check start of selection for formats
   const rng = editor.getLastRange();
   const startElement = rng.sc;
@@ -221,7 +212,7 @@ const canApply = (editor, name) => {
 const matchAllOnNode = (editor, node, formatNames) => {
   return lists.foldl(formatNames, (acc, name) => {
     const matchSimilar = FormatUtils.isVariableFormatName(editor, name);
-    if (editor.formatter.matchNode(node, name, {}, matchSimilar)) {
+    if (matchNode(node, name, {}, matchSimilar)) {
       return acc.concat([ name ]);
     } else {
       return acc;

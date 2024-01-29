@@ -129,12 +129,12 @@ export default class Style {
     // [workaround] prevent Firefox nsresult: "0x80004005 (NS_ERROR_FAILURE)"
     try {
       styleInfo = $.extend(styleInfo, {
-        'font-bold': document.queryCommandState('bold') ? 'bold' : 'normal',
-        'font-italic': document.queryCommandState('italic') ? 'italic' : 'normal',
-        'font-underline': document.queryCommandState('underline') ? 'underline' : 'normal',
-        'font-subscript': document.queryCommandState('subscript') ? 'subscript' : 'normal',
-        'font-superscript': document.queryCommandState('superscript') ? 'superscript' : 'normal',
-        'font-strikethrough': document.queryCommandState('strikethrough') ? 'strikethrough' : 'normal',
+        // 'font-bold': document.queryCommandState('bold') ? 'bold' : 'normal',
+        // 'font-italic': document.queryCommandState('italic') ? 'italic' : 'normal',
+        // 'font-underline': document.queryCommandState('underline') ? 'underline' : 'normal',
+        // 'font-subscript': document.queryCommandState('subscript') ? 'subscript' : 'normal',
+        // 'font-superscript': document.queryCommandState('superscript') ? 'superscript' : 'normal',
+        // 'font-strikethrough': document.queryCommandState('strikethrough') ? 'strikethrough' : 'normal',
         //'font-family': document.queryCommandValue('fontname') || styleInfo['font-family'],
       });
     } catch (e) {
@@ -142,9 +142,15 @@ export default class Style {
     }
 
     const formatter = this.formatter;
-    const formats = ['bold', 'italic', 'underline']; // Object.keys(formatter.formats.get());
+    const formats = ['bold', 'italic', 'underline', 'code', 'strikethrough', 'subscript', 'superscript']; // Object.keys(formatter.formats.get());
     const matches = formatter.matchAll(formats);
-    console.log(matches);
+
+    lists.each(formats, name => {
+      styleInfo['font-' + name] = 'normal';
+      if (lists.contains(matches, name)) {
+        styleInfo['font-' + name] = name;
+      }
+    });
     
     // const controller = this.commandController;
     // const node = rng.sc; // rng.commonAncestor(); 
