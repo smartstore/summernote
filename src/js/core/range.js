@@ -4,41 +4,232 @@ import lists from './lists';
 import dom from './dom';
 import Point from './Point';
 
-/**
-   * Wrapped Range
-   *
-   * @constructor
-   * @param {Node} sc - start container
-   * @param {Number} so - start offset
-   * @param {Node} ec - end container
-   * @param {Number} eo - end offset
-   */
-class WrappedRange {
-  constructor(sc, so, ec, eo) {
-    this.sc = sc;
-    this.so = so;
-    this.ec = ec;
-    this.eo = eo;
+const makeIsOn = (selector) => {
+  const pred = dom.matchSelector(selector);
+  return function() {
+    const ancestor = dom.closest(this.sc, pred);
+    return !!ancestor && (ancestor === dom.closest(this.ec, pred));
+  };
+};
 
-    // isOnEditable: judge whether range is on editable or not
-    this.isOnEditable = this.makeIsOn(dom.isEditableRoot);
-    // isOnList: judge whether range is on list node or not
-    this.isOnList = this.makeIsOn(dom.isList);
-    // isOnAnchor: judge whether range is on anchor node or not
-    this.isOnAnchor = this.makeIsOn(dom.isAnchor);
-    // isOnCell: judge whether range is on cell node or not
-    this.isOnCell = this.makeIsOn(dom.isCell);
-    // isOnData: judge whether range is on data node or not
-    this.isOnData = this.makeIsOn(dom.isData);
+// Judge whether range is on editable or not
+const isOnEditable = makeIsOn(dom.isEditableRoot);
+// Judge whether range is on list node or not
+const  isOnList = makeIsOn(dom.isList);
+// Judge whether range is on anchor node or not
+const isOnAnchor = makeIsOn(dom.isAnchor);
+// Judge whether range is on cell node or not
+const isOnCell = makeIsOn(dom.isCell);
+// Judge whether range is on data node or not
+const isOnData = makeIsOn(dom.isData);
+
+
+/**
+ * Create a `WrappedRange` object from a native `Range` object.
+ *
+ * @param {Range} nativeRange - The native range
+ * @return {WrappedRange}
+ */
+const createFromNativeRange = (nativeRange) => {
+  return new WrappedRange(nativeRange);
+};
+
+/**
+ * Create a `WrappedRange` object from boundary points.
+ *
+ * @param {Node} sc - start container
+ * @param {Number} so - start offset
+ * @param {Node} ec - end container
+ * @param {Number} eo - end offset
+ * @return {WrappedRange}
+ */
+function create(sc, so, ec, eo) {
+  const len = arguments.length;
+  if (len === 2 || len === 4) {
+    if (len === 2) {
+      // Collapsed
+      ec = sc;
+      eo = so;
+    }
+
+    const rng = document.createRange();
+    rng.setStart(sc, so);
+    rng.setEnd(ec, eo);
+  
+    return createFromNativeRange(rng);
   }
 
-  // nativeRange: get nativeRange from sc, so, ec, eo
-  nativeRange() {
-      const w3cRange = document.createRange();
-      w3cRange.setStart(this.sc, this.so);
-      w3cRange.setEnd(this.ec, this.eo);
+  let rng = createFromSelection();
 
-      return w3cRange;
+  if (!rng && len === 1) {
+    let bodyElement = arguments[0];
+    if (dom.isEditableRoot(bodyElement)) {
+      bodyElement = bodyElement.lastChild;
+    }
+    
+    return createFromBodyElement(bodyElement, dom.emptyPara === arguments[0].innerHTML);
+  }
+
+  return rng;
+};
+
+/**
+ * Create a `WrappedRange` object from start end end point objects.
+ *
+ * @return {WrappedRange}
+ */
+const createFromPoints = (startPoint, endPoint) => {
+  if (!endPoint) {
+    return create(startPoint.node, startPoint.offset);
+  } else {
+    return create(startPoint.node, startPoint.offset, endPoint.node, endPoint.offset);
+  }
+};
+
+/**
+ * Create a `WrappedRange` object from the current browser selection.
+ *
+ * @return {WrappedRange}
+ */
+const createFromSelection = () => {
+  const selection = document.getSelection();
+  if (!selection || selection.rangeCount === 0) {
+    return null;
+  } else if (dom.isBody(selection.anchorNode)) {
+    // Firefox: returns entire body as range on initialization.
+    // We won't never need it.
+    return null;
+  }
+
+  return new WrappedRange(selection.getRangeAt(0));
+};
+
+const createFromBodyElement = (bodyElement, isCollapsedToStart = false) => {
+  var wrappedRange = createFromNode(bodyElement);
+  return wrappedRange.collapse(isCollapsedToStart);
+};
+
+/**
+ * Create a `WrappedRange` object from a DOM node.
+ *
+ * @return {WrappedRange}
+ */
+const createFromNode = (node) => {
+  let sc = node;
+  let so = 0;
+  let ec = node;
+  let eo = dom.nodeLength(ec);
+
+  // Browsers can't target a picture or void node
+  if (dom.isVoid(sc)) {
+    so = dom.prevSiblings(sc).length - 1;
+    sc = sc.parentNode;
+  }
+  if (dom.isBR(ec)) {
+    eo = dom.prevSiblings(ec).length - 1;
+    ec = ec.parentNode;
+  } else if (dom.isVoid(ec)) {
+    eo = dom.prevSiblings(ec).length;
+    ec = ec.parentNode;
+  }
+
+  return create(sc, so, ec, eo);
+};
+
+/**
+ * Create a `WrappedRange` object from a DOM node, collapsed to start.
+ *
+ * @return {WrappedRange}
+ */
+const createFromNodeBefore = (node) => {
+  return createFromNode(node).collapse(true);
+};
+
+/**
+ * Create a `WrappedRange` object from a DOM node, collapsed to end.
+ *
+ * @return {WrappedRange}
+ */
+const createFromNodeAfter = (node) => {
+  return createFromNode(node).collapse(false);
+};
+
+/**
+ * Create a `WrappedRange` object from a bookmark.
+ *
+ * @return {WrappedRange}
+ */
+const createFromBookmark = (editable, bookmark) => {
+  const sc = dom.fromOffsetPath(editable, bookmark.s.path);
+  const so = bookmark.s.offset;
+  const ec = dom.fromOffsetPath(editable, bookmark.e.path);
+  const eo = bookmark.e.offset;
+  return create(sc, so, ec, eo);
+};
+
+/**
+ * Create a `WrappedRange` object from a para bookmark.
+ *
+ * @return {WrappedRange}
+ */
+const createFromParaBookmark = (bookmark, paras) => {
+  const so = bookmark.s.offset;
+  const eo = bookmark.e.offset;
+  const sc = dom.fromOffsetPath(lists.head(paras), bookmark.s.path);
+  const ec = dom.fromOffsetPath(lists.last(paras), bookmark.e.path);
+  return create(sc, so, ec, eo);
+};
+
+/**
+ * Wrapped Range
+ *
+ * @constructor
+ * @param {Range} nativeRange - The native `Range` object instance to wrap.
+ */
+class WrappedRange {
+  // TODO: Implement ElementSelection.getNode()
+  constructor(nativeRange) {
+    this._nativeRange = nativeRange;
+
+    // Judge whether range is on editable or not
+    this.isOnEditable = isOnEditable;
+    // Judge whether range is on list node or not
+    this.isOnList = isOnList;
+    // Judge whether range is on anchor node or not
+    this.isOnAnchor = isOnAnchor;
+    // Judge whether range is on cell node or not
+    this.isOnCell = isOnCell;
+    // Judge whether range is on data node or not
+    this.isOnData = isOnData;
+  }
+
+  /**
+   * Gets underlying native `Range` object
+   */
+  get nativeRange() {
+    return this._nativeRange;
+  }
+
+  get sc() {
+    return this._nativeRange.startContainer;
+  }
+
+  get so() {
+    return this._nativeRange.startOffset;
+  }
+  set so(value) {
+    return this._nativeRange.setStart(this._nativeRange.startContainer, value);
+  }
+
+  get ec() {
+    return this._nativeRange.endContainer;
+  }
+
+  get eo() {
+    return this._nativeRange.endOffset;
+  }
+  set eo(value) {
+    return this._nativeRange.setEnd(this._nativeRange.endContainer, value);
   }
 
   getPoints() {
@@ -104,7 +295,7 @@ class WrappedRange {
     };
 
     const findEndPoint = (node, root) => {
-      return dom.ancestor(node, (n) => n.parentNode === root);
+      return dom.closest(node, n => n.parentNode === root);
     };
       
     const walkBoundary = (startNode, endNode, next) => {
@@ -167,23 +358,20 @@ class WrappedRange {
 
 
   /**
-   * select update visible range
+   * Select update visible range
    */
   select() {
-    const nativeRng = this.nativeRange();
     const selection = document.getSelection();
     if (selection.rangeCount > 0) {
       selection.removeAllRanges();
     }
-    selection.addRange(nativeRng);
+    selection.addRange(this._nativeRange);
 
     return this;
   }
 
   /**
    * Moves the scrollbar to start container(sc) of current range
-   *
-   * @return {WrappedRange}
    */
   scrollIntoView(container) {
     const height = $(container).height();
@@ -194,9 +382,6 @@ class WrappedRange {
     return this;
   }
 
-  /**
-   * @return {WrappedRange}
-   */
   normalize() {
     /**
      * @param {BoundaryPoint} point
@@ -228,7 +413,7 @@ class WrappedRange {
       }
 
       // point on block's edge
-      const block = dom.ancestor(point.node, dom.isBlock);
+      const block = dom.closest(point.node, dom.isBlock);
       let hasRightNode = false;
 
       if (!hasRightNode) {
@@ -259,26 +444,20 @@ class WrappedRange {
     const endPoint = getVisiblePoint(this.getEndPoint(), false);
     const startPoint = this.isCollapsed() ? endPoint : getVisiblePoint(this.getStartPoint(), true);
 
-    return new WrappedRange(
-      startPoint.node,
-      startPoint.offset,
-      endPoint.node,
-      endPoint.offset
-    );
+    return createFromPoints(startPoint, endPoint);
   }
 
   /**
    * returns matched nodes on range
    *
-   * @param {Function} [pred] - predicate function
+   * @param {Function|String|Node} [selector] - Selector function, string or node.
    * @param {Object} [options]
    * @param {Boolean} [options.includeAncestor]
    * @param {Boolean} [options.fullyContains]
    * @return {Node[]}
    */
-  nodes(pred, options) {
-    pred = pred || func.ok;
-
+  nodes(selector, options) {
+    const pred = dom.matchSelector(selector, func.ok);
     const includeAncestor = options && options.includeAncestor;
     const fullyContains = options && options.fullyContains;
 
@@ -303,7 +482,7 @@ class WrappedRange {
           node = point.node;
         }
       } else if (includeAncestor) {
-        node = dom.ancestor(point.node, pred);
+        node = dom.closest(point.node, pred);
       } else {
         node = point.node;
       }
@@ -317,25 +496,26 @@ class WrappedRange {
   }
 
   /**
-   * returns commonAncestor of range
+   * Gets commonAncestor of range
    * @return {Element} - commonAncestor
    */
   commonAncestor() {
-    return this.nativeRange().commonAncestorContainer;
+    return this._nativeRange.commonAncestorContainer;
   }
 
   /**
    * returns expanded range by pred
    *
-   * @param {Function} pred - predicate function
+   * @param {Function|String|Node} selector - Selector function, string or node.
    * @return {WrappedRange}
    */
-  expand(pred) {
-    const startAncestor = dom.ancestor(this.sc, pred);
-    const endAncestor = dom.ancestor(this.ec, pred);
+  expand(selector) {
+    const pred = dom.matchSelector(selector);
+    const startAncestor = dom.closest(this.sc, pred);
+    const endAncestor = dom.closest(this.ec, pred);
 
     if (!startAncestor && !endAncestor) {
-      return new WrappedRange(this.sc, this.so, this.ec, this.eo);
+      return create(this.sc, this.so, this.ec, this.eo);
     }
 
     const boundaryPoints = this.getPoints();
@@ -350,7 +530,7 @@ class WrappedRange {
       boundaryPoints.eo = dom.nodeLength(endAncestor);
     }
 
-    return new WrappedRange(
+    return create(
       boundaryPoints.sc,
       boundaryPoints.so,
       boundaryPoints.ec,
@@ -359,19 +539,18 @@ class WrappedRange {
   }
 
   /**
-   * @param {Boolean} isCollapseToStart
+   * Collapses the Range to one of its boundary points.
+   * 
+   * @param {Boolean} toStart
    * @return {WrappedRange}
    */
-  collapse(isCollapseToStart) {
-    if (isCollapseToStart) {
-      return new WrappedRange(this.sc, this.so, this.sc, this.so);
-    } else {
-      return new WrappedRange(this.ec, this.eo, this.ec, this.eo);
-    }
+  collapse(toStart) {
+    this._nativeRange.collapse(toStart);
+    return this;
   }
 
   /**
-   * splitText on range
+   * SplitText on range
    */
   splitText() {
     const isSameContainer = this.sc === this.ec;
@@ -391,7 +570,7 @@ class WrappedRange {
       }
     }
 
-    return new WrappedRange(
+    return create(
       boundaryPoints.sc,
       boundaryPoints.so,
       boundaryPoints.ec,
@@ -400,7 +579,7 @@ class WrappedRange {
   }
 
   /**
-   * delete contents on range
+   * Delete contents on range
    * @return {WrappedRange}
    */
   deleteContents() {
@@ -433,34 +612,19 @@ class WrappedRange {
       dom.remove(node, false);
     });
 
-    return new WrappedRange(
-      point.node,
-      point.offset,
-      point.node,
-      point.offset
-    ).normalize();
-  }
-
-  /**
-   * makeIsOn: return isOn(pred) function
-   */
-  makeIsOn(pred) {
-    return function() {
-      const ancestor = dom.ancestor(this.sc, pred);
-      return !!ancestor && (ancestor === dom.ancestor(this.ec, pred));
-    };
+    return createFromPoints(point).normalize();
   }
 
   /**
    * @param {Function} pred
    * @return {Boolean}
    */
-  isLeftEdgeOf(pred) {
+  isLeftEdgeOf(selector) {
     if (!Point.isLeftEdgePoint(this.getStartPoint())) {
       return false;
     }
 
-    const node = dom.ancestor(this.sc, pred);
+    const node = dom.closest(this.sc, selector);
     return node && dom.isLeftEdgeOf(this.sc, node);
   }
 
@@ -475,18 +639,18 @@ class WrappedRange {
    * Checks whether range is collapsed
    */
   isCollapsed() {
-    return this.sc === this.ec && this.so === this.eo;
+    return this._nativeRange.collapsed;
   }
 
   /**
-   * wrap inline nodes which children of body with paragraph
+   * Wrap inline nodes which children of body with paragraph
    *
    * @return {WrappedRange}
    */
   wrapBodyInlineWithPara() {
     if (dom.isBodyContainer(this.sc) && dom.isEmpty(this.sc)) {
       this.sc.innerHTML = dom.emptyPara;
-      return new WrappedRange(this.sc.firstChild, 0, this.sc.firstChild, 0);
+      return create(this.sc.firstChild, 0, this.sc.firstChild, 0);
     }
 
     /**
@@ -527,7 +691,7 @@ class WrappedRange {
   }
 
   /**
-   * insert node at current cursor
+   * Insert node at current cursor
    *
    * @param {Node} node
    * @param {Boolean} doNotInsertPara - default is false, removes added <p> that's added if true
@@ -554,10 +718,10 @@ class WrappedRange {
   }
 
   /**
-   * insert html at current cursor
+   * Insert html at current cursor
    */
   pasteHTML(markup) {
-    markup = $.trim(markup);
+    markup = markup.trim();
 
     const contentsContainer = $('<div></div>').html(markup)[0];
     let childNodes = lists.from(contentsContainer.childNodes);
@@ -578,23 +742,23 @@ class WrappedRange {
     if (reversed) {
       childNodes = childNodes.reverse();
     }
+
     return childNodes;
   }
 
   /**
-   * returns text in range
+   * Returns text in range
    *
    * @return {String}
    */
   toString() {
-    const nativeRng = this.nativeRange();
-    return nativeRng.toString();
+    return this.nativeRange.toString();
   }
 
   /**
-   * returns range for word before cursor
+   * Returns range for word before cursor
    *
-   * @param {Boolean} [findAfter] - find after cursor also, default: false
+   * @param {Boolean} [findAfter] - Find after cursor also, default: false
    * @return {WrappedRange}
    */
   getWordRange(findAfter) {
@@ -615,7 +779,7 @@ class WrappedRange {
       });
     }
 
-    return new WrappedRange(
+    return create(
       startPoint.node,
       startPoint.offset,
       endPoint.node,
@@ -646,16 +810,11 @@ class WrappedRange {
       endPoint = Point.nextPointUntil(endPoint, isNotTextPoint);
     }
 
-    return new WrappedRange(
-      startPoint.node,
-      startPoint.offset,
-      endPoint.node,
-      endPoint.offset
-    );
+    return createFromPoints(startPoint, endPoint);
   }
 
   /**
-   * returns range for words before cursor that match with a Regex
+   * Returns range for words before cursor that match with a Regex
    *
    * example:
    *  range: 'hi @Peter Pan'
@@ -672,22 +831,12 @@ class WrappedRange {
       if (!Point.isCharPoint(point) && !Point.isSpacePoint(point)) {
         return true;
       }
-      var rng = new WrappedRange(
-        point.node,
-        point.offset,
-        endPoint.node,
-        endPoint.offset
-      );
+      var rng = createFromPoints(point, endPoint);
       var result = regex.exec(rng.toString());
       return result && result.index === 0;
     });
 
-    var rng = new WrappedRange(
-      startPoint.node,
-      startPoint.offset,
-      endPoint.node,
-      endPoint.offset
-    );
+    var rng = createFromPoints(startPoint, endPoint);
 
     var text = rng.toString();
     var result = regex.exec(text);
@@ -700,7 +849,7 @@ class WrappedRange {
   }
 
   /**
-   * create offsetPath bookmark
+   * Create offsetPath bookmark
    *
    * @param {Node} editable
    */
@@ -718,7 +867,7 @@ class WrappedRange {
   }
 
   /**
-   * create offsetPath bookmark base on paragraph
+   * Create offsetPath bookmark base on paragraph
    *
    * @param {Node[]} paras
    */
@@ -740,8 +889,7 @@ class WrappedRange {
    * @return {Rect[]}
    */
   getClientRects() {
-    const nativeRng = this.nativeRange();
-    return nativeRng.getClientRects();
+    return this.nativeRange.getClientRects();
   }
 }
 
@@ -753,146 +901,14 @@ class WrappedRange {
  * See to http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level-2-Range-Position
  */
 export default {
-  /**
-   * create Range Object From arguments or Browser Selection
-   *
-   * @param {Node} sc - start container
-   * @param {Number} so - start offset
-   * @param {Node} ec - end container
-   * @param {Number} eo - end offset
-   * @return {WrappedRange}
-   */
-  create: function(sc, so, ec, eo) {
-    if (arguments.length === 4) {
-      return new WrappedRange(sc, so, ec, eo);
-    } else if (arguments.length === 2) { // collapsed
-      ec = sc;
-      eo = so;
-      return new WrappedRange(sc, so, ec, eo);
-    } 
-    else {
-      let wrappedRange = this.createFromSelection();
-
-      if (!wrappedRange && arguments.length === 1) {
-        let bodyElement = arguments[0];
-        if (dom.isEditableRoot(bodyElement)) {
-          bodyElement = bodyElement.lastChild;
-        }
-        return this.createFromBodyElement(bodyElement, dom.emptyPara === arguments[0].innerHTML);
-      }
-      return wrappedRange;
-    }
-  },
-
-  createFromBodyElement: function(bodyElement, isCollapseToStart = false) {
-    var wrappedRange = this.createFromNode(bodyElement);
-    return wrappedRange.collapse(isCollapseToStart);
-  },
-
-  createFromSelection: function() {
-    let sc, so, ec, eo;
-
-    const selection = document.getSelection();
-    if (!selection || selection.rangeCount === 0) {
-      return null;
-    } 
-    else if (dom.isBody(selection.anchorNode)) {
-      // Firefox: returns entire body as range on initialization.
-      // We won't never need it.
-      return null;
-    }
-
-    const nativeRng = selection.getRangeAt(0);
-    sc = nativeRng.startContainer;
-    so = nativeRng.startOffset;
-    ec = nativeRng.endContainer;
-    eo = nativeRng.endOffset;
-
-    return new WrappedRange(sc, so, ec, eo);
-  },
-
-  /**
-   * @method
-   *
-   * create WrappedRange from node
-   *
-   * @param {Node} node
-   * @return {WrappedRange}
-   */
-  createFromNode: function(node) {
-    let sc = node;
-    let so = 0;
-    let ec = node;
-    let eo = dom.nodeLength(ec);
-
-    // browsers can't target a picture or void node
-    if (dom.isVoid(sc)) {
-      so = dom.prevSiblings(sc).length - 1;
-      sc = sc.parentNode;
-    }
-    if (dom.isBR(ec)) {
-      eo = dom.prevSiblings(ec).length - 1;
-      ec = ec.parentNode;
-    } else if (dom.isVoid(ec)) {
-      eo = dom.prevSiblings(ec).length;
-      ec = ec.parentNode;
-    }
-
-    return this.create(sc, so, ec, eo);
-  },
-
-  /**
-   * create WrappedRange from node after position
-   *
-   * @param {Node} node
-   * @return {WrappedRange}
-   */
-  createFromNodeBefore: function(node) {
-    return this.createFromNode(node).collapse(true);
-  },
-
-  /**
-   * create WrappedRange from node after position
-   *
-   * @param {Node} node
-   * @return {WrappedRange}
-   */
-  createFromNodeAfter: function(node) {
-    return this.createFromNode(node).collapse();
-  },
-
-  /**
-   * @method
-   *
-   * create WrappedRange from bookmark
-   *
-   * @param {Node} editable
-   * @param {Object} bookmark
-   * @return {WrappedRange}
-   */
-  createFromBookmark: function(editable, bookmark) {
-    const sc = dom.fromOffsetPath(editable, bookmark.s.path);
-    const so = bookmark.s.offset;
-    const ec = dom.fromOffsetPath(editable, bookmark.e.path);
-    const eo = bookmark.e.offset;
-    return new WrappedRange(sc, so, ec, eo);
-  },
-
-  /**
-   * @method
-   *
-   * create WrappedRange from paraBookmark
-   *
-   * @param {Object} bookmark
-   * @param {Node[]} paras
-   * @return {WrappedRange}
-   */
-  createFromParaBookmark: function(bookmark, paras) {
-    const so = bookmark.s.offset;
-    const eo = bookmark.e.offset;
-    const sc = dom.fromOffsetPath(lists.head(paras), bookmark.s.path);
-    const ec = dom.fromOffsetPath(lists.last(paras), bookmark.e.path);
-
-    return new WrappedRange(sc, so, ec, eo);
-  },
+  create,
+  createFromBodyElement,
+  createFromSelection,
+  createFromNode,
+  createFromNodeBefore,
+  createFromNodeAfter,
+  createFromBookmark,
+  createFromParaBookmark,
+  createFromNativeRange,
+  createFromPoints
 };

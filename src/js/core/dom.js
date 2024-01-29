@@ -537,7 +537,7 @@ const parent = (node) => {
 /**
  * Finds closest parent that matches the given selector.
  *
- * @param {Function|String} selector - Selector function or string.
+ * @param {Function|String} selector - Selector function, string or node.
  */
 const closest = (node, selector) => {
   node = getNode(node);
