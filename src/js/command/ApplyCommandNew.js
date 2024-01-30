@@ -100,7 +100,7 @@ const applyRangeStyle = (command, rng, nodeSpecific) => {
       }
 
       if (canRenameBlock(node, parentName, isEditableDescendant)) {
-        const elm = dom.replace(node, wrapName);
+        const elm = dom.rename(node, wrapName);
         applyCommandToElement(elm);
         newWrappers.push(elm);
         currentWrapElm = null;

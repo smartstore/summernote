@@ -3,6 +3,7 @@ import dom from './dom';
 
 const NBSP_CHAR = String.fromCharCode(160);
 const ZERO_WIDTH_NBSP_CHAR = '\ufeff';
+const SOFT_HYPHEN = '\u00AD';
 
 const CharTypes = {
   UNKNOWN: -1,
@@ -413,12 +414,17 @@ const isCharPoint = (point) => getCharType(point) == CharTypes.CHAR;
  */
 const isSpacePoint = (point) => getCharType(point) == CharTypes.SPACE;
 
+const isZwsp = (char) => char === ZERO_WIDTH_NBSP_CHAR;
+
+const removeZwsp = (s) => s.replace(/\uFEFF/g, '');
+
 
 export default {
   /** @property {String} NBSP_CHAR */
   NBSP_CHAR,
   /** @property {String} ZERO_WIDTH_NBSP_CHAR */
   ZERO_WIDTH_NBSP_CHAR,
+  SOFT_HYPHEN,
   CharTypes,
   isLeftEdgePoint,
   isRightEdgePoint,
@@ -441,5 +447,7 @@ export default {
   splitPoint,
   getCharType,
   isCharPoint,
-  isSpacePoint
+  isSpacePoint,
+  isZwsp,
+  removeZwsp
 }

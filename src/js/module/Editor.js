@@ -962,7 +962,7 @@ export default class Editor {
         const currentStyleClass = this.getTagStyleClass(currentTagName);
         //console.log(currentStyleClass);
         // Change tag name of found para
-        newNode = dom.replace(paraNode, tagName);
+        newNode = dom.rename(paraNode, tagName);
         if (newNode && currentStyleClass) {
           // Remove tag styling class
           $(newNode).removeClass(currentStyleClass);

@@ -112,7 +112,7 @@ export default class Bullet {
 
       if (diffLists.length) {
         $.each(diffLists, (idx, listNode) => {
-          dom.replace(listNode, listName);
+          dom.rename(listNode, listName);
         });
       } else {
         paras = this.releaseList(clustereds, true);
@@ -138,7 +138,7 @@ export default class Bullet {
 
     // P to LI
     paras = paras.map((para) => {
-      return dom.isPurePara(para) ? dom.replace(para, 'LI') : para;
+      return dom.isPurePara(para) ? dom.rename(para, 'LI') : para;
     });
 
     // append to list(<ul>, <ol>)
@@ -217,7 +217,7 @@ export default class Bullet {
         // LI to P
         if (isEscapseToBody || !dom.isList(headList.parentNode)) {
           paras = paras.map((para) => {
-            return dom.replace(para, 'P');
+            return dom.rename(para, 'P');
           });
         }
 

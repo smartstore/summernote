@@ -81,12 +81,14 @@ const sum = (list, fn, scope) => {
 }
 
 /**
- * Looks through each value in the list, returning an array of all the 
- * values that (optionally) pass a truth test (predicate)
+ * Creates a new, shallow-copied Array instance from an iterable or array-like object.
  */
-const from = (list, pred, scope) => {
-  pred = _.isFunction(pred) ? pred : func.ok;
-  return _.filter(list, pred, scope);
+const from = (list, mapper, scope) => {
+  if (_.isFunction(Array.from)) {
+    return !mapper ? Array.from(list) : Array.from(list, mapper, scope);
+  } else {
+    return !mapper ? _.toArray(list) : _.map(list, mapper, scope);
+  }
 }
 
 /**
@@ -202,16 +204,16 @@ const each = (list, callback, scope = null) =>
     _.reject(list, predicate, scope);
 
   /**
-   * Produces a new array of values by mapping each value in list through a transformation function (transformer). 
+   * Produces a new array of values by mapping each value in list through a transformation function (mapper). 
    * The iteratee is passed three arguments: the value, then the index (or key) of the iteration, and finally a reference to the entire list.
    *
    * @method map
    * @param {Array|Object} list List of items to iterate.
-   * @param {Function} transformer Function to call for each item. It's return value will be the new value.
+   * @param {Function} mapper Function to call for each item. It's return value will be the new value.
    * @return {Array} Array with new values based on function return values.
    */
-const map = (list, transformer, scope = null) =>
-  _.map(list, transformer, scope);
+const map = (list, mapper, scope = null) =>
+  _.map(list, mapper, scope);
 
 /**
  * Makes a name/object map out of an array with names.

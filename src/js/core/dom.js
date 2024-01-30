@@ -235,6 +235,14 @@ const isEditableRoot = (node) => node?.classList && node.nodeName === 'DIV' && n
  */
 const isTag = (node, tag) => matchNodeNames(tag)(node);
 
+const isEditable = (node) => {
+  if (Type.isAssigned(node)) {
+    const scope = isElement(node) ? node : node.parentElement;
+    return Type.isAssigned(scope) && isHTMLElement(scope) && scope.contentEditable === 'true';
+  }
+  return false;
+};
+
 // #endregion
 
 
@@ -516,6 +524,21 @@ const detachEvents = ($node, events) => {
 const isCustomStyleTag = (node) => {
   return node && !isText(node) && lists.contains(node.classList, 'note-styletag');
 }
+
+const getContentEditable = (node) => {
+  if (node && isHTMLElement(node)) {
+    // Check for fake content editable
+    const contentEditable = node.getAttribute('data-note-contenteditable');
+    if (contentEditable && contentEditable !== 'inherit') {
+      return contentEditable;
+    }
+
+    // Check for real content editable
+    return node.contentEditable !== 'inherit' ? node.contentEditable : null;
+  } else {
+    return null;
+  }
+};
 
 // #endregion
 
@@ -860,14 +883,35 @@ const removeWhile = (node, selector) => {
 /**
  * @method replace
  *
- * Replace node with provided nodeName
+ * Replaces the node `oldElm` with given node `newElm`.
+ *
+ * @param {Node} newElm - The new replacee.
+ * @param {Node} oldElm - The node to replace.
+ * @return {Node} - The replace (`newElm`)
+ */
+function replace(newElm, oldElm, keepChildren) {
+  // Copy children
+  if (keepChildren) {
+    while (oldElm.firstChild) {
+      newElm.appendChild(node.firstChild);
+    }
+  }
+
+  // Replace node
+  oldElm.parentNode?.replaceChild(newElm, oldElm);
+  return newElm;
+}
+
+/**
+ * @method rename
+ *
+ * Rename node with provided nodeName
  *
  * @param {Node} node
  * @param {String} nodeName
- * @return {Node} - new node
+ * @return {Node} - Node
  */
-function replace(node, nodeName) {
-  // TODO: Rename dom.replace --> dom.rename
+function rename(node, nodeName) {
   if (!isElement(node) || node.nodeName.toUpperCase() === nodeName.toUpperCase()) {
     return node;
   }
@@ -879,14 +923,7 @@ function replace(node, nodeName) {
     newNode.setAttribute(name, value);
   });
 
-  // Copy children
-  while (node.firstChild) {
-    newNode.appendChild(node.firstChild);
-  }
-
-  // Replace node
-  node.parentNode.replaceChild(newNode, node);
-  return newNode;
+  return replace(newNode, node, true);
 }
 
 // #endregion
@@ -986,6 +1023,7 @@ export default {
   createText,
   remove,
   removeWhile,
+  rename,
   replace,
   html,
   value,
@@ -993,6 +1031,7 @@ export default {
   attachEvents,
   detachEvents,
   isCustomStyleTag,
+  getContentEditable,
   setAttr,
   getAttr,
   getStyle,

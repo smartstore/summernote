@@ -103,7 +103,7 @@ export default class Typing {
 
           // replace empty heading, pre or custom-made styleTag with P tag
           if ((dom.isHeading(nextPara) || dom.isPre(nextPara) || dom.isCustomStyleTag(nextPara)) && dom.isEmpty(nextPara)) {
-            nextPara = dom.replace(nextPara, 'p');
+            nextPara = dom.rename(nextPara, 'p');
           }
         }
       }
