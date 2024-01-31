@@ -37,15 +37,16 @@ const createFromNativeRange = (nativeRange) => {
 /**
  * Create a `WrappedRange` object from boundary points.
  *
- * @param {Node} sc - start container
- * @param {Number} so - start offset
- * @param {Node} ec - end container
- * @param {Number} eo - end offset
+ * @param {Node} [sc] - start container
+ * @param {Number} [so] - start offset
+ * @param {Node} [ec] - end container
+ * @param {Number} [eo] - end offset
  * @return {WrappedRange}
  */
 function create(sc, so, ec, eo) {
   const len = arguments.length;
   if (len === 2 || len === 4) {
+
     if (len === 2) {
       // Collapsed
       ec = sc;
@@ -97,7 +98,7 @@ const createFromSelection = () => {
     return null;
   } else if (dom.isBody(selection.anchorNode)) {
     // Firefox: returns entire body as range on initialization.
-    // We won't never need it.
+    // We won't ever need it.
     return null;
   }
 
@@ -566,7 +567,7 @@ class WrappedRange {
   }
 
   /**
-   * returns expanded range by pred
+   * Gets expanded range by selector
    *
    * @param {Function|String|Node} selector - Selector function, string or node.
    * @return {WrappedRange}
@@ -907,7 +908,7 @@ class WrappedRange {
   }
 
   /**
-   * Returns range for word before cursor
+   * Returns range for word before and (optionally) after cursor
    *
    * @param {Boolean} [findAfter] - Find after cursor also, default: false
    * @return {WrappedRange}

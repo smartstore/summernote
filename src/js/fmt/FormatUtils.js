@@ -170,29 +170,23 @@ const getStyle = (node, name) => {
   return normalizeStyleValue(style, name);
 };
 
-const preserveSelection = (editor, rng, action, shouldMoveStart) => {
-  const selectedNodeBeforeAction = rng.getNode();
-  const isSelectedBeforeNodeNoneditable = !dom.isContentEditable(selectedNodeBeforeAction);
-  const editable = editor.$editable[0];
-  const bookmark = rng.bookmark(editable);
+const preserveSelection = (editor, rng, action) => {
+  // Remember selection points before applying format
+  const pts = rng.getPoints();
 
+  // Apply stuff to range
   action();
 
-  // Check previous selected node before the action still exists in the DOM
-  // and is still noneditable
-  const isBeforeNodeStillNoneditable = isSelectedBeforeNodeNoneditable && !dom.isContentEditable(selectedNodeBeforeAction);
-  const root = dom.getEditableRoot(selectedNodeBeforeAction);
-  // if (isBeforeNodeStillNoneditable && dom.isChildOf(selectedNodeBeforeAction, root)) {
-  //   const preservedRange = range.createFromNode(selectedNodeBeforeAction);
-  //   editor.setLastRange(preservedRange.select());
-  // } 
-  // else if (shouldMoveStart(selection.getStart())) {
-  //   moveStartToNearestText(selection);
-  // }
+  let rngAfter;
+  if (pts.sc == pts.ec) {
+    rngAfter = range.createFromNode(pts.sc);
+  }
+  else {
+    rngAfter = range.create(pts.sc, pts.so, pts.ec, pts.eo);
+  }
 
-  // const newRange = range.createFromBookmark(editable, bookmark);
-  // console.log(newRange);
-  // editor.setLastRange(newRange.select());
+  rngAfter.select();
+  editor.setLastRange(rngAfter);
 };
 
 // Expands the node to the closes contentEditable false element if it exists

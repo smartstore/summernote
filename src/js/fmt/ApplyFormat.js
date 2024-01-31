@@ -318,32 +318,30 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
           rng = range.createFromNativeRange(rng);
           applyRngStyle(FormatUtils.expandRng(rng, formatList), true);
         }
-      } else {
+      } 
+      else {
         applyRngStyle(node, true);
       }
-    } else {
+    } 
+    else {
       if (!isCollapsed || !FormatUtils.isInlineFormat(format) || rng.isOnCell()) {
         // Apply formatting to selection
         if (!isCollapsed) {
-          rng = rng.clone().normalize().splitText();
-          //rng.select();
+          rng = rng.clone().splitText().normalize();
         }
         
-        FormatUtils.preserveSelection(
-          editor,
-          rng,
-          () => {
-            const expandedRng = FormatUtils.expandRng(rng, formatList);
-            applyRngStyle(expandedRng, false);
-          },
-          func.ok
-        );
-      } else {
+        // Apply while preserving visible selection
+        FormatUtils.preserveSelection(editor, rng, () => {
+          const expandedRng = FormatUtils.expandRng(rng, formatList);
+          applyRngStyle(expandedRng, false);
+        });
+      } 
+      else {
         CaretFormat.applyCaretFormat(editor, name, vars);
       }
 
       each(ListItemFormat.getExpandedListItemFormat(editor.formatter, name), (liFmt) => {
-        each(ListItemFormat.getFullySelectedListItems(editor.getSelection()), (li) => applyStyles(li, liFmt, vars));
+        each(ListItemFormat.getFullySelectedListItems(editor.getLastRange()), (li) => applyStyles(li, liFmt, vars));
       });
     }
   }
