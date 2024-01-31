@@ -149,8 +149,8 @@ const formats = {
   ],
 
   underline: [
+    { inline: 'u', remove: 'all', preserve_attributes: [ 'class', 'style' ] },
     { inline: 'span', styles: { textDecoration: 'underline' }, exact: true },
-    { inline: 'u', remove: 'all', preserve_attributes: [ 'class', 'style' ] }
   ],
 
   strikethrough: [

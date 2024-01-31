@@ -1,7 +1,7 @@
 import FormatRegistry from './FormatRegistry';
-import * as MatchFormat from './MatchFormat';
-// import ApplyCommand from './ApplyCommandNew';
-// import RemoveCommand from './RemoveCommand';
+import MatchFormat from './MatchFormat';
+import ApplyFormat from './ApplyFormat';
+import RemoveFormat from './RemoveFormat';
 
 export default class Formatter {
   constructor(context) {
@@ -66,7 +66,7 @@ export default class Formatter {
    * @param {Node} node Optional node to apply the format to defaults to current selection.
    */
   apply(name, vars, node) {
-    //Rtc.applyFormat(editor, name, vars, node);
+    ApplyFormat.applyFormat(this.editor, name, vars, node);
   }
 
   /**
@@ -78,7 +78,7 @@ export default class Formatter {
    * @param {Node/Range} node Optional node or DOM range to remove the format from defaults to current selection.
    */
   remove(name, vars, node, similar) {
-    //Rtc.removeFormat(editor, name, vars, node, similar);
+    RemoveFormat.removeFormat(this.editor, name, vars, node, similar);
   }
 
   /**
@@ -90,7 +90,14 @@ export default class Formatter {
    * @param {Node} node Optional node to apply the format to or remove from. Defaults to current selection.
    */
   toggle(name, vars, node) {
-    //Rtc.toggleFormat(editor, name, vars, node);
+    const fmt = this.get(name);
+    if (fmt) {
+      if (MatchFormat.match(this.editor, name, vars, node) && (!('toggle' in fmt[0]) || fmt[0].toggle)) {
+        RemoveFormat.removeFormat(this.editor, name, vars, node);
+      } else {
+        ApplyFormat.applyFormat(this.editor, name, vars, node);
+      }
+    }
   }
 
   /**
@@ -115,6 +122,7 @@ export default class Formatter {
    * @return {String} The closest matching format name or null.
    */
   closest(names) {
+    // TODO: Implement MatchFormat.closest()
     return MatchFormat.closest(this.editor, names);
   }
 

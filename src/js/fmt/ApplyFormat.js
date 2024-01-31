@@ -7,12 +7,18 @@ import lists from '../core/lists';
 import schema from '../core/schema';
 import range from '../core/range';
 import dom from '../core/dom';
-import * as MatchFormat from './MatchFormat';
+import Point from '../core/Point';
 import FormatUtils from './FormatUtils';
+import MatchFormat from './MatchFormat';
+import CaretFormat from './CaretFormat';
+import MergeFormats from './MergeFormats';
+import ListItemFormat from './ListItemFormat';
 
 const each = lists.each;
 
-const canFormatBR = (command, node, parentName) => {
+const isCaretNode = (node) => false;
+
+const canFormatBR = (format, node, parentName) => {
   // TODO: implement canFormatBR
   return false;
 };
@@ -34,12 +40,16 @@ const applyStyles = (elm, format, vars) => {
 };
 
 const applyFormatAction = (editor, name, vars = null, node = null) => {
+  let rng = editor.getLastRange();
+  if (!rng.isEditable()) {
+    return;
+  }
+
   const formatList = editor.formatter.get(name);
   const format = formatList[0];
-  const rng = editor.getLastRange();
-  const isCollapsed = !node && ed.selection.isCollapsed();
+  const isCollapsed = !node && rng.isCollapsed();
 
-  const setElementFormat = (elm, fmt) => {
+  const setElementFormat = (elm, fmt = format) => {
     if (Type.isFunction(fmt.onformat)) {
       fmt.onformat(elm, fmt, vars, node);
     }
@@ -68,11 +78,10 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
         return false;
       }
 
-      //// TODO: Implement dom.getContentEditable() ?
-      // // Check if the node is noneditable and if the format can override noneditable node
-      // if (dom.getContentEditable(node) === 'false' && !format.ceFalseOverride) {
-      //   return true;
-      // }
+      // Check if the node is noneditable
+      if (!dom.isContentEditable(node)) {
+        return true;
+      }
 
       // Check collapsed state if it exists
       if (Type.isAssigned(format.collapsed) && format.collapsed !== isCollapsed) {
@@ -101,7 +110,7 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
     }
   };
 
-  const applyRangeStyle = (rng, nodeSpecific) => {
+  const applyRngStyle = (rng, nodeSpecific) => {
     const newWrappers = [];
     let contentEditable = true;
     
@@ -125,23 +134,25 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
       const isValidWrapNode =
         FormatUtils.isValid(wrapName, nodeName) &&
         FormatUtils.isValid(parentName, wrapName);
-      // If it is not node specific, it means that it was not passed into 'CommandController.apply` and is within the editor selection
+      
+      // If it is not node specific, it means that it was not passed into 'Formatter.apply` and is within the editor selection
       const isZwsp = !nodeSpecific && dom.isText(node) && Point.isZwsp(node.data);
       const isCaret = isCaretNode(node);
-      const isCorrectFormatForNode = !FormatUtils.isInlineFormat(format) || !dom.isBlock(node);
+      // TODO: Investigate: Why !FormatUtils.isInlineFormat(format) || !dom.isBlock(node) ?
+      const isCorrectFormatForNode = true; // !FormatUtils.isInlineFormat(format) || !dom.isBlock(node);
       return (isEditableDescendant || isWrappableNoneditableElm) && isValidWrapNode && !isZwsp && !isCaret && isCorrectFormatForNode;
     };
   
     rng.walk((nodes) => {
       let currentWrapElm;
-  
+
       const process = (node) => {
         let hasContentEditableState = false;
         let lastContentEditable = contentEditable;
         let isWrappableNoneditableElm = false;
         const parentNode = node.parentNode;
         const parentName = parentNode.nodeName.toLowerCase();
-  
+        
         // Node has a contentEditable value
         const contentEditableValue = dom.getContentEditable(node);
         if (contentEditableValue) {
@@ -149,7 +160,7 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
           contentEditable = contentEditableValue === 'true';
           // Unless the noneditable element is wrappable, we don't want to wrap the container, only it's editable children
           hasContentEditableState = true;
-          // TODO: implement isWrappableNoneditable
+          // TODO: implement isWrappableNoneditable ?
           isWrappableNoneditableElm = false; // FormatUtils.isWrappableNoneditable(ed, node);
         }
         const isEditableDescendant = contentEditable && !hasContentEditableState;
@@ -168,7 +179,7 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
           currentWrapElm = null;
           return;
         }
-  
+        
         if (canRenameBlock(node, parentName, isEditableDescendant)) {
           const elm = dom.rename(node, wrapName);
           setElementFormat(elm);
@@ -211,7 +222,7 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
         else {
           // Start a new wrapper for possible children
           currentWrapElm = null;
-  
+          
           each(lists.from(node.childNodes), process);
   
           if (hasContentEditableState) {
@@ -228,7 +239,7 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
   
     // Apply formats to links as well to get the color of the underline to change as well
     if (format.links === true) {
-      Arr.each(newWrappers, (node) => {
+      each(newWrappers, (node) => {
         const process = (node) => {
           if (node.nodeName === 'A') {
             setElementFormat(node, format);
@@ -286,34 +297,60 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
         if (!format.exact && childCount === 1) {
           node = mergeStyles(node);
         }
-  
-        // TODO: Implement MergeCommands
-        // MergeFormats.mergeWithChildren(ed, formatList, vars, node);
-        // MergeFormats.mergeWithParents(ed, format, name, vars, node);
-        // MergeFormats.mergeBackgroundColorAndFontSize(dom, format, vars, node);
-        // MergeFormats.mergeTextDecorationsAndColor(dom, format, vars, node);
-        // MergeFormats.mergeSubSup(dom, format, vars, node);
-        // MergeFormats.mergeSiblings(ed, format, vars, node);
+
+        MergeFormats.mergeWithChildren(editor, formatList, vars, node);
+        MergeFormats.mergeWithParents(editor, format, name, vars, node);
+        MergeFormats.mergeBackgroundColorAndFontSize(format, vars, node);
+        MergeFormats.mergeTextDecorationsAndColor(format, vars, node);
+        MergeFormats.mergeSubSup(format, vars, node);
+        MergeFormats.mergeSiblings(editor, format, vars, node);
       }
     });
   };
+  
+  if (format) {
+    if (node) {
+      if (dom.isNode(node)) {
+        if (!applyNodeStyle(formatList, node)) {
+          rng = document.createRange();
+          rng.setStartBefore(node);
+          rng.setEndAfter(node);
+          rng = range.createFromNativeRange(rng);
+          applyRngStyle(FormatUtils.expandRng(rng, formatList), true);
+        }
+      } else {
+        applyRngStyle(node, true);
+      }
+    } else {
+      if (!isCollapsed || !FormatUtils.isInlineFormat(format) || rng.isOnCell()) {
+        // Apply formatting to selection
+        if (!isCollapsed) {
+          rng = rng.clone().normalize().splitText();
+          //rng.select();
+        }
+        
+        FormatUtils.preserveSelection(
+          editor,
+          rng,
+          () => {
+            const expandedRng = FormatUtils.expandRng(rng, formatList);
+            applyRngStyle(expandedRng, false);
+          },
+          func.ok
+        );
+      } else {
+        CaretFormat.applyCaretFormat(editor, name, vars);
+      }
 
-  // ...Weitermachen...
+      each(ListItemFormat.getExpandedListItemFormat(editor.formatter, name), (liFmt) => {
+        each(ListItemFormat.getFullySelectedListItems(editor.getSelection()), (li) => applyStyles(li, liFmt, vars));
+      });
+    }
+  }
 };
 
-const applyFormat = (command, rng, variant = null) => {
-  const isCollapsed = rng.isCollapsed();
-  
-  if (isCollapsed) {
-    // Applying a command to a collapsed selection will do nothing. Find the word around the cursor.
-    rng = rng.getWordRange(true);
-  }
-
-  rng = rng.splitText();
-
-  // // Make predicate for matchesCommand function
-  // let pred = (node) => MatchFormat.matchNode(command, node);
-  applyRangeStyle(command, rng, true);
+const applyFormat = (editor, name, vars, node) => {
+  applyFormatAction(editor, name, vars, node);
 };
 
 export default {

@@ -220,7 +220,7 @@ const matchAllOnNode = (editor, node, formatNames) => {
   }, []); 
 };
 
-export {
+export default {
   matchNode,
   matchName,
   match,

@@ -18,7 +18,7 @@ const CharTypes = {
  */
 const paddingBlankHTML = (node) => {
   if (!dom.isVoid(node) && !dom.nodeLength(node)) {
-    node.innerHTML = blankHTML;
+    node.innerHTML = dom.blank;
   }
 }
 

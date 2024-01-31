@@ -180,6 +180,14 @@ const createFromParaBookmark = (bookmark, paras) => {
   return create(sc, so, ec, eo);
 };
 
+const skipEmptyTextNodes = (node, forwards) => {
+  const orig = node;
+  while (node && dom.isText(node) && node.length === 0) {
+    node = forwards ? node.nextSibling : node.previousSibling;
+  }
+  return node || orig;  
+}
+
 /**
  * Wrapped Range
  *
@@ -187,9 +195,8 @@ const createFromParaBookmark = (bookmark, paras) => {
  * @param {Range} nativeRange - The native `Range` object instance to wrap.
  */
 class WrappedRange {
-  // TODO: Implement ElementSelection.getNode()
   constructor(nativeRange) {
-    this._nativeRange = nativeRange;
+    this._rng = nativeRange;
 
     // Judge whether range is on editable or not
     this.isOnEditable = isOnEditable;
@@ -203,33 +210,37 @@ class WrappedRange {
     this.isOnData = isOnData;
   }
 
+  clone() {
+    return createFromNativeRange(this._rng.cloneRange());
+  }
+
   /**
    * Gets underlying native `Range` object
    */
   get nativeRange() {
-    return this._nativeRange;
+    return this._rng;
   }
 
   get sc() {
-    return this._nativeRange.startContainer;
+    return this._rng.startContainer;
   }
 
   get so() {
-    return this._nativeRange.startOffset;
+    return this._rng.startOffset;
   }
   set so(value) {
-    return this._nativeRange.setStart(this._nativeRange.startContainer, value);
+    return this._rng.setStart(this._rng.startContainer, value);
   }
 
   get ec() {
-    return this._nativeRange.endContainer;
+    return this._rng.endContainer;
   }
 
   get eo() {
-    return this._nativeRange.endOffset;
+    return this._rng.endOffset;
   }
   set eo(value) {
-    return this._nativeRange.setEnd(this._nativeRange.endContainer, value);
+    return this._rng.setEnd(this._rng.endContainer, value);
   }
 
   getPoints() {
@@ -358,14 +369,57 @@ class WrappedRange {
 
 
   /**
-   * Select update visible range
+   * Changes the visible selection to this DOM range.
+   * 
+  * @param {Boolean} forward Optional boolean if the selection is forwards or backwards.
    */
-  select() {
-    const selection = document.getSelection();
-    if (selection.rangeCount > 0) {
-      selection.removeAllRanges();
+  select(forward) {
+    const sel = window.getSelection ? window.getSelection() : document.selection;
+    const rng = this._rng;
+    let selectedRange;
+
+    if (sel) {
+      try {
+        sel.removeAllRanges();
+        sel.addRange(rng);
+      } catch (ex) {
+        // IE might throw errors here if the editor is within a hidden container and selection is changed
+      }
+
+      // Forward is set to false and we have an extend function
+      if (forward === false && sel.extend) {
+        sel.collapse(rng.endContainer, rng.endOffset);
+        sel.extend(rng.startContainer, rng.startOffset);
+      }
+
+      // Adding range isn't always successful so we need to check range count otherwise an exception can occur
+      selectedRange = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
     }
-    selection.addRange(this._nativeRange);
+
+    // WebKit edge case selecting images works better using setBaseAndExtent when the image is floated
+    if (!rng.collapsed && rng.startContainer === rng.endContainer && sel?.setBaseAndExtent) {
+      if (rng.endOffset - rng.startOffset < 2) {
+        if (rng.startContainer.hasChildNodes()) {
+          const node = rng.startContainer.childNodes[rng.startOffset];
+          if (node && node.nodeName === 'IMG') {
+            sel.setBaseAndExtent(
+              rng.startContainer,
+              rng.startOffset,
+              rng.endContainer,
+              rng.endOffset
+            );
+
+            // Since the setBaseAndExtent is fixed in more recent Blink versions we
+            // need to detect if it's doing the wrong thing and falling back to the
+            // crazy incorrect behavior api call since that seems to be the only way
+            // to get it to work on Safari WebKit as of 2017-02-23
+            if (sel.anchorNode !== rng.startContainer || sel.focusNode !== rng.endContainer) {
+              sel.setBaseAndExtent(node, 0, node, 1);
+            }
+          }
+        }
+      }
+    }
 
     return this;
   }
@@ -382,6 +436,11 @@ class WrappedRange {
     return this;
   }
 
+  /**
+   * Normalizes the range by finding the closest best suitable caret location.
+   *
+   * @return {WrappedRange} - Current instance for chaining.
+   */
   normalize() {
     /**
      * @param {BoundaryPoint} point
@@ -444,7 +503,10 @@ class WrappedRange {
     const endPoint = getVisiblePoint(this.getEndPoint(), false);
     const startPoint = this.isCollapsed() ? endPoint : getVisiblePoint(this.getStartPoint(), true);
 
-    return createFromPoints(startPoint, endPoint);
+    this.setStart(startPoint.node, startPoint.offset);
+    this.setEnd(endPoint.node, endPoint.offset);
+
+    return this;
   }
 
   /**
@@ -500,7 +562,7 @@ class WrappedRange {
    * @return {Element} - commonAncestor
    */
   commonAncestor() {
-    return this._nativeRange.commonAncestorContainer;
+    return this._rng.commonAncestorContainer;
   }
 
   /**
@@ -518,24 +580,22 @@ class WrappedRange {
       return create(this.sc, this.so, this.ec, this.eo);
     }
 
-    const boundaryPoints = this.getPoints();
+    const pts = this.getPoints();
 
     if (startAncestor) {
-      boundaryPoints.sc = startAncestor;
-      boundaryPoints.so = 0;
+      pts.sc = startAncestor;
+      pts.so = 0;
     }
 
     if (endAncestor) {
-      boundaryPoints.ec = endAncestor;
-      boundaryPoints.eo = dom.nodeLength(endAncestor);
+      pts.ec = endAncestor;
+      pts.eo = dom.nodeLength(endAncestor);
     }
 
-    return create(
-      boundaryPoints.sc,
-      boundaryPoints.so,
-      boundaryPoints.ec,
-      boundaryPoints.eo
-    );
+    this.setStart(pts.sc, pts.so);
+    this.setEnd(pts.ec, pts.eo);
+
+    return this;
   }
 
   /**
@@ -545,37 +605,144 @@ class WrappedRange {
    * @return {WrappedRange}
    */
   collapse(toStart) {
-    this._nativeRange.collapse(toStart);
+    this._rng.collapse(toStart);
     return this;
   }
 
   /**
-   * SplitText on range
+   * Sets the start position of a `Range`.
+   * 
+   * @param {Node} startNode
+   * @param {Number} startOffset
+   * @return {WrappedRange}
+   */
+  setStart(startNode, startOffset) {
+    this._rng.setStart(startNode, startOffset);
+    return this;
+  }
+
+  /**
+   * Sets the end position of a `Range`.
+   * 
+   * @param {Node} endNode
+   * @param {Number} endOffset
+   * @return {WrappedRange}
+   */
+  setEnd(endNode, endOffset) {
+    this._rng.setEnd(endNode, endOffset);
+    return this;
+  }
+
+  getNode(root) {
+    const rng = this._rng;
+    const startOffset = rng.startOffset;
+    const endOffset = rng.endOffset;
+    let startContainer = rng.startContainer;
+    let endContainer = rng.endContainer;
+    let node = rng.commonAncestorContainer;
+
+    // Handle selection a image or other control like element such as anchors
+    if (!rng.collapsed) {
+      if (startContainer === endContainer) {
+        if (endOffset - startOffset < 2) {
+          if (startContainer.hasChildNodes()) {
+            node = startContainer.childNodes[startOffset];
+          }
+        }
+      }
+
+      // If the anchor node is a element instead of a text node then return this element
+      // if (isWebKit && sel.anchorNode && sel.anchorNode.nodeType == 1)
+      // return anchorNode.childNodes[sel.anchorOffset];
+
+      // Handle cases where the selection is immediately wrapped around a node and return that node instead of it's parent.
+      // This happens when you double click an underlined word in FireFox.
+      if (dom.isText(startContainer) && dom.isText(endContainer)) {
+        if (startContainer.length === startOffset) {
+          startContainer = skipEmptyTextNodes(startContainer.nextSibling, true);
+        } else {
+          startContainer = startContainer.parentNode;
+        }
+
+        if (endOffset === 0) {
+          endContainer = skipEmptyTextNodes(endContainer.previousSibling, false);
+        } else {
+          endContainer = endContainer.parentNode;
+        }
+
+        if (startContainer && startContainer === endContainer) {
+          node = startContainer;
+        }
+      }
+    }
+
+    const elm = dom.isText(node) ? node.parentNode : node;
+    return dom.isHTMLElement(elm) ? elm : root || dom.getEditableRoot(elm);
+  }
+
+  /**
+   * Splits text on range and returns a new range.
    */
   splitText() {
+    const pts = this.getPoints();
+
+    // Handle single text node
+    if (pts.sc === pts.ec && dom.isText(pts.sc)) {
+      if (pts.so > 0 && pts.so < pts.sc.data.length) {
+        pts.ec = pts.sc.splitText(pts.so);
+        pts.sc = pts.ec.previousSibling;
+
+        if (pts.eo > pts.so) {
+          pts.eo = pts.eo - pts.so;
+          const newContainer = pts.ec.splitText(pts.eo).previousSibling;
+          pts.sc = pts.ec = newContainer;
+          pts.eo = newContainer.data.length;
+          pts.so = 0;
+        } else {
+          pts.eo = 0;
+        }
+      }
+    } else {
+      // Split startContainer text node if needed
+      if (dom.isText(pts.sc) && pts.so > 0 && pts.so < pts.sc.data.length) {
+        pts.sc = pts.sc.splitText(pts.so);
+        pts.so = 0;
+      }
+
+      // Split endContainer text node if needed
+      if (dom.isText(pts.ec) && pts.eo > 0 && pts.eo < pts.ec.data.length) {
+        const newContainer = pts.ec.splitText(pts.eo).previousSibling;
+        pts.ec = newContainer;
+        pts.eo = newContainer.data.length;
+      }
+    }
+
+    return create(pts.sc, pts.so, pts.ec, pts.eo);
+  }
+
+  splitText_old() {
+    // TODO: Remove range.splitText_old()
     const isSameContainer = this.sc === this.ec;
-    const boundaryPoints = this.getPoints();
+    const pts = this.getPoints();
 
     if (dom.isText(this.ec) && !Point.isEdgePoint(this.getEndPoint())) {
       this.ec.splitText(this.eo);
     }
 
     if (dom.isText(this.sc) && !Point.isEdgePoint(this.getStartPoint())) {
-      boundaryPoints.sc = this.sc.splitText(this.so);
-      boundaryPoints.so = 0;
+      pts.sc = this.sc.splitText(this.so);
+      pts.so = 0;
 
       if (isSameContainer) {
-        boundaryPoints.ec = boundaryPoints.sc;
-        boundaryPoints.eo = this.eo - this.so;
+        pts.ec = pts.sc;
+        pts.eo = this.eo - this.so;
       }
     }
 
-    return create(
-      boundaryPoints.sc,
-      boundaryPoints.so,
-      boundaryPoints.ec,
-      boundaryPoints.eo
-    );
+    this.setStart(pts.sc, pts.so);
+    this.setEnd(pts.ec, pts.eo);
+
+    return this;
   }
 
   /**
@@ -583,36 +750,8 @@ class WrappedRange {
    * @return {WrappedRange}
    */
   deleteContents() {
-    if (this.isCollapsed()) {
-      return this;
-    }
-
-    const rng = this.splitText();
-    const nodes = rng.nodes(null, {
-      fullyContains: true,
-    });
-
-    // find new cursor point
-    const point = Point.prevPointUntil(rng.getStartPoint(), function(point) {
-      return !lists.contains(nodes, point.node);
-    });
-
-    const emptyParents = [];
-    $.each(nodes, function(idx, node) {
-      // find empty parents
-      const parent = node.parentNode;
-      if (point.node !== parent && dom.nodeLength(parent) === 1) {
-        emptyParents.push(parent);
-      }
-      dom.remove(node, false);
-    });
-
-    // remove empty parents
-    $.each(emptyParents, function(idx, node) {
-      dom.remove(node, false);
-    });
-
-    return createFromPoints(point).normalize();
+    this._rng.deleteContents();
+    return this;
   }
 
   /**
@@ -639,7 +778,19 @@ class WrappedRange {
    * Checks whether range is collapsed
    */
   isCollapsed() {
-    return this._nativeRange.collapsed;
+    return this._rng.collapsed;
+  }
+
+  /**
+   * Checks if the current range’s start and end containers are editable within their parent’s contexts.
+   */
+  isEditable() {
+    const rng = this._rng;
+    if (rng.collapsed) {
+      return dom.isContentEditable(rng.startContainer);
+    } else {
+      return dom.isContentEditable(rng.startContainer) && dom.isContentEditable(rng.endContainer);
+    }
   }
 
   /**
@@ -779,16 +930,14 @@ class WrappedRange {
       });
     }
 
-    return create(
-      startPoint.node,
-      startPoint.offset,
-      endPoint.node,
-      Math.max(endPoint.offset - 1, endOffset)
-    );
+    this.setStart(startPoint.node, startPoint.offset);
+    this.setEnd(endPoint.node, Math.max(endPoint.offset - 1, endOffset));
+
+    return this;
   }
 
   /**
-   * returns range for words before cursor
+   * Returns range for words before cursor
    *
    * @param {Boolean} [findAfter] - find after cursor, default: false
    * @return {WrappedRange}
@@ -810,7 +959,10 @@ class WrappedRange {
       endPoint = Point.nextPointUntil(endPoint, isNotTextPoint);
     }
 
-    return createFromPoints(startPoint, endPoint);
+    this.setStart(startPoint.node, startPoint.offset);
+    this.setEnd(endPoint.node, endPoint.offset);
+
+    return this;
   }
 
   /**

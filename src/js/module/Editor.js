@@ -59,29 +59,43 @@ export default class Editor {
 
     // native commands(with execCommand), generate function for execCommand
     const commands = [
-      /*'bold', */'italic', 'underline', 'strikethrough', 'superscript', 'subscript',
+      'bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript',
       'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull',
-      'formatBlock', 'removeFormat', 'backColor',
+      'formatBlock', 'removeFormat', 'backColor', 'code'
+    ];
+
+    const supportedFormats = [
+      'bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'code'
     ];
 
     for (let idx = 0, len = commands.length; idx < len; idx++) {
       this[commands[idx]] = ((sCmd) => {
         return (value) => {
           this.beforeCommand();
-          document.execCommand(sCmd, false, value);
+          if (lists.contains(supportedFormats, sCmd)) {
+            this.formatter.toggle(sCmd);
+          }
+          else {
+            document.execCommand(sCmd, false, value);
+          }
           this.afterCommand(true);
         };
       })(commands[idx]);
       this.context.memo('help.' + commands[idx], this.lang.help[commands[idx]]);
     }
 
-    this.bold = this.wrapCommand((value) => {
-      this.commandController.toggle('bold', this.getLastRange(), value);
-    });
+    // this.bold = this.wrapCommand((value) => {
+    //   //this.commandController.toggle('bold', this.getLastRange(), value);
+    //   this.formatter.toggle('bold');
+    // });
 
-    this.inlineCode = this.wrapCommand((value) => {
-      this.commandController.toggle('code', this.getLastRange(), value);
-    });
+    // this.italic = this.wrapCommand((value) => {
+    //   this.formatter.toggle('italic');
+    // });
+
+    // this.inlineCode = this.wrapCommand((value) => {
+    //   this.formatter.toggle('code');
+    // });
 
     this.fontName = this.wrapCommand((value) => {
       return this.fontStyling('font-family', env.validFontName(value));
@@ -705,6 +719,10 @@ export default class Editor {
       this.lastRange.select();
       this.focus();
     }
+  }
+
+  getSelection() {
+    return window.getSelection ? window.getSelection() : document.selection;
   }
 
   saveTarget(node) {

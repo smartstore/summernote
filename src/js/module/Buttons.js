@@ -338,13 +338,13 @@ export default class Buttons {
     });
     this.context.memo('button.subscript', func.invoke(subscript, 'render'));
 
-    const inlineCode = this.button({
+    const code = this.button({
       className: 'note-btn-inlinecode',
       contents: this.ui.icon(this.options.icons.inlineCode),
       tooltip: this.lang.font.code,
-      click: this.context.createInvokeHandlerAndUpdateState('editor.inlineCode'),
+      click: this.context.createInvokeHandlerAndUpdateState('editor.code'),
     });
-    this.context.memo('button.inlinecode', func.invoke(inlineCode, 'render'));
+    this.context.memo('button.inlinecode', func.invoke(code, 'render'));
 
     this.context.memo('button.moreFontStyles', () => {
       return this.ui.buttonGroup([
@@ -360,7 +360,7 @@ export default class Buttons {
           css: { 'min-width': 'auto' },
           items: this.ui.buttonGroup({
             className: 'note-more-fontstyles',
-            children: [strikethrough, superscript, subscript, inlineCode],
+            children: [strikethrough, superscript, subscript, code],
           }).render()
         })
       ]).render();
@@ -878,6 +878,9 @@ export default class Buttons {
       },
       '.note-btn-strikethrough': () => {
         return styleInfo['font-strikethrough'] === 'strikethrough';
+      },
+      '.note-btn-inlinecode': () => {
+        return styleInfo['font-code'] === 'code';
       },
     });
 

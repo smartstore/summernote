@@ -224,9 +224,6 @@ const matches = (node, selector) => matchSelector(selector)(node);
 // Perf
 const isControlSizing = (node) => node?.classList && node.nodeName === 'DIV' && node.classList.contains('note-control-sizing');
 
-// Perf
-const isEditableRoot = (node) => node?.classList && node.nodeName === 'DIV' && node.classList.contains('note-editable');
-
 /**
  * Checks whether node is given tag
  *
@@ -235,12 +232,55 @@ const isEditableRoot = (node) => node?.classList && node.nodeName === 'DIV' && n
  */
 const isTag = (node, tag) => matchNodeNames(tag)(node);
 
-const isEditable = (node) => {
-  if (Type.isAssigned(node)) {
+// #endregion
+
+
+// #region ContentEditable
+
+/**
+ * Gets the root editable node.
+ */
+const getEditableRoot = (node) => $(node).closest('.note-editable')[0];
+
+// Perf
+const isEditableRoot = (node) => node?.classList && node.nodeName === 'DIV' && node.classList.contains('note-editable');
+
+const isContentEditable = (node) => {
+  if (node) {
     const scope = isElement(node) ? node : node.parentElement;
-    return Type.isAssigned(scope) && isHTMLElement(scope) && scope.contentEditable === 'true';
+    return !!scope && scope.isContentEditable;
   }
   return false;
+};
+
+const getContentEditable = (node) => {
+  if (node && isHTMLElement(node)) {
+    // Check for fake content editable
+    const contentEditable = node.getAttribute('data-note-contenteditable');
+    if (contentEditable && contentEditable !== 'inherit') {
+      return contentEditable;
+    }
+
+    // Check for real content editable
+    return node.contentEditable !== 'inherit' ? node.contentEditable : null;
+  } else {
+    return null;
+  }
+};
+
+const getContentEditableParent = (node) => {
+  const root = getRoot();
+  let state = null;
+
+  for (let tempNode = node; tempNode && tempNode !== root; tempNode = tempNode.parentNode) {
+    state = getContentEditable(tempNode);
+
+    if (state !== null) {
+      break;
+    }
+  }
+
+  return state;
 };
 
 // #endregion
@@ -254,11 +294,6 @@ const isEditable = (node) => {
  * - [workaround] IE11 and other browser works with bogus br
  */
 const blankHTML = env.isMSIE && env.browserVersion < 11 ? '&nbsp;' : '<br>';
-
-/**
- * Gets the root editable node.
- */
-const getEditableRoot = (node) => $(node).closest('.note-editable')[0];
 
 const create = (nodeName) => document.createElement(nodeName);
 const createText = (text) => document.createTextNode(text);
@@ -424,12 +459,25 @@ const isRightEdgeOf = (node, parent) => {
 /**
  * Gets offset from parent.
  */
-const position = (node) => {
-  let offset = 0;
-  while ((node = node.previousSibling)) {
-    offset += 1;
+const position = (node, normalized) => {
+  let idx = 0;
+
+  if (node) {
+    for (let lastNodeType = node.nodeType, tempNode = node.previousSibling; tempNode; tempNode = tempNode.previousSibling) {
+      const nodeType = tempNode.nodeType;
+
+      // Normalize text nodes
+      if (normalized && isText(tempNode)) {
+        if (nodeType === lastNodeType || !tempNode.data.length) {
+          continue;
+        }
+      }
+      idx++;
+      lastNodeType = nodeType;
+    }
   }
-  return offset;
+
+  return idx;
 }
 
 const hasChildren = (node) => {
@@ -524,21 +572,6 @@ const detachEvents = ($node, events) => {
 const isCustomStyleTag = (node) => {
   return node && !isText(node) && lists.contains(node.classList, 'note-styletag');
 }
-
-const getContentEditable = (node) => {
-  if (node && isHTMLElement(node)) {
-    // Check for fake content editable
-    const contentEditable = node.getAttribute('data-note-contenteditable');
-    if (contentEditable && contentEditable !== 'inherit') {
-      return contentEditable;
-    }
-
-    // Check for real content editable
-    return node.contentEditable !== 'inherit' ? node.contentEditable : null;
-  } else {
-    return null;
-  }
-};
 
 // #endregion
 
@@ -943,6 +976,9 @@ export default {
   matches,
   getEditableRoot,
   isEditableRoot,
+  isContentEditable,
+  getContentEditable,
+  getContentEditableParent,
   isControlSizing,
   isNode,
   isText,
@@ -1031,7 +1067,6 @@ export default {
   attachEvents,
   detachEvents,
   isCustomStyleTag,
-  getContentEditable,
   setAttr,
   getAttr,
   getStyle,
