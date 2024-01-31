@@ -195,7 +195,7 @@ describe('Editor', () => {
 
   describe('setLastRange', () => {
     it('should set last range', (done) => {
-      document.body.click();
+      document.body.trigger('click');
       editor.setLastRange();
 
       expect(editor.lastRange.sc).await(done).to.equal(editor.editable.lastChild);
@@ -203,7 +203,7 @@ describe('Editor', () => {
 
     it('should set last range without content', (done) => {
       context.layoutInfo.editable.html('');
-      document.body.click();
+      document.body.trigger('click');
       editor.setLastRange();
 
       expect(editor.lastRange.sc).await(done).to.equal(editor.editable);

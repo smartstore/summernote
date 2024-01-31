@@ -1,6 +1,7 @@
 import $ from 'jquery';
 import env from '../core/env';
 import key from '../core/key';
+import Str from '../core/Str';
 
 export default class LinkDialog {
   constructor(context) {
@@ -148,7 +149,7 @@ export default class LinkDialog {
         $linkText.on('input paste propertychange', () => {
           // If linktext was modified by input events,
           // cloning text from linkUrl will be stopped.
-          linkInfo.text = $linkText.val();
+          linkInfo.text = Str.escape($linkText.val());
           toggleLinkBtn();
         });
   

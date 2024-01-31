@@ -549,10 +549,6 @@ export default class Editor {
     } else if (eventName) {
       if (this.context.invoke(eventName) !== false) {
         event.preventDefault();
-        // if keyMap action was invoked
-        if (keyName != 'ENTER') {  // <--- Without this check, we get double Empty Paragraph insertion.
-          this.context.invoke(eventName);
-        }
         return true;
       }
     } else if (key.isEdit(event.keyCode)) {
@@ -1244,7 +1240,7 @@ export default class Editor {
     // [workaround] Screen will move when page is scolled in IE.
     //  - do focus when not focused
     if (!this.hasFocus()) {
-      this.$editable.focus();
+      this.$editable.trigger('focus');
     }
   }
 

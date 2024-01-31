@@ -1,3 +1,4 @@
+import func from './func';
 import lists from './lists';
 import dom from './dom';
 
@@ -231,8 +232,12 @@ const splitNode = (point, options) => {
     return point.node.splitText(point.offset);
   } else {
     const childNode = point.node.childNodes[point.offset];
+    let childNodes = dom.nextSiblings(childNode);
+    // Remove empty nodes
+    childNodes = childNodes.filter(func.not(dom.isEmpty));	
+
     const clone = dom.insertAfter(point.node.cloneNode(false), point.node);
-    dom.appendChildNodes(clone, dom.nextSiblings(childNode));
+    dom.appendChildNodes(clone, childNodes);
 
     if (!isSkipPaddingBlankHTML) {
       paddingBlankHTML(point.node);
