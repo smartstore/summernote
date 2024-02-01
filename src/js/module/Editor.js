@@ -10,7 +10,6 @@ import Point from '../core/Point';
 import { readFileAsDataURL, createImage } from '../core/async';
 import History from '../editing/History';
 import Style from '../editing/Style';
-import CommandController from '../command/Controller';
 import Typing from '../editing/Typing';
 import Table from '../editing/Table';
 import Bullet from '../editing/Bullet';
@@ -39,9 +38,8 @@ export default class Editor {
     this.typing = new Typing(context);
     this.bullet = new Bullet();
     this.history = new History(context);
-    this.commandController = new CommandController(context);
     this.formatter = new Formatter(context);
-    this.style = new Style(context, this.formatter, this.commandController);
+    this.style = new Style(context, this.formatter);
 
     this.context.memo('help.escape', this.lang.help.escape);
     this.context.memo('help.undo', this.lang.help.undo);
@@ -817,7 +815,7 @@ export default class Editor {
    */
   tab() {
     const rng = this.getLastRange();
-    if (rng.isCollapsed() && rng.isOnCell()) {
+    if (rng.collapsed && rng.isOnCell()) {
       this.table.tab(rng);
     } else {
       if (this.options.tabSize === 0) {
@@ -837,7 +835,7 @@ export default class Editor {
    */
   untab() {
     const rng = this.getLastRange();
-    if (rng.isCollapsed() && rng.isOnCell()) {
+    if (rng.collapsed && rng.isOnCell()) {
       this.table.tab(rng, true);
     } else {
       if (this.options.tabSize === 0) {
@@ -861,7 +859,7 @@ export default class Editor {
   */
   removed(rng, node, tagName) { // LB
 		rng = range.create();
-		if (rng.isCollapsed() && rng.isOnCell()) {
+		if (rng.collapsed && rng.isOnCell()) {
 			node = rng.ec;
 			if( (tagName = node.tagName) &&
 				(node.childElementCount === 1) &&
@@ -1064,7 +1062,7 @@ export default class Editor {
 
       // [workaround] added styled bogus span for style
       //  - also bogus character needed for cursor position
-      if (rng.isCollapsed()) {
+      if (rng.collapsed) {
         const firstSpan = lists.head(spans);
         if (firstSpan && !dom.nodeLength(firstSpan)) {
           firstSpan.innerHTML = Point.ZERO_WIDTH_NBSP_CHAR;
@@ -1159,7 +1157,7 @@ export default class Editor {
 
   addRow(position) {
     const rng = this.getLastRange(this.$editable);
-    if (rng.isCollapsed() && rng.isOnCell()) {
+    if (rng.collapsed && rng.isOnCell()) {
       this.beforeCommand();
       this.table.addRow(rng, position);
       this.afterCommand();
@@ -1168,7 +1166,7 @@ export default class Editor {
 
   addCol(position) {
     const rng = this.getLastRange(this.$editable);
-    if (rng.isCollapsed() && rng.isOnCell()) {
+    if (rng.collapsed && rng.isOnCell()) {
       this.beforeCommand();
       this.table.addCol(rng, position);
       this.afterCommand();
@@ -1177,7 +1175,7 @@ export default class Editor {
 
   deleteRow() {
     const rng = this.getLastRange(this.$editable);
-    if (rng.isCollapsed() && rng.isOnCell()) {
+    if (rng.collapsed && rng.isOnCell()) {
       this.beforeCommand();
       this.table.deleteRow(rng);
       this.afterCommand();
@@ -1186,7 +1184,7 @@ export default class Editor {
 
   deleteCol() {
     const rng = this.getLastRange(this.$editable);
-    if (rng.isCollapsed() && rng.isOnCell()) {
+    if (rng.collapsed && rng.isOnCell()) {
       this.beforeCommand();
       this.table.deleteCol(rng);
       this.afterCommand();
@@ -1195,7 +1193,7 @@ export default class Editor {
 
   deleteTable() {
     const rng = this.getLastRange(this.$editable);
-    if (rng.isCollapsed() && rng.isOnCell()) {
+    if (rng.collapsed && rng.isOnCell()) {
       this.beforeCommand();
       this.table.deleteTable(rng);
       this.afterCommand();

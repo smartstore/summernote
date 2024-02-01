@@ -20,7 +20,7 @@ const last = (array) => _.last(array);
 const initial = (array) => _.initial(array);
 
 /**
- * Returns the rest of the items in an array.
+ * Returns the rest of the items in an array (starting at index 1).
  *
  * @param {Array} array
  */
@@ -92,7 +92,7 @@ const from = (list, mapper, scope) => {
 }
 
 /**
- * Returns true if list has no elements.
+ * Returns true if list or string has no elements.
  */
 const isEmpty = (list) =>
   _.isEmpty(list);
@@ -236,6 +236,34 @@ function makeMap(array, delim = null, map = null) {
 }
 
 /**
+ * Executes the specified function for each item in an object tree.
+ *
+ * @method walk
+ * @param {Object} node Tree item to traverse.
+ * @param {Function} callback Function to call for each item.
+ * @param {String} [propName] Optional name of collection inside the item to walk, for example `childNodes`.
+ * @param {Object} [scope] - Optional scope to execute the function in.
+ */
+const walk = (node, callback, propName, scope) => {
+  scope = scope || node;
+
+  if (node) {
+    if (propName) {
+      node = o[propName];
+    }
+
+    _.each(node, (o, i) => {
+      if (callback.call(scope, o, i, propName) === false) {
+        return false;
+      } else {
+        walk(o, callback, propName, scope);
+        return true;
+      }
+    });
+  }
+};
+
+/**
  * @class core.list
  *
  * list utils
@@ -268,5 +296,6 @@ export default {
   reject,
   map,
   makeMap,
-  isArrayLike
+  isArrayLike,
+  walk
 };

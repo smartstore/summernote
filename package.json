@@ -16,8 +16,8 @@
     "email": "<susukang98@gmail.com>"
   },
   "main": "dist/summernote.js",
-  "engines" : { 
-    "node" : ">=17.0.0" 
+  "engines": {
+    "node": ">=17.0.0"
   },
   "scripts": {
     "dev": "eslint config && webpack serve --config=./config/webpack.development.js --progress",
@@ -39,6 +39,7 @@
       "pre-push": "yarn lint && yarn run test"
     }
   },
+  "browserslist": "> 1%, not dead",
   "devDependencies": {
     "@babel/core": "^7.9.0",
     "@babel/eslint-parser": "^7.12.16",
@@ -109,5 +110,6 @@
     "webpack-dev-server": "^4.3.0",
     "webpack-sources": "^3.2.3",
     "zip-webpack-plugin": "^4.0.1"
-  }
+  },
+  "dependencies": {}
 }

@@ -42,11 +42,11 @@ module.exports = {
     // entries for each style
     ...styles.map(style => 
       [`${style.target}`, `./src/styles/${style.id}/summernote-${style.id}.js`]
-    ),
+    ).slice(4, 5),
     // ... and for minimized
     ...styles.map(style => 
       [`${style.target}.min`, `./src/styles/${style.id}/summernote-${style.id}.js`]
-    ),
+    ).slice(4, 5),
     // entries for each language
     ...languages.map(lang => 
       [`lang/${lang}`, `./src/lang/${lang}.js`]
@@ -69,6 +69,12 @@ module.exports = {
       commonjs: 'jquery',
       commonjs2: 'jquery',
       amd: 'jquery',
+    },
+    underscore: {
+      root: '_',
+      commonjs: '_',
+      commonjs2: '_',
+      amd: '_',
     },
   },
 

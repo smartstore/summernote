@@ -80,7 +80,7 @@ export default class AirPopover {
 
   update(forcelyOpen) {
     const styleInfo = this.context.invoke('editor.currentStyle');
-    if (styleInfo.range && (!styleInfo.range.isCollapsed() || forcelyOpen)) {
+    if (styleInfo.range && (!styleInfo.range.collapsed || forcelyOpen)) {
       let rect = {
         left: this.pageX,
         top: this.pageY,

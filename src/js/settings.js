@@ -2,7 +2,6 @@ import $ from 'jquery';
 import '../lang/summernote-en-US';
 import './summernote';
 import icons from './icons';
-import commands from './commands';
 import dom from './core/dom';
 import range from './core/range';
 import lists from './core/lists';
@@ -28,7 +27,7 @@ import ImagePopover from './module/ImagePopover';
 import TablePopover from './module/TablePopover';
 import VideoDialog from './module/VideoDialog';
 import HelpDialog from './module/HelpDialog';
-import AirPopover from './module/AirPopover';
+//import AirPopover from './module/AirPopover';
 import HintPopover from './module/HintPopover';
 
 $.summernote = $.extend($.summernote, {
@@ -42,7 +41,6 @@ $.summernote = $.extend($.summernote, {
   options: {
     langInfo: $.summernote.lang['en-US'],
     editing: true,
-    commands: commands,
     modules: {
       'editor': Editor,
       'clipboard': Clipboard,
@@ -67,7 +65,7 @@ $.summernote = $.extend($.summernote, {
       'tablePopover': TablePopover,
       'videoDialog': VideoDialog,
       'helpDialog': HelpDialog,
-      'airPopover': AirPopover,
+      //'airPopover': AirPopover,
     },
 
     buttons: {},

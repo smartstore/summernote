@@ -13,6 +13,8 @@ const isNode = (node) =>
 const isElementNode = (node) =>
   dom.isElement(node) && !dom.isBookmarkNode(node);
 
+const isCaretNode = (node) => false;
+
 const isElementDirectlySelected = (node) => {
   // Table cells are a special case and are separately handled from native editor selection
   if (isElementNode(node) && !/^(TD|TH)$/.test(node.nodeName)) {
@@ -63,6 +65,28 @@ const isWhiteSpaceNode = (node, allowSpaces = false) => {
   } else {
     return false;
   }
+};
+
+/**
+ * Returns the next/previous non whitespace node.
+ *
+ * @private
+ * @param {Node} node Node to start at.
+ * @param {Boolean} [next] (Optional) Include next or previous node defaults to previous.
+ * @param {Boolean} [inc] (Optional) Include the current node in checking. Defaults to false.
+ * @return {Node} Next or previous node or undefined if it wasn't found.
+ */
+const getNonWhiteSpaceSibling = (node, next, inc) => {
+  if (node) {
+    const nextName = next ? 'nextSibling' : 'previousSibling';
+
+    for (node = inc ? node : node[nextName]; node; node = node[nextName]) {
+      if (dom.isElement(node) || !isWhiteSpaceNode(node)) {
+        return node;
+      }
+    }
+  }
+  return undefined;
 };
 
 const replaceVars = (value, vars = null) => {
@@ -259,7 +283,7 @@ const findSelectorEndPoint = (formatList, rng, container, siblingName) => {
       const curFormat = formatList[y];
 
       // If collapsed state is set then skip formats that doesn't match that
-      if (Type.isAssigned(curFormat.collapsed) && curFormat.collapsed !== rng.isCollapsed()) {
+      if (Type.isAssigned(curFormat.collapsed) && curFormat.collapsed !== rng.collapsed) {
         continue;
       }
 
@@ -354,7 +378,7 @@ const expandRng = (rng, formatList) => {
 
   // TODO: Implement ExpandRange.isSelfOrParentBookmark() (?)
 
-  if (rng.isCollapsed()) {
+  if (rng.collapsed) {
     rng = rng.getWordRange(true);
     startContainer = rng.sc;
     startOffset = rng.so;
@@ -419,6 +443,7 @@ const expandRng = (rng, formatList) => {
 export default {
   isNode,
   isElementNode,
+  isCaretNode,
   isInlineFormat,
   isBlockFormat,
   isMixedFormat,
@@ -430,6 +455,7 @@ export default {
   isTextBlock,
   isValid,
   isWhiteSpaceNode,
+  getNonWhiteSpaceSibling,
   replaceVars,
   isEq,
   normalizeStyleValue,

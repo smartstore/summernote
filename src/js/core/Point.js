@@ -279,7 +279,7 @@ const splitTree = (root, point, options) => {
   }
   // Filter elements with sibling elements
   if (parents.length > 2) {
-    let domList = dom.parents.slice(0, parents.length - 1);
+    let domList = parents.slice(0, parents.length - 1);
     let ifHasNextSibling = domList.find(item => item.nextSibling);
     if (ifHasNextSibling && point.offset != 0 && isRightEdgePoint(point)) {
         let nestSibling = ifHasNextSibling.nextSibling;

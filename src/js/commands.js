@@ -1,3 +1,4 @@
+// TODO: Remove commands.js later
 export default {
     'bold': {
         tag: ['strong', 'b'], 

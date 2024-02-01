@@ -289,7 +289,7 @@ export default class Table {
    * @param {Boolean} isShift
    */
   tab(rng, isShift) {
-    const cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
+    const cell = dom.ancestor(rng.commonAncestorContainer, dom.isCell);
     const table = dom.ancestor(cell, dom.isTable);
     const cells = dom.children(table, dom.isCell);
 
@@ -307,7 +307,7 @@ export default class Table {
    * @return {Node}
    */
   addRow(rng, position) {
-    const cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
+    const cell = dom.ancestor(rng.commonAncestorContainer, dom.isCell);
 
     const currentTr = $(cell).closest('tr');
     const trAttributes = this.recoverAttributes(currentTr);
@@ -364,7 +364,7 @@ export default class Table {
    * @return {Node}
    */
   addCol(rng, position) {
-    const cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
+    const cell = dom.ancestor(rng.commonAncestorContainer, dom.isCell);
     const row = $(cell).closest('tr');
     const rowsGroup = $(row).siblings();
     rowsGroup.push(row);
@@ -432,7 +432,7 @@ export default class Table {
    * @return {Node}
    */
   deleteRow(rng) {
-    const cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
+    const cell = dom.ancestor(rng.commonAncestorContainer, dom.isCell);
     const row = $(cell).closest('tr');
     const cellPos = row.children('td, th').index($(cell));
     const rowPos = row[0].rowIndex;
@@ -499,7 +499,7 @@ export default class Table {
    * @return {Node}
    */
   deleteCol(rng) {
-    const cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
+    const cell = dom.ancestor(rng.commonAncestorContainer, dom.isCell);
     const row = $(cell).closest('tr');
     const cellPos = row.children('td, th').index($(cell));
 
@@ -574,7 +574,7 @@ export default class Table {
    * @return {Node}
    */
   deleteTable(rng) {
-    const cell = dom.ancestor(rng.commonAncestor(), dom.isCell);
+    const cell = dom.ancestor(rng.commonAncestorContainer, dom.isCell);
     $(cell).closest('table').remove();
   }
 }

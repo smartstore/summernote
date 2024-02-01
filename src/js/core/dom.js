@@ -204,6 +204,7 @@ const isTextarea = matchNodeName('TEXTAREA');
 const isTextareaOrInput = matchNodeNames(['TEXTAREA', 'INPUT', 'SELECT']);
 const isList = matchNodeNames(['UL', 'OL']);
 const isCell = matchNodeNames(['TD', 'TH']);
+const isCellOrRow = matchNodeNames(['TR', 'TD', 'TH']);
 const isCellOrCaption = matchNodeNames(['TD', 'TH', 'CAPTION']);
 const isMedia = matchNodeNames(['VIDEO', 'AUDIO', 'OBJECT', 'EMBED']);
 const isHeading = matchSchemaMap(schema.getHeadingElements());
@@ -295,8 +296,29 @@ const getContentEditableParent = (node) => {
  */
 const blankHTML = env.isMSIE && env.browserVersion < 11 ? '&nbsp;' : '<br>';
 
-const create = (nodeName) => document.createElement(nodeName);
 const createText = (text) => document.createTextNode(text);
+
+const create = (nodeName, attrs = null, html = null) => {
+  const node = document.createElement(nodeName);
+  
+  if (Type.isObject(attrs)) {
+    lists.each(attrs, (name) => {
+      setAttr(node, name, attrs[name]);
+    });
+  }
+
+  if (html) {
+    if (!Type.isString(html) && html.nodeType) {
+      node.appendChild(html);
+    } 
+    else if (Type.isString(html) && html.length) {
+      node.innerHTML = html;
+    }    
+  }
+
+  return node;
+};
+
 
 /**
  * Gets the value of an HTML attribute
@@ -362,11 +384,29 @@ const setStyles = (node, styleMap) => {
   $(node).css(styleMap);
 };
 
-/**
- * Unlike `$.hasClass` this method accepts only a single class name (without whitespace)
- */
 const hasClass = (node, name) => {
-  return node?.classList && node.classList.contains(name);
+  return $(node).hasClass(name);
+};
+
+const addClass = (node, name) => {
+  return $(node).addClass(name);
+};
+
+const removeClass = (node, name) => {
+  return $(node).removeClass(name);
+};
+
+const toggleClass = (node, name, state) => {
+  return $(node).toggleClass(name, state);
+};
+
+const parseStyle = (node) => {
+  const result = {};
+  for (let i = 0, len = node?.style?.length; i < len; i++) {
+    const name = node.style[i];
+    result[name] = node.style.getPropertyValue(name);
+  }
+  return result;
 };
 
 /**
@@ -577,6 +617,14 @@ const isCustomStyleTag = (node) => {
 
 
 // #region Traverse
+
+const select = (node, selector) => {
+  const elm = getNode(node);
+  if (elm) {
+    return elm.querySelectorAll ? lists.from(elm.querySelectorAll(selector)) : [];
+  }
+  return [];
+};
 
 /**
  * Gets the direct parent of given node but does not go beyond editor root.
@@ -890,17 +938,24 @@ const appendChildNodes = (node, children) => {
  */
 const remove = (node, deep) => {
   if (!node || !node.parentNode) { return; }
-  if (node.removeNode) { return node.removeNode(deep); }
+  //if (node.removeNode) { return node.removeNode(deep); }
 
   const parent = node.parentNode;
   if (!deep) {
-    const nodes = [];
+    const keptNodes = [];
     for (let i = 0, len = node.childNodes.length; i < len; i++) {
-      nodes.push(node.childNodes[i]);
+      const child = node.childNodes[i];
+      if (isText(child) && child.length === 0) {
+        // Delete anyway
+        node.removeChild(child);
+      }
+      else {
+        keptNodes.push(child);
+      }
     }
 
-    for (let i = 0, len = nodes.length; i < len; i++) {
-      parent.insertBefore(nodes[i], node);
+    for (let i = 0, len = keptNodes.length; i < len; i++) {
+      parent.insertBefore(keptNodes[i], node);
     }
   }
 
@@ -920,19 +975,17 @@ const removeWhile = (node, selector) => {
 }
 
 /**
- * @method replace
- *
  * Replaces the node `oldElm` with given node `newElm`.
  *
  * @param {Node} newElm - The new replacee.
  * @param {Node} oldElm - The node to replace.
  * @return {Node} - The replace (`newElm`)
  */
-function replace(newElm, oldElm, keepChildren) {
+const replace = (newElm, oldElm, keepChildren) => {
   // Copy children
   if (keepChildren) {
     while (oldElm.firstChild) {
-      newElm.appendChild(node.firstChild);
+      newElm.appendChild(oldElm.firstChild);
     }
   }
 
@@ -940,6 +993,17 @@ function replace(newElm, oldElm, keepChildren) {
   oldElm.parentNode?.replaceChild(newElm, oldElm);
   return newElm;
 }
+
+/**
+ * @method replace
+ *
+ * Returns a copy of node. If `deep` is true, the copy also includes the node's descendants.
+ *
+ * @param {Node} node - The node to clone.
+ * @param {boolean} [deep] - Whether to copy also node's descendants.
+ * @return {Node} - The new clone node
+ */
+const clone = (node, deep) => node.cloneNode(deep);
 
 /**
  * @method rename
@@ -950,7 +1014,7 @@ function replace(newElm, oldElm, keepChildren) {
  * @param {String} nodeName
  * @return {Node} - Node
  */
-function rename(node, nodeName) {
+const rename = (node, nodeName) => {
   if (!isElement(node) || node.nodeName.toUpperCase() === nodeName.toUpperCase()) {
     return node;
   }
@@ -1018,6 +1082,7 @@ export default {
   isDetails,
   isSummary,
   isCell,
+  isCellOrRow,
   isCellOrCaption,
   isMedia,
   isBlockquote,
@@ -1040,6 +1105,7 @@ export default {
   nodeLength,
   isLeftEdgeOf,
   isRightEdgeOf,
+  select,
   closest,
   ancestor: closest, // Alias
   closestSingleParent,
@@ -1065,6 +1131,7 @@ export default {
   createText,
   remove,
   removeWhile,
+  clone,
   rename,
   replace,
   html,
@@ -1078,5 +1145,9 @@ export default {
   getStyle,
   setStyle,
   setStyles,
-  hasClass
+  hasClass,
+  addClass,
+  removeClass,
+  toggleClass,
+  parseStyle
 };

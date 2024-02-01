@@ -4,10 +4,9 @@ import lists from '../core/lists';
 import dom from '../core/dom';
 
 export default class Style {
-  constructor(context, formatter, commandController) {
+  constructor(context, formatter) {
     this.options = context.options;
     this.formatter = formatter;
-    this.commandController = commandController;
   }
 
   /**
@@ -80,7 +79,7 @@ export default class Style {
     const expandClosestSibling = !!(options && options.expandClosestSibling);
     const onlyPartialContains = !!(options && options.onlyPartialContains);
 
-    if (rng.isCollapsed()) {
+    if (rng.collapsed) {
       return [rng.insertNode(dom.create(nodeName))];
     }
 
@@ -153,7 +152,7 @@ export default class Style {
     });
     
     // const controller = this.commandController;
-    // const node = rng.sc; // rng.commonAncestor(); 
+    // const node = rng.sc; // rng.commonAncestorContainer; 
     // const ancestors = dom.parents(node/*, dom.isBlock*/);
     // styleInfo = $.extend(styleInfo, {
     //   'font-bold': controller.matchRange('bold', rng, ancestors) ? 'bold' : 'normal',

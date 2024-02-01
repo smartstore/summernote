@@ -75,14 +75,14 @@ describe('base:core.range', () => {
       var $u = $cont.find('u');
 
       var rng = range.create($b[0].firstChild, 0, $u[0].firstChild, 1);
-      expect(rng.commonAncestor()).to.deep.equal($span[0]);
+      expect(rng.commonAncestorContainer).to.deep.equal($span[0]);
     });
 
     it('should return b(#textNode) for <b>|b|</b>', () => {
       var $b = $cont.find('b');
 
       var rng = range.create($b[0].firstChild, 0, $b[0].firstChild, 1);
-      expect(rng.commonAncestor()).to.deep.equal($b[0].firstChild);
+      expect(rng.commonAncestorContainer).to.deep.equal($b[0].firstChild);
     });
   });
 
@@ -222,7 +222,7 @@ describe('base:core.range', () => {
       var rng = range.create(text, 0, text, 0).normalize();
       expect(rng.sc).to.equal(text);
       expect(rng.so).to.equal(0);
-      expect(rng.isCollapsed()).to.true;
+      expect(rng.collapsed).to.true;
     });
   });
 

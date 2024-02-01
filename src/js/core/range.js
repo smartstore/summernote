@@ -12,6 +12,10 @@ const makeIsOn = (selector) => {
   };
 };
 
+const getNativeRange = (rng) => {
+  return rng.isWrapper ? rng.nativeRange : rng;
+};
+
 // Judge whether range is on editable or not
 const isOnEditable = makeIsOn(dom.isEditableRoot);
 // Judge whether range is on list node or not
@@ -197,7 +201,8 @@ const skipEmptyTextNodes = (node, forwards) => {
  */
 class WrappedRange {
   constructor(nativeRange) {
-    this._rng = nativeRange;
+    this.nativeRange = nativeRange;
+    this.isWrapper = true;
 
     // Judge whether range is on editable or not
     this.isOnEditable = isOnEditable;
@@ -211,38 +216,160 @@ class WrappedRange {
     this.isOnData = isOnData;
   }
 
-  clone() {
-    return createFromNativeRange(this._rng.cloneRange());
-  }
+  // #region Range like properties
 
-  /**
-   * Gets underlying native `Range` object
-   */
-  get nativeRange() {
-    return this._rng;
+  get startContainer() {
+    return this.nativeRange.startContainer;
   }
-
   get sc() {
-    return this._rng.startContainer;
+    return this.nativeRange.startContainer;
   }
 
+  get startOffset() {
+    return this.nativeRange.startOffset;
+  }
   get so() {
-    return this._rng.startOffset;
+    return this.nativeRange.startOffset;
   }
   set so(value) {
-    return this._rng.setStart(this._rng.startContainer, value);
+    return this.nativeRange.setStart(this.nativeRange.startContainer, value);
   }
 
+  get endContainer() {
+    return this.nativeRange.endContainer;
+  }
   get ec() {
-    return this._rng.endContainer;
+    return this.nativeRange.endContainer;
   }
 
+  get endOffset() {
+    return this.nativeRange.endOffset;
+  }
   get eo() {
-    return this._rng.endOffset;
+    return this.nativeRange.endOffset;
   }
   set eo(value) {
-    return this._rng.setEnd(this._rng.endContainer, value);
+    return this.nativeRange.setEnd(this.nativeRange.endContainer, value);
   }
+
+  get collapsed() {
+    return this.nativeRange.collapsed;
+  }
+  isCollapsed() {
+    // Legacy, we gonna keep it.
+    return this.nativeRange.collapsed;
+  }
+
+  get commonAncestorContainer() {
+    return this.nativeRange.commonAncestorContainer;
+  }
+
+  // endregion
+
+
+  // #region Wrapped Range members
+
+  cloneContents() {
+    return this.nativeRange.cloneContents();
+  }
+
+  cloneRange() {
+    return createFromNativeRange(this.nativeRange.cloneRange());
+  }
+
+  collapse(toStart) {
+    this.nativeRange.collapse(toStart);
+    return this;
+  }
+
+  compareBoundaryPoints(how, sourceRange) {
+    return this.nativeRange.compareBoundaryPoints(how, getNativeRange(sourceRange));
+  }
+
+  comparePoint(referenceNode, offset) {
+    return this.nativeRange.comparePoint(referenceNode, offset);
+  }
+
+  deleteContents() {
+    this.nativeRange.deleteContents();
+    return this;
+  }
+
+  extractContents() {
+    return this.nativeRange.extractContents();
+  }
+
+  getBoundingClientRect() {
+    return this.nativeRange.getBoundingClientRect();
+  }
+
+  getClientRects() {
+    return this.nativeRange.getClientRects();
+  }
+
+  intersectsNode(referenceNode) {
+    return this.nativeRange.intersectsNode(referenceNode);
+  }
+
+  isPointInRange(referenceNode, offset) {
+    return this.nativeRange.isPointInRange(referenceNode, offset);
+  }
+
+  selectNode(referenceNode) {
+    this.nativeRange.selectNode(referenceNode);
+    return this;
+  }
+
+  selectNodeContents(referenceNode) {
+    this.nativeRange.selectNodeContents(referenceNode);
+    return this;
+  }
+
+  setEnd(endNode, endOffset) {
+    this.nativeRange.setEnd(endNode, endOffset);
+    return this;
+  }
+
+  setEndAfter(referenceNode) {
+    this.nativeRange.setEndAfter(referenceNode);
+    return this;
+  }
+
+  setEndBefore(referenceNode) {
+    this.nativeRange.setEndBefore(referenceNode);
+    return this;
+  }
+
+  setStart(startNode, startOffset) {
+    this.nativeRange.setStart(startNode, startOffset);
+    return this;
+  }
+
+  setStartAfter(referenceNode) {
+    this.nativeRange.setStartAfter(referenceNode);
+    return this;
+  }
+
+  setStartBefore(referenceNode) {
+    this.nativeRange.setStartBefore(referenceNode);
+    return this;
+  }
+
+  surroundContents(newParent) {
+    this.nativeRange.surroundContents(newParent);
+    return this;
+  }
+
+  toString() {
+    return this.nativeRange.toString();
+  }
+
+  // #endregion
+
+
+  // #region Sugar utils
+
+  // #endregion
 
   getPoints() {
     return {
@@ -376,7 +503,7 @@ class WrappedRange {
    */
   select(forward) {
     const sel = window.getSelection ? window.getSelection() : document.selection;
-    const rng = this._rng;
+    const rng = this.nativeRange;
     let selectedRange;
 
     if (sel) {
@@ -502,7 +629,7 @@ class WrappedRange {
     };
 
     const endPoint = getVisiblePoint(this.getEndPoint(), false);
-    const startPoint = this.isCollapsed() ? endPoint : getVisiblePoint(this.getStartPoint(), true);
+    const startPoint = this.collapsed ? endPoint : getVisiblePoint(this.getStartPoint(), true);
 
     this.setStart(startPoint.node, startPoint.offset);
     this.setEnd(endPoint.node, endPoint.offset);
@@ -559,14 +686,6 @@ class WrappedRange {
   }
 
   /**
-   * Gets commonAncestor of range
-   * @return {Element} - commonAncestor
-   */
-  commonAncestor() {
-    return this._rng.commonAncestorContainer;
-  }
-
-  /**
    * Gets expanded range by selector
    *
    * @param {Function|String|Node} selector - Selector function, string or node.
@@ -599,43 +718,8 @@ class WrappedRange {
     return this;
   }
 
-  /**
-   * Collapses the Range to one of its boundary points.
-   * 
-   * @param {Boolean} toStart
-   * @return {WrappedRange}
-   */
-  collapse(toStart) {
-    this._rng.collapse(toStart);
-    return this;
-  }
-
-  /**
-   * Sets the start position of a `Range`.
-   * 
-   * @param {Node} startNode
-   * @param {Number} startOffset
-   * @return {WrappedRange}
-   */
-  setStart(startNode, startOffset) {
-    this._rng.setStart(startNode, startOffset);
-    return this;
-  }
-
-  /**
-   * Sets the end position of a `Range`.
-   * 
-   * @param {Node} endNode
-   * @param {Number} endOffset
-   * @return {WrappedRange}
-   */
-  setEnd(endNode, endOffset) {
-    this._rng.setEnd(endNode, endOffset);
-    return this;
-  }
-
   getNode(root) {
-    const rng = this._rng;
+    const rng = this.nativeRange;
     const startOffset = rng.startOffset;
     const endOffset = rng.endOffset;
     let startContainer = rng.startContainer;
@@ -747,15 +831,6 @@ class WrappedRange {
   }
 
   /**
-   * Delete contents on range
-   * @return {WrappedRange}
-   */
-  deleteContents() {
-    this._rng.deleteContents();
-    return this;
-  }
-
-  /**
    * @param {Function} pred
    * @return {Boolean}
    */
@@ -776,17 +851,10 @@ class WrappedRange {
   }
 
   /**
-   * Checks whether range is collapsed
-   */
-  isCollapsed() {
-    return this._rng.collapsed;
-  }
-
-  /**
    * Checks if the current range’s start and end containers are editable within their parent’s contexts.
    */
   isEditable() {
-    const rng = this._rng;
+    const rng = this.nativeRange;
     if (rng.collapsed) {
       return dom.isContentEditable(rng.startContainer);
     } else {
@@ -896,15 +964,6 @@ class WrappedRange {
     }
 
     return childNodes;
-  }
-
-  /**
-   * Returns text in range
-   *
-   * @return {String}
-   */
-  toString() {
-    return this.nativeRange.toString();
   }
 
   /**
@@ -1035,14 +1094,6 @@ class WrappedRange {
         offset: this.eo,
       },
     };
-  }
-
-  /**
-   * getClientRects
-   * @return {Rect[]}
-   */
-  getClientRects() {
-    return this.nativeRange.getClientRects();
   }
 }
 

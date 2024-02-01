@@ -138,7 +138,7 @@ const match = (editor, name, vars, node, similar) => {
 
   // TODO: Implement MatchFormat.match() range.getNode() stuff
   // Check selected node
-  node = rng.commonAncestor();
+  node = rng.commonAncestorContainer;
   if (matchParents(editor, node, name, vars, similar)) {
     return true;
   }

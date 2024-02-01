@@ -1,10 +1,5 @@
-import $ from 'jquery';
-import Str from '../core/Str';
-import Obj from '../core/Obj';
 import Type from '../core/Type';
-import func from '../core/func';
 import lists from '../core/lists';
-import schema from '../core/schema';
 import range from '../core/range';
 import dom from '../core/dom';
 import Point from '../core/Point';
@@ -15,8 +10,6 @@ import MergeFormats from './MergeFormats';
 import ListItemFormat from './ListItemFormat';
 
 const each = lists.each;
-
-const isCaretNode = (node) => false;
 
 const canFormatBR = (format, node, parentName) => {
   // TODO: implement canFormatBR
@@ -47,7 +40,7 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
 
   const formatList = editor.formatter.get(name);
   const format = formatList[0];
-  const isCollapsed = !node && rng.isCollapsed();
+  const isCollapsed = !node && rng.collapsed;
 
   const setElementFormat = (elm, fmt = format) => {
     if (Type.isFunction(fmt.onformat)) {
@@ -88,7 +81,7 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
         return true;
       }
 
-      if (dom.matches(node, format.selector) && !isCaretNode(node)) {
+      if (dom.matches(node, format.selector) && !FormatUtils.isCaretNode(node)) {
         setElementFormat(node, format);
         found = true;
         return false;
@@ -137,7 +130,7 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
       
       // If it is not node specific, it means that it was not passed into 'Formatter.apply` and is within the editor selection
       const isZwsp = !nodeSpecific && dom.isText(node) && Point.isZwsp(node.data);
-      const isCaret = isCaretNode(node);
+      const isCaret = FormatUtils.isCaretNode(node);
       // TODO: Investigate: Why !FormatUtils.isInlineFormat(format) || !dom.isBlock(node) ?
       const isCorrectFormatForNode = true; // !FormatUtils.isInlineFormat(format) || !dom.isBlock(node);
       return (isEditableDescendant || isWrappableNoneditableElm) && isValidWrapNode && !isZwsp && !isCaret && isCorrectFormatForNode;
@@ -267,19 +260,17 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
       };   
   
       const mergeStyles = (node) => {
-        // TODO: Implement ApplyFormat.mergeStyles()
-        return node;
-        // // Check if a child was found and of the same type as the current node
-        // const childElement = lists.find(node.childNodes, FormatUtils.isElementNode)
-        //   .filter((child) => dom.getContentEditable(child) !== 'false' && MatchFormat.matchName(child, format));
-        // return childElement.map(child => {
-        //   const clone = child.cloneNode(false);
-        //   setElementFormat(clone);
+        const childElement = lists.find(node.childNodes, FormatUtils.isElementNode);
+        if (childElement && dom.isContentEditable(childElement) && MatchFormat.matchName(child, format)) {
+          const clone = dom.clone(child, false);
+          setElementFormat(clone);
 
-        //   dom.replace(clone, node, true);
-        //   dom.remove(child, true);
-        //   return clone;
-        // }).getOr(node);
+          dom.replace(clone, node, true);
+          dom.remove(child, true);
+          return clone;
+        }
+
+        return node;
       };
   
       const childCount = getChildCount(node);
@@ -303,7 +294,7 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
         MergeFormats.mergeBackgroundColorAndFontSize(format, vars, node);
         MergeFormats.mergeTextDecorationsAndColor(format, vars, node);
         MergeFormats.mergeSubSup(format, vars, node);
-        MergeFormats.mergeSiblings(editor, format, vars, node);
+        MergeFormats.mergeSiblings(format, vars, node);
       }
     });
   };
@@ -312,10 +303,9 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
     if (node) {
       if (dom.isNode(node)) {
         if (!applyNodeStyle(formatList, node)) {
-          rng = document.createRange();
+          rng = range.create();
           rng.setStartBefore(node);
           rng.setEndAfter(node);
-          rng = range.createFromNativeRange(rng);
           applyRngStyle(FormatUtils.expandRng(rng, formatList), true);
         }
       } 
@@ -327,9 +317,9 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
       if (!isCollapsed || !FormatUtils.isInlineFormat(format) || rng.isOnCell()) {
         // Apply formatting to selection
         if (!isCollapsed) {
-          rng = rng.clone().splitText().normalize();
+          rng = rng.cloneRange().splitText().normalize();
         }
-        
+
         // Apply while preserving visible selection
         FormatUtils.preserveSelection(editor, rng, () => {
           const expandedRng = FormatUtils.expandRng(rng, formatList);

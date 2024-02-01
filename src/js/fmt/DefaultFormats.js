@@ -147,11 +147,18 @@ const formats = {
     { inline: 'span', styles: { fontStyle: 'italic' }},
     { inline: 'i', remove: 'all', preserve_attributes: [ 'class', 'style' ] }
   ],
+  // TODO: Remove test formats
+  // italic: [
+  //   { inline: 'span', classes: 'text-primary'},
+  // ],
 
   underline: [
     { inline: 'u', remove: 'all', preserve_attributes: [ 'class', 'style' ] },
     { inline: 'span', styles: { textDecoration: 'underline' }, exact: true },
   ],
+  // underline: [
+  //   { inline: 'span', classes: 'bg-success-subtle'},
+  // ],
 
   strikethrough: [
     { inline: 's', remove: 'all', preserve_attributes: [ 'class', 'style' ] },

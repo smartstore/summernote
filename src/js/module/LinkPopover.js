@@ -59,7 +59,7 @@ export default class LinkPopover {
     }
 
     const rng = this.context.invoke('editor.getLastRange');
-    if (rng.isCollapsed() && rng.isOnAnchor()) {
+    if (rng.collapsed && rng.isOnAnchor()) {
       const anchor = dom.ancestor(rng.sc, dom.isAnchor);
       const href = $(anchor).attr('href');
       this.$popover.find('a')
