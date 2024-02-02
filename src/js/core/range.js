@@ -16,6 +16,10 @@ const getNativeRange = (rng) => {
   return rng.isWrapper ? rng.nativeRange : rng;
 };
 
+const getWrappedRange = (rng) => {
+  return rng.isWrapper ? rng : createFromNativeRange(rng);
+};
+
 // Judge whether range is on editable or not
 const isOnEditable = makeIsOn(dom.isEditableRoot);
 // Judge whether range is on list node or not
@@ -1114,5 +1118,6 @@ export default {
   createFromBookmark,
   createFromParaBookmark,
   createFromNativeRange,
-  createFromPoints
+  createFromPoints,
+  getWrappedRange
 };

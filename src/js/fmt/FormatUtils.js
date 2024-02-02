@@ -235,7 +235,7 @@ const findParentContainer = (formatList, container, offset, start) => {
   let parent = container;
 
   const siblingName = start ? 'previousSibling' : 'nextSibling';
-  const root = dom.getEditableRoot();
+  const root = dom.getEditableRoot(container);
 
   // If it's a text node and the offset is inside the text
   if (dom.isText(container) && !isWhiteSpaceNode(container)) {
@@ -298,7 +298,7 @@ const findSelectorEndPoint = (formatList, rng, container, siblingName) => {
 
 const findBlockEndPoint = (formatList, container, siblingName) => {
   let node = container;
-  const root = dom.getEditableRoot();
+  const root = dom.getEditableRoot(node);
   const format = formatList[0];
 
   // Expand to block of similar type

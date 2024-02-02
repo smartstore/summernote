@@ -134,7 +134,7 @@ export default class Bullet {
     const prevList = dom.isList(head.previousElementSibling) && head.previousElementSibling;
     const nextList = dom.isList(last.nextElementSibling) && last.nextElementSibling;
 
-    const listNode = prevList || dom.insertAfter(dom.create(listName || 'UL'), last);
+    const listNode = prevList || dom.insertAfter(last, dom.create(listName || 'UL'));
 
     // P to LI
     paras = paras.map((para) => {
@@ -222,7 +222,7 @@ export default class Bullet {
         }
 
         $.each(lists.from(paras).reverse(), (idx, para) => {
-          dom.insertAfter(para, headList);
+          dom.insertAfter(headList, para);
         });
 
         // remove empty lists

@@ -170,6 +170,9 @@ const isInline = (name) => !Str.startsWith(name, '#') && isValid(name) && !isBlo
 const isWrapper = (name) => Obj.has(wrapBlockElementsMap, name) || isInline(name);
 const isVoid = (name) => Obj.has(voidElementsMap, name);
 
+const isTransparentElementName = (name) => Obj.has(getTransparentElements(), name);
+const isTransparentElement = (node) => dom.isElement(node) && isTransparentElementName(node.nodeName);
+
 export default {
   getHeadingElements,
   getBlockElements,
@@ -190,5 +193,7 @@ export default {
   isBlock,
   isInline,
   isWrapper,
-  isVoid
+  isVoid,
+  isTransparentElementName,
+  isTransparentElement
 };

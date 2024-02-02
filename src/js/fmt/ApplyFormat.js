@@ -261,12 +261,12 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
   
       const mergeStyles = (node) => {
         const childElement = lists.find(node.childNodes, FormatUtils.isElementNode);
-        if (childElement && dom.isContentEditable(childElement) && MatchFormat.matchName(child, format)) {
-          const clone = dom.clone(child, false);
+        if (childElement && dom.isContentEditable(childElement) && MatchFormat.matchName(childElement, format)) {
+          const clone = dom.clone(childElement, false);
           setElementFormat(clone);
 
           dom.replace(clone, node, true);
-          dom.remove(child, true);
+          dom.remove(childElement, true);
           return clone;
         }
 
@@ -330,9 +330,10 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
         CaretFormat.applyCaretFormat(editor, name, vars);
       }
 
-      each(ListItemFormat.getExpandedListItemFormat(editor.formatter, name), (liFmt) => {
+      const liFmt = ListItemFormat.getExpandedListItemFormat(editor.formatter, name);
+      if (liFmt) {
         each(ListItemFormat.getFullySelectedListItems(editor.getLastRange()), (li) => applyStyles(li, liFmt, vars));
-      });
+      }
     }
   }
 };

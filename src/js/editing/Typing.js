@@ -87,7 +87,7 @@ export default class Typing {
             split.parentNode.insertBefore(nextPara, split);
           } 
           else {
-            dom.insertAfter(nextPara, blockquote); // There's no split if we were at the end of the blockquote
+            dom.insertAfter(blockquote, nextPara); // There's no split if we were at the end of the blockquote
           }
         }
         else {

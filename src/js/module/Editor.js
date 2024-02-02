@@ -13,6 +13,7 @@ import Style from '../editing/Style';
 import Typing from '../editing/Typing';
 import Table from '../editing/Table';
 import Bullet from '../editing/Bullet';
+import Selection from '../editing/Selection';
 import Formatter from '../fmt/Formatter';
 
 const KEY_BOGUS = 'bogus';
@@ -40,6 +41,7 @@ export default class Editor {
     this.history = new History(context);
     this.formatter = new Formatter(context);
     this.style = new Style(context, this.formatter);
+    this.selection = new Selection(context);
 
     this.context.memo('help.escape', this.lang.help.escape);
     this.context.memo('help.undo', this.lang.help.undo);
@@ -62,16 +64,27 @@ export default class Editor {
       'formatBlock', 'removeFormat', 'backColor', 'code'
     ];
 
-    const supportedFormats = [
-      'bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'code'
-    ];
+    const formatMap = {
+      bold: 'bold',
+      italic: 'italic',
+      underline: 'underline',
+      strikethrough: 'strikethrough',
+      superscript: 'superscript',
+      subscript: 'subscript',
+      justifyLeft: 'alignleft',
+      justifyCenter: 'aligncenter',
+      justifyRight: 'alignright',
+      justifyFull: 'alignfull',
+      removeFormat: 'removeformat',
+      code: 'code'
+    };
 
     for (let idx = 0, len = commands.length; idx < len; idx++) {
       this[commands[idx]] = ((sCmd) => {
         return (value) => {
           this.beforeCommand();
-          if (lists.contains(supportedFormats, sCmd)) {
-            this.formatter.toggle(sCmd);
+          if (formatMap[sCmd]) {
+            this.formatter.toggle(formatMap[sCmd]);
           }
           else {
             document.execCommand(sCmd, false, value);
@@ -81,19 +94,6 @@ export default class Editor {
       })(commands[idx]);
       this.context.memo('help.' + commands[idx], this.lang.help[commands[idx]]);
     }
-
-    // this.bold = this.wrapCommand((value) => {
-    //   //this.commandController.toggle('bold', this.getLastRange(), value);
-    //   this.formatter.toggle('bold');
-    // });
-
-    // this.italic = this.wrapCommand((value) => {
-    //   this.formatter.toggle('italic');
-    // });
-
-    // this.inlineCode = this.wrapCommand((value) => {
-    //   this.formatter.toggle('code');
-    // });
 
     this.fontName = this.wrapCommand((value) => {
       return this.fontStyling('font-family', env.validFontName(value));
@@ -184,6 +184,7 @@ export default class Editor {
      * @param {String} tagName
      */
     this.formatBlock = this.wrapCommand((tagName, $target) => {
+      console.log('formatBlock', tagName, $target)
       const onApplyCustomStyle = this.options.callbacks.onApplyCustomStyle;
       if (onApplyCustomStyle) {
         onApplyCustomStyle.call(this, $target, this.context, this.onFormatBlock);
@@ -519,11 +520,13 @@ export default class Editor {
       }
     }
 
+    this.selection.initialize();
     this.history.recordUndo();
     this.setLastRange();
   }
 
   destroy() {
+    this.selection.destroy();
     this.$editable.off();
   }
 
@@ -657,14 +660,14 @@ export default class Editor {
   /**
    * set the last range
    *
-   * if given rng is exist, set rng as the last range
+   * if given rng exist, set rng as the last range
    * or create a new range at the end of the document
    *
    * @param {WrappedRange} rng
    */
   setLastRange(rng) {
     if (rng) {
-      this.lastRange = rng;
+      this.lastRange = range.getWrappedRange(rng).cloneRange();
     } 
     else {
       this.lastRange = range.create(this.editable);
@@ -960,6 +963,9 @@ export default class Editor {
   }
 
   onFormatBlock(tagName, $target) {
+    this.formatter.toggle(tagName.toLowerCase());
+    return;
+
     let rng = this.createRange();
     let paraNode = dom.findPara(rng.sc);
     let newNode;

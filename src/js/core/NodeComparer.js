@@ -1,3 +1,4 @@
+import lists from '../core/lists';
 import dom from '../core/dom';
 import Str from '../core/Str';
 import Obj from '../core/Obj';
@@ -29,7 +30,7 @@ const compare = (node1, node2) => {
   const getAttribs = (node) => {
     const attribs = {};
 
-    each(node.attributes, (attr) => {
+    lists.each(node.attributes, (attr) => {
       const name = attr.nodeName.toLowerCase();
 
       // Don't compare internal attributes or style
@@ -69,5 +70,6 @@ const compare = (node1, node2) => {
 };
 
 export default {
-  compare
+  compare,
+  isAttributeInternal
 }

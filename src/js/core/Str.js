@@ -20,6 +20,15 @@ const unescape = (str) => _.unescape(str);
 const hasWhiteSpace = (str) => WHITESPACE_PATTERN.test(str);
 const isAllWhitespace = (str) => WHITESPACE_ALL_PATTERN.test(str);
 
+const contains = (str, substr, start = 0, end) => {
+  const idx = str.indexOf(substr, start);
+  if (idx !== -1) {
+    return Type.isUndefined(end) ? true : idx + substr.length <= end;
+  } else {
+    return false;
+  }
+}
+
 /**
  * Check if test matches strOrPattern  
  * @param {String|RegExp} strOrPattern
@@ -77,6 +86,7 @@ const explode = (str, delim = null) => {
 export default {
   startsWith,
   endsWith,
+  contains,
   hasWhiteSpace,
   isAllWhitespace,
   escape,

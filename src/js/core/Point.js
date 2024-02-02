@@ -236,7 +236,7 @@ const splitNode = (point, options) => {
     // Remove empty nodes
     childNodes = childNodes.filter(func.not(dom.isEmpty));	
 
-    const clone = dom.insertAfter(point.node.cloneNode(false), point.node);
+    const clone = dom.insertAfter(point.node, point.node.cloneNode(false));
     dom.appendChildNodes(clone, childNodes);
 
     if (!isSkipPaddingBlankHTML) {

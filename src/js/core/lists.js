@@ -181,6 +181,17 @@ const each = (list, callback, scope = null) =>
   _.foldl(list, callback, memo, scope);
 
   /**
+   * The right-associative version of reduce/foldl.
+   *
+   * @param {Array|Object} list Array or collection to iterate over.
+   * @param {Function} callback Callback function to execute for each item.
+   * @param {any} [memo] - Optional memo.
+   * @param {Object} [scope] - Optional scope to execute the callback in.
+   */
+  const foldr = (list, callback, memo, scope) =>
+  _.foldr(list, callback, memo, scope);
+
+  /**
    * Looks through each value in `list`, returning an array of
    * all the values that pass a truth test (`predicate`).
    * @param list The collection or array to filter.
@@ -292,6 +303,7 @@ export default {
   unique,
   each,
   foldl,
+  foldr,
   filter,
   reject,
   map,

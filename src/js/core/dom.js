@@ -270,7 +270,7 @@ const getContentEditable = (node) => {
 };
 
 const getContentEditableParent = (node) => {
-  const root = getRoot();
+  const root = getEditableRoot(node);
   let state = null;
 
   for (let tempNode = node; tempNode && tempNode !== root; tempNode = tempNode.parentNode) {
@@ -302,8 +302,8 @@ const create = (nodeName, attrs = null, html = null) => {
   const node = document.createElement(nodeName);
   
   if (Type.isObject(attrs)) {
-    lists.each(attrs, (name) => {
-      setAttr(node, name, attrs[name]);
+    lists.each(attrs, (value, name) => {
+      setAttr(node, name, value);
     });
   }
 
@@ -317,6 +317,29 @@ const create = (nodeName, attrs = null, html = null) => {
   }
 
   return node;
+};
+
+const createFragment = (html = null) => {
+  const container = document.createElement('div');
+  const frag = document.createDocumentFragment();
+
+  // Append the container to the fragment so as to remove it from
+  // the current document context
+  frag.appendChild(container);
+
+  if (html) {
+    container.innerHTML = html;
+  }
+
+  let node;
+  while ((node = container.firstChild)) {
+    frag.appendChild(node);
+  }
+
+  // Remove the container now that all the children have been transferred
+  frag.removeChild(container);
+
+  return frag;
 };
 
 
@@ -350,6 +373,13 @@ const setAttr = (node, name, value) => {
       node.setAttribute(name, value)
     else
       node.removeAttribute(name);
+  }
+}
+
+const removeAllAttrs = (node) => {
+  const attrs = node.attributes;
+  for (let i = attrs.length - 1; i >= 0; i--) {
+    node.removeAttributeNode(attrs.item(i));
   }
 }
 
@@ -895,21 +925,55 @@ const unwrap = (node) => {
 }
 
 /**
- * Insert node after preceding
- *
- * @param {Node} node
- * @param {Node} preceding - predicate function
+ * Appends `element` to `parent`.
+ * 
+ * @return {Node} - The appended child (`element`).
  */
-const insertAfter = (node, preceding) => {
-  const next = preceding.nextSibling;
-  let parent = preceding.parentNode;
-  if (next) {
-    parent.insertBefore(node, next);
-  } else {
-    parent.appendChild(node);
+const append = (parent, element) => {
+  return parent.appendChild(element);
+};
+
+/**
+ * Prepends `element` to `parent`.
+ * 
+ * @return {Node} - The prepended child (`element`).
+ */
+const prepend = (parent, element) => {
+  const firstChild = parent.firstChild;
+  if (firstChild == null) {
+    return append(parent, element);
   }
-  return node;
-}
+  else {
+    return parent.insertBefore(element, firstChild);
+  }
+};
+
+/**
+ * Inserts `element` before `marker`.
+ * 
+ * @return {Node} - The inserted sibling (`element`).
+ */
+const insertBefore = (marker, element) => {
+  return marker.parentNode.insertBefore(element, marker);
+};
+
+/**
+ * Inserts `element` after `marker`.
+ * 
+ * @return {Node} - The inserted sibling (`element`).
+ */
+const insertAfter = (marker, element) => {
+  const sibling = marker.nextSibling;
+  if (marker.parentNode) {
+    if (sibling == null) {
+      return append(marker.parentNode, element);
+    }
+    else {
+      return insertBefore(sibling, element);
+    }
+  }
+  return null;
+};
 
 /**
  * Append child elements to given node.
@@ -1029,6 +1093,87 @@ const rename = (node, nodeName) => {
   return replace(newNode, node, true);
 }
 
+const split = (parentElm, splitElm, replacementElm = null) => {
+  // W3C valid browsers tend to leave empty nodes to the left/right side of the contents - this makes sense
+  // but we don't want that in our code since it serves no purpose for the end user
+  // For example splitting this html at the bold element:
+  //   <p>text 1<span><b>CHOP</b></span>text 2</p>
+  // would produce:
+  //   <p>text 1<span></span></p><b>CHOP</b><p><span></span>text 2</p>
+  // this function will then trim off empty edges and produce:
+  //   <p>text 1</p><b>CHOP</b><p>text 2</p>
+  const trimNode = (node, root = null) => {
+    const rootNode = root || node;
+    if (isElement(node) && isBookmarkNode(node)) {
+      return node;
+    }
+
+    const children = node.childNodes;
+    for (let i = children.length - 1; i >= 0; i--) {
+      trimNode(children[i], rootNode);
+    }
+
+    // If the only child is a bookmark then move it up
+    if (isElement(node)) {
+      const currentChildren = node.childNodes;
+      if (currentChildren.length === 1 && isBookmarkNode(currentChildren[0])) {
+        node.parentNode?.insertBefore(currentChildren[0], node);
+      }
+    }
+
+    // TODO: implement TrimNode
+    const isDoc = isDocumentFragment(node) || isDocument(node);
+    const isContent = false; // isContent(node, rootNode)
+    const isKeepElement = isElement(node) ? node.childNodes.length > 0 : false;
+    // Keep text nodes with only spaces if surrounded by spans.
+    // eg. "<p><span>a</span> <span>b</span></p>" should keep space between a and b
+    const isKeepTextNode = isText(node) && node.data.length > 0 && false /* surroundedByInlineContent(node, root)*/;
+    // Remove any empty nodes
+    if (!isDoc && !isContent && !isKeepElement && !isKeepTextNode) {
+      remove(node);
+    }
+
+    return node;
+  };
+
+  let range = document.createRange();
+  let beforeFragment;
+  let afterFragment;
+
+  if (parentElm && splitElm && parentElm.parentNode && splitElm.parentNode) {
+    const parentNode = parentElm.parentNode;
+    // Get before chunk
+    range.setStart(parentNode, position(parentElm));
+    range.setEnd(splitElm.parentNode, position(splitElm));
+    beforeFragment = range.extractContents();
+
+    // Get after chunk
+    range = document.createRange();
+    range.setStart(splitElm.parentNode, position(splitElm) + 1);
+    range.setEnd(parentNode, position(parentElm) + 1);
+    afterFragment = range.extractContents();
+
+    // Insert before chunk
+    parentNode.insertBefore(trimNode(beforeFragment), parentElm);
+
+    // Insert middle chunk
+    if (replacementElm) {
+      parentNode.insertBefore(replacementElm, parentElm);
+      // pa.replaceChild(replacementElm, splitElm);
+    } else {
+      parentNode.insertBefore(splitElm, parentElm);
+    }
+
+    // Insert after chunk
+    parentNode.insertBefore(trimNode(afterFragment), parentElm);
+    remove(parentElm);
+
+    return replacementElm || splitElm;
+  } else {
+    return undefined;
+  }
+};
+
 // #endregion
 
 
@@ -1120,6 +1265,9 @@ export default {
   wrap,
   unwrap,
   insertAfter,
+  insertBefore,
+  append,
+  prepend,
   appendChildNodes,
   position,
   hasChildren,
@@ -1129,11 +1277,13 @@ export default {
   getNextTextNode,
   create,
   createText,
+  createFragment,
   remove,
   removeWhile,
   clone,
   rename,
   replace,
+  split,
   html,
   value,
   posFromPlaceholder,
@@ -1141,6 +1291,7 @@ export default {
   detachEvents,
   isCustomStyleTag,
   setAttr,
+  removeAllAttrs,
   getAttr,
   getStyle,
   setStyle,

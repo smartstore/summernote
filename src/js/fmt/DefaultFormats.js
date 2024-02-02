@@ -25,7 +25,7 @@ const formats = {
     // },
     {
       selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
-      classes: 'text-left',
+      //classes: 'text-left',
       styles: { textAlign: 'left' },
       inherit: false,
       preview: false
@@ -62,7 +62,7 @@ const formats = {
     // },
     {
       selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
-      classes: 'text-center',
+      //classes: 'text-center',
       styles: { textAlign: 'center' },
       inherit: false,
       preview: 'font-family font-size'
@@ -98,7 +98,7 @@ const formats = {
     // },
     {
       selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
-      classes: 'text-right',
+      //classes: 'text-right',
       styles: { textAlign: 'right' },
       inherit: false,
       preview: 'font-family font-size'
@@ -128,7 +128,7 @@ const formats = {
   alignjustify: [
     {
       selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
-      classes: 'text-justify',
+      //classes: 'text-justify',
       styles: { textAlign: 'justify' },
       inherit: false,
       preview: 'font-family font-size'
@@ -208,6 +208,8 @@ const formats = {
 lists.each('p h1 h2 h3 h4 h5 h6 div address pre dt dd samp'.split(/\s/), (name) => {
   formats[name] = { block: name, remove: 'all' };
 });
+
+//formats['alert'] = { block: 'div', classes: 'alert alert-info', remove: 'all' };
 
 const get = func.constant(formats);
 
