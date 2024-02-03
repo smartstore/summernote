@@ -107,7 +107,7 @@ export default class Context {
         this.layoutInfo.editable.html(html);
       }
       this.$note.val(html);
-      this.triggerEvent('change', html, this.layoutInfo.editable);
+      this.triggerEvent('change', this.layoutInfo.editable);
     }
   }
 
@@ -135,14 +135,15 @@ export default class Context {
   }
 
   triggerEvent() {
-    const namespace = lists.head(arguments);
+    const name = lists.head(arguments);
     const args = lists.tail(lists.from(arguments));
 
-    const callback = this.options.callbacks[Str.namespaceToCamel(namespace, 'on')];
+    const callback = this.options.callbacks[Str.namespaceToCamel(name, 'on')];
     if (callback) {
       callback.apply(this.$note[0], args);
     }
-    this.$note.trigger('summernote.' + namespace, args);
+
+    this.$note.trigger('summernote.' + name, args);
   }
 
   initializeModule(key) {

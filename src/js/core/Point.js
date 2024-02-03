@@ -50,7 +50,7 @@ const isEdgePoint = (point) => isLeftEdgePoint(point) || isRightEdgePoint(point)
  * @param {Node} parent
  * @return {Boolean}
  */
-const isLeftEdgePointOf = (point, parent) => 
+const isLeftEdgePointOf = (point, parent) =>
   isLeftEdgePoint(point) && dom.isLeftEdgeOf(point.node, parent);
 
 /**
@@ -61,6 +61,26 @@ const isLeftEdgePointOf = (point, parent) =>
  */
 const isRightEdgePointOf = (point, parent) => {
   isRightEdgePoint(point) && dom.isRightEdgeOf(point.node, parent);
+}
+
+/**
+ * Gets previous boundary point of given node.
+ *
+ * @param {Node} node
+ * @return {BoundaryPoint}
+ */
+const pointBeforeNode = (node) => {
+  return { node: node.parentNode, offset: dom.position(node) };
+}
+
+/**
+ * Gets next boundary point of given node.
+ *
+ * @param {Node} node
+ * @return {BoundaryPoint}
+ */
+const pointAfterNode = (node) => {
+  return { node: node.parentNode, offset: dom.position(node) + 1 };
 }
 
 /**
@@ -192,12 +212,51 @@ const walkPoint = (startPoint, endPoint, handler, skipInnerOffset) => {
     }
 
     const skipOffset = skipInnerOffset &&
-                       startPoint.node !== point.node &&
-                       endPoint.node !== point.node;
+      startPoint.node !== point.node &&
+      endPoint.node !== point.node;
     point = nextPointWithEmptyNode(point, skipOffset);
   }
 }
 
+const comparePoints = (point1, point2) => {
+  // See http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level-2-Range-Comparing
+  const nodeA = point1.mode, offsetA = point1.offset, nodeB = point2.node, offsetB = point2.offset;
+  let nodeC, root, childA, childB, n;
+  if (nodeA == nodeB) {
+    // Case 1: nodes are the same
+    return offsetA === offsetB ? 0 : (offsetA < offsetB) ? -1 : 1;
+  } else if ((nodeC = dom.closest(nodeB, nodeA))) {
+    // Case 2: node C (container B or an ancestor) is a child node of A
+    return offsetA <= dom.position(nodeC) ? -1 : 1;
+  } else if ((nodeC = dom.closest(nodeA, nodeB))) {
+    // Case 3: node C (container A or an ancestor) is a child node of B
+    return dom.position(nodeC) < offsetB ? -1 : 1;
+  } else {
+    root = getCommonAncestor(nodeA, nodeB);
+    if (!root) {
+      throw new Error("comparePoints error: nodes have no common ancestor");
+    }
+
+    // Case 4: containers are siblings or descendants of siblings
+    childA = (nodeA === root) ? root : dom.closest(nodeA, root);
+    childB = (nodeB === root) ? root : dom.closest(nodeB, root);
+
+    if (childA === childB) {
+      // This shouldn't be possible
+      throw new Error("comparePoints got to case 4 and childA and childB are the same!");
+    } else {
+      n = root.firstChild;
+      while (n) {
+        if (n === childA) {
+          return -1;
+        } else if (n === childB) {
+          return 1;
+        }
+        n = n.nextSibling;
+      }
+    }
+  }
+};
 
 /**
  * Split element or #text
@@ -234,7 +293,7 @@ const splitNode = (point, options) => {
     const childNode = point.node.childNodes[point.offset];
     let childNodes = dom.nextSiblings(childNode);
     // Remove empty nodes
-    childNodes = childNodes.filter(func.not(dom.isEmpty));	
+    childNodes = childNodes.filter(func.not(dom.isEmpty));
 
     const clone = dom.insertAfter(point.node, point.node.cloneNode(false));
     dom.appendChildNodes(clone, childNodes);
@@ -282,21 +341,21 @@ const splitTree = (root, point, options) => {
     let domList = parents.slice(0, parents.length - 1);
     let ifHasNextSibling = domList.find(item => item.nextSibling);
     if (ifHasNextSibling && point.offset != 0 && isRightEdgePoint(point)) {
-        let nestSibling = ifHasNextSibling.nextSibling;
-        let textNode;
-        if (nestSibling.nodeType == 1) {
-            textNode = nestSibling.childNodes[0];
-            parents = dom.parents(textNode, root);
-            point = { node: textNode, offset: 0 };
-        }
-        else if (nestSibling.nodeType == 3 && !nestSibling.data.match(/[\n\r]/g)) {
-            textNode = nestSibling;
-            parents = dom.parents(textNode, root);
-            point = { node: textNode, offset: 0 };
-        }
+      let nestSibling = ifHasNextSibling.nextSibling;
+      let textNode;
+      if (nestSibling.nodeType == 1) {
+        textNode = nestSibling.childNodes[0];
+        parents = dom.parents(textNode, root);
+        point = { node: textNode, offset: 0 };
+      }
+      else if (nestSibling.nodeType == 3 && !nestSibling.data.match(/[\n\r]/g)) {
+        textNode = nestSibling;
+        parents = dom.parents(textNode, root);
+        point = { node: textNode, offset: 0 };
+      }
     }
   }
-  return parents.reduce(function(node, parent) {
+  return parents.reduce(function (node, parent) {
     if (node === point.node) {
       node = splitNode(point, options);
     }
@@ -440,7 +499,10 @@ export default {
   isRightEdgePointOf,
   prevPoint,
   nextPoint,
+  pointBeforeNode,
+  pointAfterNode,
   nextPointWithEmptyNode,
+  comparePoints,
   isSamePoint,
   isVisiblePoint,
   prevPointUntil,

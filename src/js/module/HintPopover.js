@@ -130,7 +130,7 @@ export default class HintPopover {
       this.lastWordRange = null;
       this.hide();
       this.context.invoke('editor.focus');
-      this.context.triggerEvent('change', this.$editable.html(), this.$editable);
+      this.context.triggerEvent('change', this.$editable);
     }
   }
 

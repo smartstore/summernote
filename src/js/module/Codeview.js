@@ -161,7 +161,7 @@ export default class CodeView {
     this.$editor.removeClass('codeview');
 
     if (isChange) {
-      this.context.triggerEvent('change', this.$editable.html(), this.$editable);
+      this.context.triggerEvent('change', this.$editable);
     }
 
     this.$editable.trigger('focus');

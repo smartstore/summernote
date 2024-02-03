@@ -1,11 +1,12 @@
 import Type from '../core/Type';
+import func from '../core/func';
 import lists from '../core/lists';
 import dom from '../core/dom';
 import range from '../core/range';
 import Point from '../core/Point';
 
 const win = window;
-const doc = document;
+
 const getEndpointElement = (
   root,
   rng,
@@ -26,9 +27,12 @@ const getEndpointElement = (
     }
   }
 
-  return null;
+  // TODO: Ist das korrekt?
+  return root;
 };
 
+// TODO: Implement Selection.getContent() ?
+// TODO: Implement Selection.setContent() ?
 export default class Selection {
   constructor(context) {
     this.context = context;
@@ -36,14 +40,38 @@ export default class Selection {
     this.explicitRange = null;
   }
 
-  initialize() {
-    // TODO: Implement Selection.initialize()
-    // TODO: Implement Selection.getContent() ?
-    // TODO: Implement Selection.setContent() ?
+  initialize(editor) {
+    this.hasFocus = editor.hasFocus();
+
+    const throttledHandler = func.throttle(e => {
+      if (e.type === 'blur') {
+        this.hasFocus = false;
+      }
+      if (e.type === 'focus') {
+        this.hasFocus = true;
+        this.editor.setLastRange();
+      }
+      else if (e.type !== 'summernote') {
+        this.editor.setLastRange();
+      }  
+    }, 300);
+
+    const events = ['keydown', 'keyup', 'mouseup', 'paste', 'focus', 'blur']
+      .map(x => x + '.selection')
+      .join(' ');
+    editor.$editable.on(events, throttledHandler);
+
+    const $note = this.context.layoutInfo.note;
+    $note.on('summernote.change.selection', throttledHandler);
   }
 
   destroy() {
-    // TODO: Implement Selection.destroy()
+    this.editor.$editable.off('selection');
+    this.context.layoutInfo.note.off('selection');
+    this.context = null;
+    this.selectedRange = null;
+    this.explicitRange = null;
+    win = null;
   }
 
   get editor() {
@@ -55,6 +83,131 @@ export default class Selection {
    */
   get nativeSelection() {
     return win.getSelection ? win.getSelection() : win.document.selection;
+  }
+
+  isValidRange(rng) {
+    // TODO: Implement Selection.isValidRange
+    return true;
+  }
+
+  /**
+   * Returns the current editor selection range.
+   */
+  getRange() {
+    let rng;
+
+    const tryCompareBoundaryPoints = (how, sourceRange, destinationRange) => {
+      try {
+        return sourceRange.compareBoundaryPoints(how, destinationRange);
+      } catch (ex) {
+        return -1;
+      }
+    };
+
+    const editor = this.editor;
+
+    if (Type.isAssigned(editor.bookmark) && !this.hasFocus) {
+      rng = range.createFromBookmark(editor.bookmark);
+      if (rng) {
+        return rng;
+      }
+    }
+
+    if (this.hasFocus) {
+      try {
+        const selection = this.nativeSelection;
+        if (selection && !dom.isRestrictedNode(selection.anchorNode)) {
+          if (selection.rangeCount > 0) {
+            rng = range.createFromNativeRange(selection.getRangeAt(0));
+          }
+        }
+      } catch {}
+    }
+
+    // No range found. Create one from root editable.
+    if (!rng) {
+      rng = range.createFromBodyElement(editor.editable.lastChild || editor.editable, true);
+      if ($(rng.startContainer).closest('.note-editable').length === 0) {
+        rng = range.createFromBodyElement(editor.editable);
+      }
+    }
+
+    if (selectedRange && explicitRange) {
+      if (tryCompareBoundaryPoints(rng.START_TO_START, rng, selectedRange) === 0 &&
+        tryCompareBoundaryPoints(rng.END_TO_END, rng, selectedRange) === 0) {
+        // Safari, Opera and Chrome only ever select text which causes the range to change.
+        // This lets us use the originally set range if the selection hasn't been changed by the user.
+        rng = explicitRange;
+      } else {
+        selectedRange = null;
+        explicitRange = null;
+      }
+    }
+
+    return rng;
+  }
+
+  /**
+   * Changes the selection to the specified range.
+   *
+   * @method setRange
+   * @param {WrappedRange|Range} rng Range to select.
+   * @param {Boolean} [forward] Optional boolean if the selection is forwards or backwards.
+   */
+  setRange(rng, forward) {
+    if (!this.isValidRange(rng)) {
+      return;
+    }
+
+    const sel = this.nativeSelection;
+
+    if (sel) {
+      const nativeRange = rng.isWrapper ? range.getNativeRange(rng) : rng;
+      const wrappedRange = rng.isWrapper ? rng : range.getWrappedRange(rng);
+
+      explicitRange = wrappedRange;
+
+      try {
+        sel.removeAllRanges();
+        sel.addRange(nativeRange);
+      } catch (ex) {
+        // IE might throw errors here if the editor is within a hidden container and selection is changed
+      }
+
+      // Forward is set to false and we have an extend function
+      if (forward === false && sel.extend) {
+        sel.collapse(rng.endContainer, rng.endOffset);
+        sel.extend(rng.startContainer, rng.startOffset);
+      }
+
+      // adding range isn't always successful so we need to check range count otherwise an exception can occur
+      selectedRange = sel.rangeCount > 0 ? wrappedRange : null;
+    }
+
+    // WebKit edge case selecting images works better using setBaseAndExtent when the image is floated
+    if (!rng.collapsed && rng.startContainer === rng.endContainer && sel?.setBaseAndExtent) {
+      if (rng.endOffset - rng.startOffset < 2) {
+        if (rng.startContainer.hasChildNodes()) {
+          const node = rng.startContainer.childNodes[rng.startOffset];
+          if (node && node.nodeName === 'IMG') {
+            sel.setBaseAndExtent(
+              rng.startContainer,
+              rng.startOffset,
+              rng.endContainer,
+              rng.endOffset
+            );
+
+            // Since the setBaseAndExtent is fixed in more recent Blink versions we
+            // need to detect if it's doing the wrong thing and falling back to the
+            // crazy incorrect behavior api call since that seems to be the only way
+            // to get it to work on Safari WebKit as of 2017-02-23
+            if (sel.anchorNode !== rng.startContainer || sel.focusNode !== rng.endContainer) {
+              sel.setBaseAndExtent(node, 0, node, 1);
+            }
+          }
+        }
+      }
+    }
   }
 
   /**

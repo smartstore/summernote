@@ -51,7 +51,7 @@ export default class AutoLink {
       this.lastWordRange.insertNode(node);
       this.lastWordRange = null;
       this.context.invoke('editor.focus');
-      this.context.triggerEvent('change', this.$editable.html(), this.$editable);
+      this.context.triggerEvent('change', this.$editable);
     }
   }
 

@@ -6,7 +6,6 @@ import func from './func';
 import lists from './lists';
 import env from './env';
 import schema from './schema';
-import { contains } from 'underscore';
 
 const beautifyOpts = {
   indent_size: 2,
@@ -672,9 +671,10 @@ const parent = (node) => {
  * Finds closest parent that matches the given selector.
  *
  * @param {Function|String} selector - Selector function, string or node.
+ * @param {bool} [includeSelf] - Whether to start with `node`. Default is true.
  */
-const closest = (node, selector) => {
-  node = getNode(node);
+const closest = (node, selector, includeSelf = true) => {
+  node = getNode(includeSelf ? node : node.parentNode);
   if (node) {
     const pred = matchSelector(selector);
     while (node) {
@@ -707,15 +707,16 @@ function closestSingleParent(node, selector) {
  * Gets array of parent nodes until selector hit (including start and hit node).
  *
  * @param {Function|String} [selector] - Selector function or string.
+ * @param {bool} [includeSelf] - Whether to start with `node`. Default is true.
  */
-const parents = (node, selector) => {
+const parents = (node, selector, includeSelf = true) => {
   const pred = matchSelector(selector, func.fail);
   const parents = [];
 
   closest(node, (el) => {
     parents.push(el);
     return pred(el);
-  });
+  }, includeSelf);
 
   return parents;
 }
@@ -753,13 +754,30 @@ const farthestParent = (node, selector) => {
 }
 
 /**
- * Find the common parent node for two nodes.
+ * Finds the common parent node for two nodes. 
+ * If both nodes are equal, this node is the common parent.
  */
 const commonParent = (node1, node2) => {
-  const nodes = parents(node1);
-  for (let n = node2; n; n = parent(n)) {
-    if (nodes.indexOf(n) > -1) return n;
+  if (Type.isNullOrUndefined(node1) || Type.isNullOrUndefined(node2)) {
+    return null;
   }
+
+  node1 = getNode(node1);
+  node2 = getNode(node2);
+  if (Type.isNode(node1) && node1 === node2) {
+    return node1;
+  }
+
+  let ancestors = [], n;
+  for (n = node1; n; n = n.parentNode) {
+    ancestors.push(n);
+    if (isEditableRoot(n)) break;
+  }
+
+  for (n = node2; n; n = n.parentNode) {
+    if (ancestors.indexOf(n) > -1) return n;
+  }
+
   return null;
 }
 

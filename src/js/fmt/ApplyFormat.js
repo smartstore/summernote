@@ -325,6 +325,8 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
           const expandedRng = FormatUtils.expandRng(rng, formatList);
           applyRngStyle(expandedRng, false);
         });
+
+        FormatUtils.afterFormat(editor);
       } 
       else {
         CaretFormat.applyCaretFormat(editor, name, vars);

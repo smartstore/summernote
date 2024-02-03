@@ -88,8 +88,8 @@ export default class Editor {
           }
           else {
             document.execCommand(sCmd, false, value);
+            this.afterCommand(true);
           }
-          this.afterCommand(true);
         };
       })(commands[idx]);
       this.context.memo('help.' + commands[idx], this.lang.help[commands[idx]]);
@@ -438,7 +438,6 @@ export default class Editor {
           return false;
         }
       }
-      this.setLastRange();
 
       // record undo in the key event except keyMap.
       if (this.options.recordEveryKeystroke) {
@@ -446,30 +445,9 @@ export default class Editor {
           this.history.recordUndo();
         }
       }
-    }).on('keyup', (event) => {
-      this.setLastRange();
-      this.context.triggerEvent('keyup', event);
-    }).on('focus', (event) => {
-      this.setLastRange();
-      this.$editor.addClass("focus");
-      this.context.triggerEvent('focus', event);
-    }).on('blur', (event) => {
-      this.$editor.removeClass("focus");
-      this.context.triggerEvent('blur', event);
-    }).on('mousedown', (event) => {
-      this.context.triggerEvent('mousedown', event);
-    }).on('mouseup', (event) => {
-      this.setLastRange();
-      // Don't record undo on simple mouseup (?). Too noisy.
-      //this.history.recordUndo();
-      this.context.triggerEvent('mouseup', event);
-    }).on('scroll', (event) => {
-      this.context.triggerEvent('scroll', event);
-    }).on('paste', (event) => {
-      this.setLastRange();
-      this.context.triggerEvent('paste', event);
-    }).on('copy', (event) => {
-      this.context.triggerEvent('copy', event);
+    }).on('keyup mousedown mouseup copy paste focus blur scroll', (e) => {
+      // Pass all events
+      this.context.triggerEvent(e.type, e);
     }).on('input', () => {
       // To limit composition characters (e.g. Korean)
       if (this.isLimited(0) && this.snapshot) {
@@ -489,7 +467,7 @@ export default class Editor {
     this.$editable.html(dom.html(this.$note) || dom.emptyPara);
 
     this.$editable.on(env.inputEventName, func.debounce(() => {
-      this.context.triggerEvent('change', this.$editable.html(), this.$editable);
+      this.context.triggerEvent('change', this.$editable);
     }, 10));
 
     this.$editable.on('focusin', (event) => {
@@ -520,7 +498,7 @@ export default class Editor {
       }
     }
 
-    this.selection.initialize();
+    this.selection.initialize(this);
     this.history.recordUndo();
     this.setLastRange();
   }
@@ -763,36 +741,34 @@ export default class Editor {
    * undo
    */
   undo() {
-    this.context.triggerEvent('before.command', this.$editable.html());
+    this.context.triggerEvent('before.command', this.$editable);
     this.history.undo();
-    this.context.triggerEvent('change', this.$editable.html(), this.$editable);
+    this.context.triggerEvent('change', this.$editable);
   }
 
   /*
   * commit
   */
   commit() {
-    this.context.triggerEvent('before.command', this.$editable.html());
+    this.context.triggerEvent('before.command', this.$editable);
     this.history.commit();
-    this.context.triggerEvent('change', this.$editable.html(), this.$editable);
+    this.context.triggerEvent('change', this.$editable);
   }
 
   /**
    * redo
    */
   redo() {
-    this.context.triggerEvent('before.command', this.$editable.html());
+    this.context.triggerEvent('before.command', this.$editable);
     this.history.redo();
-    this.context.triggerEvent('change', this.$editable.html(), this.$editable);
+    this.context.triggerEvent('change', this.$editable);
   }
 
   /**
    * before command
    */
   beforeCommand() {
-    let rng = this.getLastRange();
-
-    this.context.triggerEvent('before.command', this.$editable.html());
+    this.context.triggerEvent('before.command', this.$editable);
 
     // Set styleWithCSS before run a command
     document.execCommand('styleWithCSS', false, this.options.styleWithCSS);
@@ -803,13 +779,13 @@ export default class Editor {
 
   /**
    * after command
-   * @param {Boolean} isPreventTrigger
+   * @param {Boolean} silent
    */
-  afterCommand(isPreventTrigger) {
+  afterCommand(silent) {
     this.normalizeContent();
     this.history.recordUndo();
-    if (!isPreventTrigger) {
-      this.context.triggerEvent('change', this.$editable.html(), this.$editable);
+    if (!silent) {
+      this.context.triggerEvent('change', this.$editable);
     }
   }
 

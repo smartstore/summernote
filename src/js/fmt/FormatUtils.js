@@ -353,7 +353,7 @@ const isAtBlockBoundary = (root, container, siblingName) => {
 };
 
 const expandRng = (rng, formatList) => {
-  let { startContainer, startOffset, endContainer, endOffset } = rng.nativeRange;
+  let { startContainer, startOffset, endContainer, endOffset } = rng;
   const format = formatList[0];
 
   // If index based start position then resolve it
@@ -440,6 +440,12 @@ const expandRng = (rng, formatList) => {
   return range.create(startContainer, startOffset, endContainer, endOffset);
 };
 
+const afterFormat = (editor) => {
+  editor.normalizeContent();
+  editor.history.recordUndo();
+  editor.context.triggerEvent('change', editor.$editable);
+};
+
 export default {
   isNode,
   isElementNode,
@@ -464,5 +470,6 @@ export default {
   getTextDecoration,
   getStyle,
   preserveSelection,
-  expandRng
+  expandRng,
+  afterFormat
 }

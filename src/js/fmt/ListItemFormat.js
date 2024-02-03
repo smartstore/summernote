@@ -6,7 +6,7 @@ import FormatUtils from './FormatUtils';
 
 const listItemStyles = [ 'fontWeight', 'fontStyle', 'color', 'fontSize', 'fontFamily' ];
 
-const hasListStyles = (fmt) => Type.isObject(fmt.styles) && lists.exists(Obj.keys(fmt.styles), (name) => lists.contains(listItemStyles, name));
+const hasListStyles = (fmt) => Type.isObject(fmt.styles) && lists.exists(Object.keys(fmt.styles), (name) => lists.contains(listItemStyles, name));
 
 const findExpandedListItemFormat = (formats) =>
   lists.find(formats, (fmt) => FormatUtils.isInlineFormat(fmt) && fmt.inline === 'span' && hasListStyles(fmt));

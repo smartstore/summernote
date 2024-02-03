@@ -12,8 +12,31 @@ const makeIsOn = (selector) => {
   };
 };
 
+const detachRange = (rng) => {
+  try { rng.detach(); } catch {}
+};
+
+const callNative = (rng, action) => {
+  let detach = false;
+  if (rng.isWrapper) {
+    rng = getNativeRange(rng);
+    detach = true;
+  }
+
+  const out = action(rng);
+
+  if (detach) detachRange(rng);
+  return out;
+};
+
 const getNativeRange = (rng) => {
-  return rng.isWrapper ? rng.nativeRange : rng;
+  if (rng.isWrapper) {
+    const {sc, so, ec, eo} = rng;
+    rng = document.createRange();
+    rng.setStart(sc, so);
+    rng.setEnd(ec, eo);
+  }
+  return rng;
 };
 
 const getWrappedRange = (rng) => {
@@ -39,7 +62,8 @@ const isOnData = makeIsOn(dom.isData);
  * @return {WrappedRange}
  */
 const createFromNativeRange = (nativeRange) => {
-  return new WrappedRange(nativeRange);
+  const r = nativeRange;
+  return new WrappedRange(r.startContainer, r.startOffset, r.endContainer, r.endOffset);
 };
 
 /**
@@ -61,11 +85,7 @@ function create(sc, so, ec, eo) {
       eo = so;
     }
 
-    const rng = document.createRange();
-    rng.setStart(sc, so);
-    rng.setEnd(ec, eo);
-  
-    return createFromNativeRange(rng);
+    return new WrappedRange(sc, so, ec, eo);
   }
 
   let rng = createFromSelection();
@@ -89,9 +109,9 @@ function create(sc, so, ec, eo) {
  */
 const createFromPoints = (startPoint, endPoint) => {
   if (!endPoint) {
-    return create(startPoint.node, startPoint.offset);
+    return new WrappedRange(startPoint.node, startPoint.offset);
   } else {
-    return create(startPoint.node, startPoint.offset, endPoint.node, endPoint.offset);
+    return new WrappedRange(startPoint.node, startPoint.offset, endPoint.node, endPoint.offset);
   }
 };
 
@@ -110,7 +130,7 @@ const createFromSelection = () => {
     return null;
   }
 
-  return new WrappedRange(selection.getRangeAt(0));
+  return createFromNativeRange(selection.getRangeAt(0));
 };
 
 const createFromBodyElement = (bodyElement, isCollapsedToStart = false) => {
@@ -124,16 +144,14 @@ const createFromBodyElement = (bodyElement, isCollapsedToStart = false) => {
  * @return {WrappedRange}
  */
 const createFromNode = (node) => {
-  let sc = node;
-  let so = 0;
-  let ec = node;
-  let eo = dom.nodeLength(ec);
+  let sc = node, so = 0, ec = node, eo = dom.nodeLength(ec);
 
   // Browsers can't target a picture or void node
   if (dom.isVoid(sc)) {
     so = dom.prevSiblings(sc).length - 1;
     sc = sc.parentNode;
   }
+
   if (dom.isBR(ec)) {
     eo = dom.prevSiblings(ec).length - 1;
     ec = ec.parentNode;
@@ -142,7 +160,7 @@ const createFromNode = (node) => {
     ec = ec.parentNode;
   }
 
-  return create(sc, so, ec, eo);
+  return new WrappedRange(sc, so, ec, eo);
 };
 
 /**
@@ -169,11 +187,14 @@ const createFromNodeAfter = (node) => {
  * @return {WrappedRange}
  */
 const createFromBookmark = (editable, bookmark) => {
+  if (bookmark.start) {
+    return createFromPoints(bookmark.start, bookmark.end);
+  }
   const sc = dom.fromOffsetPath(editable, bookmark.s.path);
   const so = bookmark.s.offset;
   const ec = dom.fromOffsetPath(editable, bookmark.e.path);
   const eo = bookmark.e.offset;
-  return create(sc, so, ec, eo);
+  return new WrappedRange(sc, so, ec, eo);
 };
 
 /**
@@ -186,7 +207,7 @@ const createFromParaBookmark = (bookmark, paras) => {
   const eo = bookmark.e.offset;
   const sc = dom.fromOffsetPath(lists.head(paras), bookmark.s.path);
   const ec = dom.fromOffsetPath(lists.last(paras), bookmark.e.path);
-  return create(sc, so, ec, eo);
+  return new WrappedRange(sc, so, ec, eo);
 };
 
 const skipEmptyTextNodes = (node, forwards) => {
@@ -200,13 +221,19 @@ const skipEmptyTextNodes = (node, forwards) => {
 /**
  * Wrapped Range
  *
- * @constructor
- * @param {Range} nativeRange - The native `Range` object instance to wrap.
+  * @param {Node} startContainer - Start container
+  * @param {Number} startOffset - Start offset
+  * @param {Node} endContainer - End container
+  * @param {Number} endOffset - End offset
  */
 class WrappedRange {
-  constructor(nativeRange) {
-    this.nativeRange = nativeRange;
+  constructor(startContainer, startOffset, endContainer, endOffset) {
     this.isWrapper = true;
+    this.startContainer = startContainer;
+    this.startOffset = startOffset;
+    this.endContainer = endContainer;
+    this.endOffset = endOffset;
+    this.collapsed = startContainer === endContainer && startOffset === endOffset;
 
     // Judge whether range is on editable or not
     this.isOnEditable = isOnEditable;
@@ -220,52 +247,88 @@ class WrappedRange {
     this.isOnData = isOnData;
   }
 
+  updateStart(node, offset) {
+    if (node != this.startContainer) {
+      this._commonParent = undefined;
+    }
+    this.startContainer = node;
+    this.startOffset = offset;
+    this.collapsed = node === this.endContainer && offset === this.endOffset;
+  }
+
+  updateEnd(node, offset) {
+    if (node != this.endContainer) {
+      this._commonParent = undefined;
+    }
+    this.endContainer = node;
+    this.endOffset = offset;
+    this.collapsed = node === this.startContainer && offset === this.startOffset;
+  }
+
+  getNativeRange() {
+    return getNativeRange(this);
+  }
+
+  equals(other) {
+    if (other == this) {
+      return true;
+    }
+    else if (other instanceof WrappedRange || other instanceof Range) {
+      const { startContainer, startOffset, endContainer, endOffset } = other;
+      return this.startContainer === startContainer &&
+        this.startOffset === startOffset &&
+        this.endContainer === endContainer &&
+        this.endOffset === endOffset;
+    }
+
+    return false;
+  }
+
+  startEquals(other) {
+    if (other == this) {
+      return true;
+    }
+    else if (other instanceof WrappedRange || other instanceof Range) {
+      return this.startContainer === other.startContainer && this.startOffset === other.startOffset;
+    }
+    return false;
+  }
+
+  endEquals(other) {
+    if (other == this) {
+      return true;
+    }
+    else if (other instanceof WrappedRange || other instanceof Range) {
+      return this.endContainer === other.endContainer && this.endOffset === other.endOffset;
+    }
+    return false;
+  }
+
   // #region Range like properties
 
-  get startContainer() {
-    return this.nativeRange.startContainer;
-  }
+  // Legacy. Keep for compat reasons.
   get sc() {
-    return this.nativeRange.startContainer;
-  }
-
-  get startOffset() {
-    return this.nativeRange.startOffset;
+    return this.startContainer;
   }
   get so() {
-    return this.nativeRange.startOffset;
+    return this.startOffset;
   }
   set so(value) {
-    return this.nativeRange.setStart(this.nativeRange.startContainer, value);
+    return this.updateStart(this.startContainer, value);
   }
 
-  get endContainer() {
-    return this.nativeRange.endContainer;
-  }
   get ec() {
-    return this.nativeRange.endContainer;
-  }
-
-  get endOffset() {
-    return this.nativeRange.endOffset;
+    return this.endContainer;
   }
   get eo() {
-    return this.nativeRange.endOffset;
+    return this.endOffset;
   }
   set eo(value) {
-    return this.nativeRange.setEnd(this.nativeRange.endContainer, value);
+    return this.updateEnd(this.endContainer, value);
   }
 
-  get collapsed() {
-    return this.nativeRange.collapsed;
-  }
   isCollapsed() {
-    // Legacy, we gonna keep it.
-    return this.nativeRange.collapsed;
-  }
-
-  get commonAncestorContainer() {
-    return this.nativeRange.commonAncestorContainer;
+    return this.collapsed;
   }
 
   // endregion
@@ -273,99 +336,165 @@ class WrappedRange {
 
   // #region Wrapped Range members
 
+  get commonAncestorContainer() {
+    if (!this._commonParent) {
+      this._commonParent = this.collapsed ? this.startContainer : dom.commonParent(this.startContainer, this.endContainer);
+    }
+    return this._commonParent
+  }
+
   cloneContents() {
-    return this.nativeRange.cloneContents();
+    return callNative(this, x => x.cloneContents());
   }
 
   cloneRange() {
-    return createFromNativeRange(this.nativeRange.cloneRange());
+    return new WrappedRange(this.startContainer, this.startOffset, this.endContainer, this.endOffset);
   }
 
   collapse(toStart) {
-    this.nativeRange.collapse(toStart);
+    const node = toStart ? this.startContainer : this.endContainer;
+    const offset = toStart ? this.startOffset : this.endOffset;
+    this.updateStart(node, offset);
+    this.updateEnd(node, offset);
     return this;
   }
 
   compareBoundaryPoints(how, sourceRange) {
-    return this.nativeRange.compareBoundaryPoints(how, getNativeRange(sourceRange));
+    //return callNative(this, x => x.compareBoundaryPoints(how, getNativeRange(sourceRange)));
+    var node1, offset1, node2, offset2;
+    var prefix1 = (how == Range.END_TO_START || how == Range.START_TO_START) ? "start" : "end";
+    var prefix2 = (how == Range.START_TO_END || how == Range.START_TO_START) ? "start" : "end";
+    node1 = this[prefix1 + "Container"];
+    offset1 = this[prefix1 + "Offset"];
+    node2 = sourceRange[prefix2 + "Container"];
+    offset2 = sourceRange[prefix2 + "Offset"];
+    return Point.comparePoints({ node: node1, offset: offset1 }, { node: node2, offset: offset2 } );
+  }
+
+  compareNode(referenceNode) {
+    return callNative(this, x => x.compareNode(referenceNode));
   }
 
   comparePoint(referenceNode, offset) {
-    return this.nativeRange.comparePoint(referenceNode, offset);
+    return callNative(this, x => x.comparePoint(referenceNode, offset));
   }
 
   deleteContents() {
-    this.nativeRange.deleteContents();
+    callNative(this, x => x.deleteContents());
+    return this;
+  }
+
+  detach() {
+    // Noop
     return this;
   }
 
   extractContents() {
-    return this.nativeRange.extractContents();
+    return callNative(this, x => x.extractContents());
   }
 
   getBoundingClientRect() {
-    return this.nativeRange.getBoundingClientRect();
+    return callNative(this, x => x.getBoundingClientRect());
   }
 
   getClientRects() {
-    return this.nativeRange.getClientRects();
+    return callNative(this, x => x.getClientRects());
   }
 
+  /**
+   * Insert node at current cursor
+   *
+   * @param {Node} node
+   * @param {Boolean} doNotInsertPara - default is false, removes added <p> that's added if true
+   * @return {Node}
+   */
+    insertNode(node, doNotInsertPara = false) {
+      let rng = this;
+  
+      if (dom.isText(node) || dom.isInline(node)) {
+        rng = this.wrapBodyInlineWithPara().deleteContents();
+      }
+  
+      const info = Point.splitPoint(rng.getStartPoint(), dom.isInline(node));
+      if (info.rightNode) {
+        info.rightNode.parentNode.insertBefore(node, info.rightNode);
+        if (dom.isEmpty(info.rightNode) && (doNotInsertPara || dom.isPara(node))) {
+          info.rightNode.parentNode.removeChild(info.rightNode);
+        }
+      } else {
+        info.container.appendChild(node);
+      }
+  
+      return node;
+    }
+
   intersectsNode(referenceNode) {
-    return this.nativeRange.intersectsNode(referenceNode);
+    return callNative(this, x => x.intersectsNode(referenceNode));
   }
 
   isPointInRange(referenceNode, offset) {
-    return this.nativeRange.isPointInRange(referenceNode, offset);
+    return callNative(this, x => x.isPointInRange(referenceNode, offset));
   }
 
   selectNode(referenceNode) {
-    this.nativeRange.selectNode(referenceNode);
+    const start = Point.pointBeforeNode(referenceNode);
+    const end = Point.pointAfterNode(referenceNode);
+    this.updateStart(start.node, start.offset);
+    this.updateEnd(end.node, end.offset);
     return this;
   }
 
   selectNodeContents(referenceNode) {
-    this.nativeRange.selectNodeContents(referenceNode);
+    this.updateStart(referenceNode, 0);
+    this.updateEnd(referenceNode, dom.nodeLength(referenceNode));
     return this;
   }
 
   setEnd(endNode, endOffset) {
-    this.nativeRange.setEnd(endNode, endOffset);
+    this.updateEnd(endNode, endOffset);
     return this;
   }
 
   setEndAfter(referenceNode) {
-    this.nativeRange.setEndAfter(referenceNode);
+    const pt = Point.pointAfterNode(referenceNode);
+    this.updateEnd(pt.node, pt.offset);
     return this;
   }
 
   setEndBefore(referenceNode) {
-    this.nativeRange.setEndBefore(referenceNode);
+    const pt = Point.pointBeforeNode(referenceNode);
+    this.updateEnd(pt.node, pt.offset);
     return this;
   }
 
   setStart(startNode, startOffset) {
-    this.nativeRange.setStart(startNode, startOffset);
+    this.updateStart(startNode, startOffset);
     return this;
   }
 
   setStartAfter(referenceNode) {
-    this.nativeRange.setStartAfter(referenceNode);
+    const pt = Point.pointAfterNode(referenceNode);
+    this.updateStart(pt.node, pt.offset);
     return this;
   }
 
   setStartBefore(referenceNode) {
-    this.nativeRange.setStartBefore(referenceNode);
+    const pt = Point.pointBeforeNode(referenceNode);
+    this.updateStart(pt.node, pt.offset);
     return this;
   }
 
   surroundContents(newParent) {
-    this.nativeRange.surroundContents(newParent);
+    callNative(this, x => {
+      x.surroundContents(newParent);
+      this.updateStart(x.startContainer, x.startOffset);
+      this.updateEnd(x.endContainer, x.endOffset);    
+    });
     return this;
   }
 
   toString() {
-    return this.nativeRange.toString();
+    return callNative(this, x => x.toString());
   }
 
   // #endregion
@@ -377,32 +506,32 @@ class WrappedRange {
 
   getPoints() {
     return {
-      sc: this.sc,
-      so: this.so,
-      ec: this.ec,
-      eo: this.eo,
+      sc: this.startContainer,
+      so: this.startOffset,
+      ec: this.endContainer,
+      eo: this.endOffset,
     };
   }
 
   getStartPoint() {
     return {
-      node: this.sc,
-      offset: this.so,
+      node: this.startContainer,
+      offset: this.startOffset,
     };
   }
 
   getEndPoint() {
     return {
-      node: this.ec,
-      offset: this.eo,
+      node: this.endContainer,
+      offset: this.endOffset,
     };
   }
 
   walk(callback) {
-    const startOffset = this.so;
-    const startContainer = dom.getRangeNode(this.sc, startOffset);
-    const endOffset = this.eo;
-    const endContainer = dom.getRangeNode(this.ec, endOffset - 1);
+    const startOffset = this.startOffset;
+    const startContainer = dom.getRangeNode(this.startContainer, startOffset);
+    const endOffset = this.endOffset;
+    const endContainer = dom.getRangeNode(this.endContainer, endOffset - 1);
 
     /**
      * Excludes start/end text node if they are out side the range
@@ -507,7 +636,7 @@ class WrappedRange {
    */
   select(forward) {
     const sel = window.getSelection ? window.getSelection() : document.selection;
-    const rng = this.nativeRange;
+    const rng = getNativeRange(this);
     let selectedRange;
 
     if (sel) {
@@ -561,8 +690,8 @@ class WrappedRange {
    */
   scrollIntoView(container) {
     const height = $(container).height();
-    if (container.scrollTop + height < this.sc.offsetTop) {
-      container.scrollTop += Math.abs(container.scrollTop + height - this.sc.offsetTop);
+    if (container.scrollTop + height < this.startContainer.offsetTop) {
+      container.scrollTop += Math.abs(container.scrollTop + height - this.startContainer.offsetTop);
     }
 
     return this;
@@ -697,11 +826,11 @@ class WrappedRange {
    */
   expand(selector) {
     const pred = dom.matchSelector(selector);
-    const startAncestor = dom.closest(this.sc, pred);
-    const endAncestor = dom.closest(this.ec, pred);
+    const startAncestor = dom.closest(this.startContainer, pred);
+    const endAncestor = dom.closest(this.endContainer, pred);
 
     if (!startAncestor && !endAncestor) {
-      return create(this.sc, this.so, this.ec, this.eo);
+      return this;
     }
 
     const pts = this.getPoints();
@@ -723,7 +852,7 @@ class WrappedRange {
   }
 
   getNode(root) {
-    const rng = this.nativeRange;
+    const rng = this;
     const startOffset = rng.startOffset;
     const endOffset = rng.endOffset;
     let startContainer = rng.startContainer;
@@ -851,25 +980,24 @@ class WrappedRange {
    * Checks whether range is within a single container
    */
   isSingleContainer() {
-    return this.sc === this.ec;
+    return this.startContainer === this.endContainer;
   }
 
   /**
    * Checks if the current range’s start and end containers are editable within their parent’s contexts.
    */
   isEditable() {
-    const rng = this.nativeRange;
-    if (rng.collapsed) {
-      return dom.isContentEditable(rng.startContainer);
+    if (this.collapsed) {
+      return dom.isContentEditable(this.startContainer);
     } else {
-      return dom.isContentEditable(rng.startContainer) && dom.isContentEditable(rng.endContainer);
+      return dom.isContentEditable(this.startContainer) && dom.isContentEditable(this.endContainer);
     }
   }
 
   /**
    * Wrap inline nodes which children of body with paragraph
    *
-   * @return {WrappedRange}
+   * @return {WrappedRange} - A new `WrappedRange` instance.
    */
   wrapBodyInlineWithPara() {
     if (dom.isBodyContainer(this.sc) && dom.isEmpty(this.sc)) {
@@ -915,33 +1043,6 @@ class WrappedRange {
   }
 
   /**
-   * Insert node at current cursor
-   *
-   * @param {Node} node
-   * @param {Boolean} doNotInsertPara - default is false, removes added <p> that's added if true
-   * @return {Node}
-   */
-  insertNode(node, doNotInsertPara = false) {
-    let rng = this;
-
-    if (dom.isText(node) || dom.isInline(node)) {
-      rng = this.wrapBodyInlineWithPara().deleteContents();
-    }
-
-    const info = Point.splitPoint(rng.getStartPoint(), dom.isInline(node));
-    if (info.rightNode) {
-      info.rightNode.parentNode.insertBefore(node, info.rightNode);
-      if (dom.isEmpty(info.rightNode) && (doNotInsertPara || dom.isPara(node))) {
-        info.rightNode.parentNode.removeChild(info.rightNode);
-      }
-    } else {
-      info.container.appendChild(node);
-    }
-
-    return node;
-  }
-
-  /**
    * Insert html at current cursor
    */
   pasteHTML(markup) {
@@ -974,7 +1075,7 @@ class WrappedRange {
    * Returns range for word before and (optionally) after cursor
    *
    * @param {Boolean} [findAfter] - Find after cursor also, default: false
-   * @return {WrappedRange}
+   * @return {WrappedRange} - A new `WrappedRange` instance.
    */
   getWordRange(findAfter) {
     let endPoint = this.getEndPoint();
@@ -994,17 +1095,19 @@ class WrappedRange {
       });
     }
 
-    this.setStart(startPoint.node, startPoint.offset);
-    this.setEnd(endPoint.node, Math.max(endPoint.offset - 1, endOffset));
-
-    return this;
+    return new WrappedRange(
+      startPoint.node,
+      startPoint.offset,
+      endPoint.node,
+      Math.max(endPoint.offset - 1, endOffset)
+    );
   }
 
   /**
    * Returns range for words before cursor
    *
    * @param {Boolean} [findAfter] - find after cursor, default: false
-   * @return {WrappedRange}
+   * @return {WrappedRange} - A new `WrappedRange` instance.
    */
   getWordsRange(findAfter) {
     var endPoint = this.getEndPoint();
@@ -1023,10 +1126,12 @@ class WrappedRange {
       endPoint = Point.nextPointUntil(endPoint, isNotTextPoint);
     }
 
-    this.setStart(startPoint.node, startPoint.offset);
-    this.setEnd(endPoint.node, endPoint.offset);
-
-    return this;
+    return new WrappedRange(
+      startPoint.node,
+      startPoint.offset,
+      endPoint.node,
+      endPoint.offset
+    );
   }
 
   /**
@@ -1038,24 +1143,24 @@ class WrappedRange {
    *  return range: '@Peter Pan'
    *
    * @param {RegExp} [regex]
-   * @return {WrappedRange|null}
+   * @return {WrappedRange|null} - A new `WrappedRange` instance or `null`.
    */
   getWordsMatchRange(regex) {
-    var endPoint = this.getEndPoint();
+    const endPoint = this.getEndPoint();
 
-    var startPoint = Point.prevPointUntil(endPoint, function(point) {
+    const startPoint = Point.prevPointUntil(endPoint, function(point) {
       if (!Point.isCharPoint(point) && !Point.isSpacePoint(point)) {
         return true;
       }
-      var rng = createFromPoints(point, endPoint);
-      var result = regex.exec(rng.toString());
+      const rng = createFromPoints(point, endPoint);
+      const result = regex.exec(rng.toString());
       return result && result.index === 0;
     });
 
-    var rng = createFromPoints(startPoint, endPoint);
+    const rng = createFromPoints(startPoint, endPoint);
 
-    var text = rng.toString();
-    var result = regex.exec(text);
+    const text = rng.toString();
+    const result = regex.exec(text);
 
     if (result && result[0].length === text.length) {
       return rng;

@@ -6,6 +6,7 @@ const isArrayBuffer = obj => _.isArrayBuffer(obj);
 const isBoolean = obj => _.isBoolean(obj);
 const isDataView = obj => _.isDataView(obj);
 const isDate = obj => _.isDate(obj);
+const isNode = obj => obj instanceof Node;
 const isElement = obj => _.isElement(obj);
 const isError = obj => _.isError(obj);
 const isFunction = obj => _.isFunction(obj);
@@ -23,9 +24,6 @@ const isTypedArray = obj => _.isTypedArray(obj);
 const isUndefined = obj => _.isUndefined(obj);
 const isJquery = obj => obj instanceof jQuery;
 
-// lists
-//const isEmpty = (obj) => _.isEmpty(obj);
-
 export default {
   isArguments,
   isArray,
@@ -33,6 +31,7 @@ export default {
   isBoolean,
   isDataView,
   isDate,
+  isNode,
   isElement,
   isError,
   isFunction,

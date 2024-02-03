@@ -595,8 +595,7 @@ const removeFormatInternal = (ed, name, vars, node, similar) => {
     //   applyRngStyle(expandedRng, false);
     // });
 
-    // TODO: nodeChanged() ?
-    //ed.nodeChanged();
+    FormatUtils.afterFormat(ed);
   } else {
     CaretFormat.removeCaretFormat(ed, name, vars, similar);
   }

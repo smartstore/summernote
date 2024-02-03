@@ -15,8 +15,7 @@ export default class Handle {
           e.preventDefault();
         }
       },
-      'summernote.keyup summernote.scroll summernote.change summernote.dialog.shown': (we, e) => {
-        // TODO: react to summernote.change?
+      'summernote.keyup summernote.scroll summernote.change summernote.dialog.shown': (_, e) => {
         this.update(e?.target, e);
       },
       'summernote.disable summernote.blur': () => {
