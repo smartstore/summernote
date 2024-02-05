@@ -576,9 +576,11 @@ const removeFormatInternal = (ed, name, vars, node, similar) => {
     return;
   }
 
-  const rng = ed.getLastRange();
+  let rng = ed.getLastRange();
   const collapsed = rng.collapsed; // selection.isCollapsed()
   if (!collapsed || !FormatUtils.isInlineFormat(format) || rng.isOnCell()) {
+    //rng = rng.splitText();
+
     // Remove formatting while preserving visible selection
     FormatUtils.preserveSelection(ed, rng,
       () => removeRngStyle(rng)

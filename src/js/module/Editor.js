@@ -7,6 +7,7 @@ import lists from '../core/lists';
 import dom from '../core/dom';
 import range from '../core/range';
 import Point from '../core/Point';
+import Obj from '../core/Obj';
 import { readFileAsDataURL, createImage } from '../core/async';
 import History from '../editing/History';
 import Style from '../editing/Style';
@@ -15,6 +16,7 @@ import Table from '../editing/Table';
 import Bullet from '../editing/Bullet';
 import Selection from '../editing/Selection';
 import Formatter from '../fmt/Formatter';
+import HtmlSanitizer from '../util/HtmlSanitizer';
 
 const KEY_BOGUS = 'bogus';
 
@@ -415,6 +417,8 @@ export default class Editor {
   }
 
   initialize() {
+    this.selection.initialize(this);
+
     // bind custom events
     this.$editable.on('keydown', (event) => {
       if (event.keyCode === key.code.ENTER) {
@@ -455,7 +459,7 @@ export default class Editor {
       }
     });
 
-    this.$editable.attr('spellcheck', this.options.spellCheck);
+    this.$editable.attr('spellcheck', this.options.spellCheck); 
 
     this.$editable.attr('autocorrect', this.options.spellCheck);
 
@@ -464,7 +468,7 @@ export default class Editor {
     }
 
     // init content before set event
-    this.$editable.html(dom.html(this.$note) || dom.emptyPara);
+    this.$editable.html(dom.value(this.$note) || dom.emptyPara);
 
     this.$editable.on(env.inputEventName, func.debounce(() => {
       this.context.triggerEvent('change', this.$editable);
@@ -498,7 +502,6 @@ export default class Editor {
       }
     }
 
-    this.selection.initialize(this);
     this.history.recordUndo();
     this.setLastRange();
   }
@@ -645,7 +648,7 @@ export default class Editor {
    */
   setLastRange(rng) {
     if (rng) {
-      this.lastRange = range.getWrappedRange(rng).cloneRange();
+      this.lastRange = range.getWrappedRange(rng);
     } 
     else {
       this.lastRange = range.create(this.editable);
@@ -694,6 +697,16 @@ export default class Editor {
       this.lastRange.select();
       this.focus();
     }
+  }
+
+  html(sanitize) {
+    let html = this.$editable.html();
+    // TODO: How to deal with both opts sanitize & prettify?
+    const sanitizeOption = Obj.valueOrDefault(this.options.sanitizeHtml, this.options.prettifyHtml);
+    if (Obj.valueOrDefault(sanitize, sanitizeOption)) {
+      html = HtmlSanitizer.sanitizeHtml(this.context, html);
+    }
+    return html;
   }
 
   getSelection() {

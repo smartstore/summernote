@@ -2,6 +2,27 @@ import $ from "jquery";
 
 let summernote_image_upload_url;
 
+const beautifyOpts = {
+  indent_size: 2,
+  indent_with_tabs: true,
+  indent_char: " ",
+  max_preserve_newlines: "2",
+  preserve_newlines: true,
+  keep_array_indentation: false,
+  break_chained_methods: false,
+  indent_scripts: "normal",
+  brace_style: "collapse",
+  space_before_conditional: true,
+  unescape_strings: false,
+  jslint_happy: false,
+  end_with_newline: false,
+  wrap_line_length: "140",
+  indent_inner_html: true,
+  comma_first: false,
+  e4x: false,
+  indent_empty_lines: false
+};
+
 export var summernote_global_config = {
   disableDragAndDrop: false,
   dialogsInBody: true,
@@ -40,6 +61,12 @@ export var summernote_global_config = {
         sendFile(files[0], this);
       }   
     },
+    onSanitizeHtml(html, opts) {
+      if (opts.prettify && window.html_beautify) {
+        return window.html_beautify(html, beautifyOpts);
+      }
+      return html;
+    }
   },
   toolbar: [
     ['edit', ['undo', 'redo']],

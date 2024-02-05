@@ -317,7 +317,7 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
       if (!isCollapsed || !FormatUtils.isInlineFormat(format) || rng.isOnCell()) {
         // Apply formatting to selection
         if (!isCollapsed) {
-          rng = rng.cloneRange().splitText().normalize();
+          rng = rng.splitText().normalize();
         }
 
         // Apply while preserving visible selection

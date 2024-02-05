@@ -54,7 +54,7 @@ export default class Selection {
       else if (e.type !== 'summernote') {
         this.editor.setLastRange();
       }  
-    }, 300);
+    }, 200);
 
     const events = ['keydown', 'keyup', 'mouseup', 'paste', 'focus', 'blur']
       .map(x => x + '.selection')

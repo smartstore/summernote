@@ -99,7 +99,9 @@ export default class CodeView {
    */
   activate() {
     const CodeMirror = this.CodeMirrorConstructor;
-    this.$codable.val(dom.html(this.$editable, this.options.prettifyHtml));
+    const editor = this.context.modules.editor;
+    
+    this.$codable.val(editor.html());
     this.$codable.height(this.$editable.height());
 
     this.context.invoke('toolbar.updateCodeview', true);

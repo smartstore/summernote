@@ -95,17 +95,21 @@ export default class Context {
   }
 
   code(html) {
-    const isActivated = this.invoke('codeview.isActivated');
+    const isCodeView = this.invoke('codeview.isActivated');
 
     if (html === undefined) {
+      // Get
       this.invoke('codeview.sync');
       return isActivated ? this.layoutInfo.codable.val() : this.layoutInfo.editable.html();
     } else {
-      if (isActivated) {
+      // Set
+      if (isCodeView) {
         this.invoke('codeview.sync', html);
-      } else {
+      } 
+      else {
         this.layoutInfo.editable.html(html);
       }
+
       this.$note.val(html);
       this.triggerEvent('change', this.layoutInfo.editable);
     }
@@ -123,7 +127,7 @@ export default class Context {
   }
 
   disable() {
-    // close codeview if codeview is opend
+    // close codeview if codeview is open
     if (this.invoke('codeview.isActivated')) {
       this.invoke('codeview.deactivate');
     }

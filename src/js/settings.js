@@ -143,6 +143,8 @@ $.summernote = $.extend($.summernote, {
     // TODO: need to be documented
     recordEveryKeystroke: false,
     historyLimit: 200,
+    sanitizeHtml: true,
+    prettifyHtml: true,
 
     // TODO: need to be documented
     showDomainOnlyForAutolink: false,
@@ -226,6 +228,7 @@ $.summernote = $.extend($.summernote, {
       onImageLinkInsert: null,
       onImageUpload: null,
       onImageUploadError: null,
+      onSanitizeHtml: null,
       onInit: null,
       onKeydown: null,
       onKeyup: null,

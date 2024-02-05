@@ -67,7 +67,6 @@ export default class ImageDialog {
       this.context.invoke('editor.restoreRange');
 
       if (typeof data === 'string') { // image url
-        // If onImageLinkInsert set,
         if (this.options.callbacks.onImageLinkInsert) {
           this.context.triggerEvent('image.link.insert', data);
         } else {
