@@ -397,7 +397,7 @@ const wrapAndSplit = (
 const removeFormatInternal = (ed, name, vars, node, similar) => {
   const formatList = ed.formatter.get(name);
   const format = formatList[0];
-  //const selection = ed.selection;
+  const selection = ed.selection;
 
   const splitToFormatRoot = (container) => {
     const formatRoot = findFormatRoot(ed, container, name, vars, similar);
@@ -576,9 +576,8 @@ const removeFormatInternal = (ed, name, vars, node, similar) => {
     return;
   }
 
-  let rng = ed.getLastRange();
-  const collapsed = rng.collapsed; // selection.isCollapsed()
-  if (!collapsed || !FormatUtils.isInlineFormat(format) || rng.isOnCell()) {
+  if (!selection.isCollapsed() || !FormatUtils.isInlineFormat(format) || rng.isOnCell()) {
+    let rng = selection.getRange();
     //rng = rng.splitText();
 
     // Remove formatting while preserving visible selection
@@ -609,7 +608,7 @@ const removeFormatInternal = (ed, name, vars, node, similar) => {
 };
 
 const removeFormat = (editor, name, vars, node, similar) => {
-  if (node || editor.getLastRange().isEditable()) {
+  if (node || editor.selection.isEditable()) {
     removeFormatInternal(editor, name, vars, node, similar);
   }
 };

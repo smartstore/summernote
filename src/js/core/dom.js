@@ -487,7 +487,23 @@ const isClosestSibling = (node1, node2) =>
   node1.nextSibling === node2 || node1.previousSibling === node2;
 
 
-const isChildOf = (node, parent) => node === parent || parent.contains(node);
+const isChildOf = (node, parentSelector, deep, ignoreSelf) => {
+  const pred = matchSelector(parentSelector);
+
+  if (pred(node)) { // node === parent
+    return !ignoreSelf;
+  }
+  else if (deep) {
+    for (let n = node.parentNode; n; n = n.parentNode) {
+      if (pred(n)) return true;
+    }
+  }
+  else {
+    return pred(node.parentNode);
+  }
+
+  return false;
+};
 
 /**
  * Checks whether node is left edge of parent or not.
@@ -563,6 +579,14 @@ const getRangeNode = (container, offset) => {
   else {
     return container;
   }
+}
+
+const skipEmptyTextNodes = (node, forwards) => {
+  const orig = node;
+  while (node && isText(node) && node.length === 0) {
+    node = forwards ? node.nextSibling : node.previousSibling;
+  }
+  return node || orig;  
 }
 
 /**
@@ -1258,6 +1282,7 @@ export default {
   appendChildNodes,
   position,
   hasChildren,
+  skipEmptyTextNodes,
   makeOffsetPath,
   fromOffsetPath,
   getRangeNode,

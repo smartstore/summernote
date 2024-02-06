@@ -187,9 +187,6 @@ const createFromNodeAfter = (node) => {
  * @return {WrappedRange}
  */
 const createFromBookmark = (editable, bookmark) => {
-  if (bookmark.start) {
-    return createFromPoints(bookmark.start, bookmark.end);
-  }
   const sc = dom.fromOffsetPath(editable, bookmark.s.path);
   const so = bookmark.s.offset;
   const ec = dom.fromOffsetPath(editable, bookmark.e.path);
@@ -1224,5 +1221,6 @@ export default {
   createFromParaBookmark,
   createFromNativeRange,
   createFromPoints,
-  getWrappedRange
+  getWrappedRange,
+  getNativeRange
 };

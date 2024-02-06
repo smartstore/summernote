@@ -229,6 +229,7 @@ export default class Context {
   }
 
   invoke() {
+    // TODO: Allow multiple splits, e.g. "editor.selection.getRange"
     const namespace = lists.head(arguments);
     const args = lists.tail(lists.from(arguments));
 

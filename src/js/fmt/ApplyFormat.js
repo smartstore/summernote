@@ -33,10 +33,8 @@ const applyStyles = (elm, format, vars) => {
 };
 
 const applyFormatAction = (editor, name, vars = null, node = null) => {
-  let rng = editor.getLastRange();
-  if (!rng.isEditable()) {
-    return;
-  }
+  const sel = editor.selection;
+  let rng = sel.getRange();
 
   const formatList = editor.formatter.get(name);
   const format = formatList[0];
@@ -334,14 +332,16 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
 
       const liFmt = ListItemFormat.getExpandedListItemFormat(editor.formatter, name);
       if (liFmt) {
-        each(ListItemFormat.getFullySelectedListItems(editor.getLastRange()), (li) => applyStyles(li, liFmt, vars));
+        each(ListItemFormat.getFullySelectedListItems(editor.selection), (li) => applyStyles(li, liFmt, vars));
       }
     }
   }
 };
 
 const applyFormat = (editor, name, vars, node) => {
-  applyFormatAction(editor, name, vars, node);
+  if (node || editor.selection.isEditable()) {
+    applyFormatAction(editor, name, vars, node);
+  }
 };
 
 export default {

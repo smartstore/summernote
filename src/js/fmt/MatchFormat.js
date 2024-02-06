@@ -134,17 +134,15 @@ const match = (editor, name, vars, node, similar) => {
     return matchParents(editor, node, name, vars, similar);
   }
 
-  const rng = editor.getLastRange();
-
   // TODO: Implement MatchFormat.match() range.getNode() stuff
   // Check selected node
-  node = rng.commonAncestorContainer;
+  node = editor.selection.getNode();
   if (matchParents(editor, node, name, vars, similar)) {
     return true;
   }
 
   // Check start node if it's different
-  const startNode = rng.sc;
+  const startNode = editor.selection.getStart();
   if (startNode !== node) {
     if (matchParents(editor, startNode, name, vars, similar)) {
       return true;
@@ -159,8 +157,7 @@ const matchAll = (editor, names, vars) => {
   const checkedMap = {};
   
   // Check start of selection for formats
-  const rng = editor.getLastRange();
-  const startElement = rng.sc;
+  const startElement = editor.selection.getStart();
 
   dom.closest(startElement, (node) => {
     for (let i = 0; i < names.length; i++) {
@@ -185,9 +182,8 @@ const canApply = (editor, name) => {
   const formatList = editor.formatter.get(name);
 
   // Implement range isEditable() stuff (?)
-  if (formatList /*&& editor.selection.isEditable()*/) {
-    const rng = editor.getLastRange();
-    const startNode = rng.sc;
+  if (formatList && editor.selection.isEditable()) {
+    const startNode = editor.selection.getStart();
     const parents = dom.parents(startNode);
 
     for (let x = formatList.length - 1; x >= 0; x--) {

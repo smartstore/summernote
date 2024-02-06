@@ -7,6 +7,13 @@ import Point from '../core/Point';
 
 const win = window;
 
+const createRootRange = (editor) => {
+  rng = range.createFromBodyElement(editor.editable.lastChild || editor.editable, true);
+  if (!dom.isChildOf(rng.startContainer, editor.editable, true)) {
+    rng = range.createFromBodyElement(editor.editable);
+  }
+};
+
 const getEndpointElement = (
   root,
   rng,
@@ -38,10 +45,26 @@ export default class Selection {
     this.context = context;
     this.selectedRange = null;
     this.explicitRange = null;
+    this.bookmark = null;
   }
 
   initialize(editor) {
     this.hasFocus = editor.hasFocus();
+
+    const createBookmarkFromSelection = () => {
+      const sel = this.nativeSelection;
+      let rng;
+      if (sel.rangeCount > 0) {
+        rng = range.createFromNativeRange(sel.getRangeAt(0));
+      } else {
+        let rng = range.create(this.editor.$editable);
+        if ($(rng).closest('.note-editable').length === 0) {
+          rng = range.createFromBodyElement(this.editor.$editable);
+        }
+      }
+
+      return rng;
+    };
 
     const throttledHandler = func.throttle(e => {
       if (e.type === 'blur') {
@@ -49,10 +72,12 @@ export default class Selection {
       }
       if (e.type === 'focus') {
         this.hasFocus = true;
-        this.editor.setLastRange();
+        //this.editor.setLastRange();
+        this.bookmark = createBookmarkFromSelection();
       }
       else if (e.type !== 'summernote') {
-        this.editor.setLastRange();
+        //this.editor.setLastRange();
+        this.bookmark = createBookmarkFromSelection();
       }  
     }, 200);
 
@@ -85,10 +110,41 @@ export default class Selection {
     return win.getSelection ? win.getSelection() : win.document.selection;
   }
 
+  /**
+   * Checks whether the given range is completely within the boundaries of the root editable.
+   */
   isValidRange(rng) {
-    // TODO: Implement Selection.isValidRange
-    return true;
+    const isValidObj = rng && (rng.isWrapper || rng instanceof Range);
+    if (!isValidObj) return false;
+
+    const root = this.editor.editable;
+    return dom.isChildOf(rng.startContainer, root, true) && (rng.endContainer == rng.startContainer || dom.isChildOf(rng.endContainer, root, true));
   }
+
+  /**
+   * Saves the bookmark location for the given range. This bookmark
+   * can then be used to restore the selection after some content modification to the document.
+   */
+  setBookmark(rng) {
+    if (this.isValidRange(rng)) {
+      rng = range.getWrappedRange(rng);
+      this.bookmark = rng;
+    } else {
+      console.warn('Range is not within the editor boundaries.', rng?.toString());
+    }
+  }
+
+  /**
+   * Collapse the selection to start or end of range.
+   *
+   * @method collapse
+   * @param {Boolean} toStart Optional boolean state if to collapse to end or not. Defaults to false.
+   */
+  collapse(toStart) {
+    const rng = this.getRange();
+    rng.collapse(!!toStart);
+    this.setRange(rng);
+  };
 
   /**
    * Returns the current editor selection range.
@@ -106,11 +162,9 @@ export default class Selection {
 
     const editor = this.editor;
 
-    if (Type.isAssigned(editor.bookmark) && !this.hasFocus) {
-      rng = range.createFromBookmark(editor.bookmark);
-      if (rng) {
-        return rng;
-      }
+    if (Type.isAssigned(this.bookmark) && !this.hasFocus) {
+      // Get the last saved range if not in focus
+      return this.bookmark;
     }
 
     if (this.hasFocus) {
@@ -126,21 +180,18 @@ export default class Selection {
 
     // No range found. Create one from root editable.
     if (!rng) {
-      rng = range.createFromBodyElement(editor.editable.lastChild || editor.editable, true);
-      if ($(rng.startContainer).closest('.note-editable').length === 0) {
-        rng = range.createFromBodyElement(editor.editable);
-      }
+      rng = createRootRange(editor);
     }
 
-    if (selectedRange && explicitRange) {
-      if (tryCompareBoundaryPoints(rng.START_TO_START, rng, selectedRange) === 0 &&
-        tryCompareBoundaryPoints(rng.END_TO_END, rng, selectedRange) === 0) {
+    if (this.selectedRange && this.explicitRange) {
+      if (tryCompareBoundaryPoints(rng.START_TO_START, rng, this.selectedRange) === 0 &&
+        tryCompareBoundaryPoints(rng.END_TO_END, rng, this.selectedRange) === 0) {
         // Safari, Opera and Chrome only ever select text which causes the range to change.
         // This lets us use the originally set range if the selection hasn't been changed by the user.
-        rng = explicitRange;
+        rng = this.explicitRange;
       } else {
-        selectedRange = null;
-        explicitRange = null;
+        this.selectedRange = null;
+        this.explicitRange = null;
       }
     }
 
@@ -165,7 +216,7 @@ export default class Selection {
       const nativeRange = rng.isWrapper ? range.getNativeRange(rng) : rng;
       const wrappedRange = rng.isWrapper ? rng : range.getWrappedRange(rng);
 
-      explicitRange = wrappedRange;
+      this.explicitRange = wrappedRange;
 
       try {
         sel.removeAllRanges();
@@ -181,7 +232,7 @@ export default class Selection {
       }
 
       // adding range isn't always successful so we need to check range count otherwise an exception can occur
-      selectedRange = sel.rangeCount > 0 ? wrappedRange : null;
+      this.selectedRange = sel.rangeCount > 0 ? wrappedRange : null;
     }
 
     // WebKit edge case selecting images works better using setBaseAndExtent when the image is floated
@@ -208,6 +259,77 @@ export default class Selection {
         }
       }
     }
+  }
+
+  /**
+   * Sets the current selection to the specified DOM element.
+   *
+   * @method setNode
+   * @param {Element} elm Element to set as the contents of the selection.
+   * @return {Element} Returns the element that got passed in.
+   */
+  setNode(elm) {
+    // TODO: Implement Selection.setNode()
+    return elm;
+  }
+
+  /**
+   * Returns the currently selected element or the common ancestor element for both start and end of the selection.
+   *
+   * @method getNode
+   * @return {Element} Currently selected element or common ancestor element.
+   */
+  getNode() {
+    const rng = this.getRange();
+    const root = this.editor.$editable;
+    // Range maybe lost after the editor is made visible again
+    if (!rng) {
+      return root;
+    }
+
+    const startOffset = rng.startOffset;
+    const endOffset = rng.endOffset;
+    let startContainer = rng.startContainer;
+    let endContainer = rng.endContainer;
+    let node = rng.commonAncestorContainer;
+
+    // Handle selection a image or other control like element such as anchors
+    if (!rng.collapsed) {
+      if (startContainer === endContainer) {
+        if (endOffset - startOffset < 2) {
+          if (startContainer.hasChildNodes()) {
+            node = startContainer.childNodes[startOffset];
+          }
+        }
+      }
+
+      // If the anchor node is a element instead of a text node then return this element
+      // if (isWebKit && sel.anchorNode && sel.anchorNode.nodeType == 1)
+      // return anchorNode.childNodes[sel.anchorOffset];
+
+      // Handle cases where the selection is immediately wrapped around a node and return that node instead of it's parent.
+      // This happens when you double click an underlined word in FireFox.
+      if (dom.isText(startContainer) && dom.isText(endContainer)) {
+        if (startContainer.length === startOffset) {
+          startContainer = dom.skipEmptyTextNodes(startContainer.nextSibling, true);
+        } else {
+          startContainer = startContainer.parentNode;
+        }
+
+        if (endOffset === 0) {
+          endContainer = dom.skipEmptyTextNodes(endContainer.previousSibling, false);
+        } else {
+          endContainer = endContainer.parentNode;
+        }
+
+        if (startContainer && startContainer === endContainer) {
+          node = startContainer;
+        }
+      }
+    }
+
+    const elm = dom.isText(node) ? node.parentNode : node;
+    return dom.isHTMLElement(elm) ? elm : root;
   }
 
   /**
@@ -286,12 +408,12 @@ export default class Selection {
    *
    * @method select
    * @param {Element} node HTML DOM element to select.
-   * @param {Boolean} [content] Optional bool state if the contents should be selected or not on non IE browser.
    * @return {Element} Selected element the same element as the one that got passed in.
    */
-  select(node, content) {
-    // TODO: Implement Selection.select()
-    return node;
+  select(node) {
+    // TODO: What about Selection.select(node, content)?
+    const rng = range.createFromNode(node);
+    this.setRange(rng);
   }
 
   /**
@@ -301,18 +423,25 @@ export default class Selection {
    * @return {Boolean} true/false state if the selection range is collapsed or not.
    */
   isCollapsed() {
-    const rng = range.getNativeRange(this.getRange()), sel = this.nativeSelection;
-
-    if (!rng || rng.item) {
+    const rng = this.getRange();
+    if (!rng) {
       return false;
     }
 
-    if (rng.compareEndPoints) {
-      return rng.compareEndPoints('StartToEnd', rng) === 0;
-    }
-
-    return !sel || rng.collapsed;
+    return rng.collapsed;
   }
 
-  // TODO: Mach weiter ab Selection.isEditable
+  /**
+   * Checks if the current selection’s start and end containers are editable within their parent’s contexts.
+   */
+  isEditable() {
+    const rng = this.getRange();
+    if (rng.collapsed) {
+      return dom.isContentEditable(rng.startContainer);
+    } else {
+      return dom.isContentEditable(rng.startContainer) && dom.isContentEditable(rng.endContainer);
+    }
+  }
+
+  // TODO: Mach weiter ab Selection.collapse
 }

@@ -149,9 +149,9 @@ export default class Editor {
       if (this.isLimited($(node).text().length)) {
         return;
       }
-      const rng = this.getLastRange();
+      const rng = this.selection.getRange();
       rng.insertNode(node);
-      this.setLastRange(range.createFromNodeAfter(node).select());
+      this.selection.setRange(range.createFromNodeAfter(node));
     });
 
     /**
@@ -162,9 +162,9 @@ export default class Editor {
       if (this.isLimited(text.length)) {
         return;
       }
-      const rng = this.getLastRange();
+      const rng = this.selection.getRange();
       const textNode = rng.insertNode(dom.createText(text));
-      this.setLastRange(range.create(textNode, dom.nodeLength(textNode)).select());
+      this.selection.setRange(range.create(textNode, dom.nodeLength(textNode)));
     });
 
     /**
@@ -176,8 +176,9 @@ export default class Editor {
         return;
       }
       markup = this.context.invoke('codeview.purify', markup);
-      const contents = this.getLastRange().pasteHTML(markup);
-      this.setLastRange(range.createFromNodeAfter(lists.last(contents)).select());
+      // TODO: rng.pasteHTML() --> selection.setContent
+      const contents = this.selection.getRange().pasteHTML(markup);
+      this.selection.setRange(range.createFromNodeAfter(lists.last(contents)));
     });
 
     /**
@@ -199,9 +200,9 @@ export default class Editor {
      * insert horizontal rule
      */
     this.insertHorizontalRule = this.wrapCommand(() => {
-      const hrNode = this.getLastRange().insertNode(dom.create('HR'));
+      const hrNode = this.selection.getRange().insertNode(dom.create('HR'));
       if (hrNode.nextSibling) {
-        this.setLastRange(range.create(hrNode.nextSibling, 0).normalize().select());
+        this.selection.setRange(range.create(hrNode.nextSibling, 0).normalize());
       }
     });
 
@@ -210,7 +211,7 @@ export default class Editor {
      * @param {String} value
      */
     this.lineHeight = this.wrapCommand((value) => {
-      this.style.stylePara(this.getLastRange(), {
+      this.style.stylePara(this.selection.getRange(), {
         lineHeight: value,
       });
     });
@@ -251,7 +252,7 @@ export default class Editor {
         anchors.push(linkInfo.a);
       }
       else {
-        let rng = linkInfo.range || this.getLastRange();
+        let rng = linkInfo.range || this.selection.getRange();
         const additionalTextLength = linkText.length - rng.toString().length;
         if (additionalTextLength > 0 && this.isLimited(additionalTextLength)) {
           return;
@@ -308,9 +309,7 @@ export default class Editor {
         }
       });
 
-      this.setLastRange(
-        this.createRangeFromList(anchors).select()
-      );
+      this.selection.setRange(this.createRangeFromList(anchors));
     });
 
     /**
@@ -345,8 +344,9 @@ export default class Editor {
     this.insertTable = this.wrapCommand((dim) => {
       const dimension = dim.split('x');
 
-      const rng = this.getLastRange().deleteContents();
+      const rng = this.selection.getRange().deleteContents();
       rng.insertNode(this.table.createTable(dimension[0], dimension[1], this.options));
+      // TODO: Where to put cursor after TABLE create?
     });
 
     /**
@@ -360,7 +360,7 @@ export default class Editor {
         $target = $(this.restoreTarget()).detach();
       }
       
-      this.setLastRange(range.createFromSelection($target).select());
+      this.selection.setRange(range.createFromSelection($target));
       this.context.triggerEvent('media.delete', $target, this.$editable);
     });
 
@@ -437,7 +437,7 @@ export default class Editor {
         }
       }
       if (this.isLimited(1, event)) {
-        const lastRange = this.getLastRange();
+        const lastRange = this.selection.getRange();
         if (lastRange.eo - lastRange.so === 0) {
           return false;
         }
@@ -503,7 +503,6 @@ export default class Editor {
     }
 
     this.history.recordUndo();
-    this.setLastRange();
   }
 
   destroy() {
@@ -614,8 +613,7 @@ export default class Editor {
    */
   createRange() {
     this.focus();
-    this.setLastRange();
-    return this.getLastRange();
+    return this.selection.getRange();
   }
 
   /**
@@ -668,10 +666,11 @@ export default class Editor {
    * @return {WrappedRange}
    */
   getLastRange() {
-    if (!this.lastRange) {
-      this.setLastRange();
-    }
-    return this.lastRange;
+    return this.selection.getRange();
+    // if (!this.lastRange) {
+    //   this.setLastRange();
+    // }
+    // return this.lastRange;
   }
 
   /**
@@ -683,7 +682,7 @@ export default class Editor {
    */
   saveRange(thenCollapse) {
     if (thenCollapse) {
-      this.getLastRange().collapse().select();
+      this.selection.collapse();
     }
   }
 
@@ -693,10 +692,15 @@ export default class Editor {
    * restore lately range
    */
   restoreRange() {
-    if (this.lastRange) {
-      this.lastRange.select();
+    // TODO: selection bookmarks/restore (TryRestoreBookmark?)
+    if (this.selection.bookmark) {
+      this.selection.setRange(this.selection.bookmark);
       this.focus();
     }
+    // if (this.lastRange) {
+    //   this.lastRange.select();
+    //   this.focus();
+    // }
   }
 
   html(sanitize) {
@@ -707,10 +711,6 @@ export default class Editor {
       html = HtmlSanitizer.sanitizeHtml(this.context, html);
     }
     return html;
-  }
-
-  getSelection() {
-    return window.getSelection ? window.getSelection() : document.selection;
   }
 
   saveTarget(node) {
@@ -806,7 +806,7 @@ export default class Editor {
    * handle tab key
    */
   tab() {
-    const rng = this.getLastRange();
+    const rng = this.selection.getRange();
     if (rng.collapsed && rng.isOnCell()) {
       this.table.tab(rng);
     } else {
@@ -826,7 +826,7 @@ export default class Editor {
    * handle shift+tab key
    */
   untab() {
-    const rng = this.getLastRange();
+    const rng = this.selection.getRange();
     if (rng.collapsed && rng.isOnCell()) {
       this.table.tab(rng, true);
     } else {
@@ -886,8 +886,8 @@ export default class Editor {
       }
 
       $image.show();
-      this.getLastRange().insertNode($image[0]);
-      this.setLastRange(range.createFromNodeAfter($image[0]).select());
+      this.selection.getRange().insertNode($image[0]);
+      this.selection.setRange(range.createFromNodeAfter($image[0]));
       this.afterCommand();
     }).fail((e) => {
       this.context.triggerEvent('image.upload.error', e);
@@ -933,7 +933,8 @@ export default class Editor {
    * @return {String} text
    */
   getSelectedText() {
-    let rng = this.getLastRange();
+    // TODO: Move this to Selection
+    let rng = this.selection.getRange();
 
     // if range on anchor, expand range with anchor
     if (rng.isOnAnchor()) {
@@ -1048,7 +1049,7 @@ export default class Editor {
   }
 
   fontStyling(target, value) {
-    const rng = this.getLastRange();
+    const rng = this.selection.getRange();
 
     if (rng !== '') {
       const spans = this.style.styleNodes(rng);
@@ -1061,12 +1062,11 @@ export default class Editor {
         const firstSpan = lists.head(spans);
         if (firstSpan && !dom.nodeLength(firstSpan)) {
           firstSpan.innerHTML = Point.ZERO_WIDTH_NBSP_CHAR;
-          range.createFromNode(firstSpan.firstChild).select();
-          this.setLastRange();
+          this.selection.setRange(range.createFromNode(firstSpan.firstChild));
           this.$editable.data(KEY_BOGUS, firstSpan);
         }
       } else {
-        rng.select();
+        this.selection.setRange(rng);
       }
     } else {
       const noteStatusOutput = $.now();
@@ -1090,12 +1090,11 @@ export default class Editor {
       this.context.modules.imagePopover.hide();
     }
     else {
-      let rng = this.getLastRange();
+      let rng = this.selection.getRange();
       if (rng.isOnAnchor()) {
         const anchor = dom.ancestor(rng.sc, dom.isAnchor);
         rng = range.createFromNode(anchor);
-        rng.select();
-        this.setLastRange();
+        this.selection.setRange(rng);
   
         this.beforeCommand();
         document.execCommand('unlink');
@@ -1124,7 +1123,7 @@ export default class Editor {
     }
 
     if (!rng) {
-      rng = this.getLastRange().expand(dom.isAnchor);
+      rng = this.selection.getRange().expand(dom.isAnchor);
     }
 
     if (!a) {
@@ -1151,7 +1150,7 @@ export default class Editor {
   }
 
   addRow(position) {
-    const rng = this.getLastRange(this.$editable);
+    const rng = this.selection.getRange();
     if (rng.collapsed && rng.isOnCell()) {
       this.beforeCommand();
       this.table.addRow(rng, position);
@@ -1160,7 +1159,7 @@ export default class Editor {
   }
 
   addCol(position) {
-    const rng = this.getLastRange(this.$editable);
+    const rng = this.selection.getRange();
     if (rng.collapsed && rng.isOnCell()) {
       this.beforeCommand();
       this.table.addCol(rng, position);
@@ -1169,7 +1168,7 @@ export default class Editor {
   }
 
   deleteRow() {
-    const rng = this.getLastRange(this.$editable);
+    const rng = this.selection.getRange();
     if (rng.collapsed && rng.isOnCell()) {
       this.beforeCommand();
       this.table.deleteRow(rng);
@@ -1178,7 +1177,7 @@ export default class Editor {
   }
 
   deleteCol() {
-    const rng = this.getLastRange(this.$editable);
+    const rng = this.selection.getRange();
     if (rng.collapsed && rng.isOnCell()) {
       this.beforeCommand();
       this.table.deleteCol(rng);
@@ -1187,7 +1186,7 @@ export default class Editor {
   }
 
   deleteTable() {
-    const rng = this.getLastRange(this.$editable);
+    const rng = this.selection.getRange();
     if (rng.collapsed && rng.isOnCell()) {
       this.beforeCommand();
       this.table.deleteTable(rng);

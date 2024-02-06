@@ -209,8 +209,7 @@ const preserveSelection = (editor, rng, action) => {
     rngAfter = range.create(pts.sc, pts.so, pts.ec, pts.eo);
   }
 
-  rngAfter.select();
-  editor.setLastRange(rngAfter);
+  editor.selection.setRange(rngAfter);
 };
 
 // Expands the node to the closes contentEditable false element if it exists
