@@ -107,7 +107,7 @@ const matchNode = (editor, node, name, vars, similar) => {
     // Check each format in list
     for (let i = 0; i < formatList.length; i++) {
       const format = formatList[i];
-
+      
       // Name name, attributes, styles and classes
       if (matchName(node, format) && matchItems(node, format, 'attributes', similar, vars) && matchItems(node, format, 'styles', similar, vars)) {
         // Match classes
@@ -134,7 +134,6 @@ const match = (editor, name, vars, node, similar) => {
     return matchParents(editor, node, name, vars, similar);
   }
 
-  // TODO: Implement MatchFormat.match() range.getNode() stuff
   // Check selected node
   node = editor.selection.getNode();
   if (matchParents(editor, node, name, vars, similar)) {
@@ -174,14 +173,13 @@ const matchAll = (editor, names, vars) => {
 };
 
 const closest = (editor, names) => {
-  // Implement MatchFormat.closest()
+  // TODO: Implement MatchFormat.closest() ?
   return null;
 };
 
 const canApply = (editor, name) => {
   const formatList = editor.formatter.get(name);
 
-  // Implement range isEditable() stuff (?)
   if (formatList && editor.selection.isEditable()) {
     const startNode = editor.selection.getStart();
     const parents = dom.parents(startNode);

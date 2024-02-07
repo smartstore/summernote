@@ -194,14 +194,13 @@
     self.showDialog = function() {
       var info = self.getInfo();
       var newNode = !info.node;
-      context.invoke('editor.saveRange');
 
       self
         .openDialog(info)
         .then(function(dialogInfo) {
           // [workaround] hide dialog before restore range for IE range focus
           ui.hideDialog(self.$dialog);
-          context.invoke('editor.restoreRange');
+          context.invoke('editor.selection.restoreBookmark');
 
           // insert a new node
           if (newNode) {
@@ -214,7 +213,7 @@
           self.updateNode(info);
         })
         .fail(function() {
-          context.invoke('editor.restoreRange');
+          context.invoke('editor.selection.restoreBookmark');
         });
     };
 

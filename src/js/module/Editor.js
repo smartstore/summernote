@@ -34,7 +34,6 @@ export default class Editor {
     this.lang = this.options.langInfo;
     
     this.editable = this.$editable[0];
-    this.lastRange = null;
     this.snapshot = null;
 
     this.table = new Table();
@@ -96,6 +95,10 @@ export default class Editor {
       })(commands[idx]);
       this.context.memo('help.' + commands[idx], this.lang.help[commands[idx]]);
     }
+
+    // this.bold = this.wrapCommand((value) => {
+    //   return this.selection.pasteContent('<span class="text-white bg-danger">Hallo Welt Yooooooooooo</span>');
+    // });
 
     this.fontName = this.wrapCommand((value) => {
       return this.fontStyling('font-family', env.validFontName(value));
@@ -350,7 +353,7 @@ export default class Editor {
     });
 
     /**
-     * remove media object and Figure Elements if media object is img with Figure.
+     * Remove media object and Figure Elements if media object is img with Figure.
      */
     this.removeMedia = this.wrapCommand(() => {
       let $target = $(this.restoreTarget()).parent();
@@ -437,8 +440,8 @@ export default class Editor {
         }
       }
       if (this.isLimited(1, event)) {
-        const lastRange = this.selection.getRange();
-        if (lastRange.eo - lastRange.so === 0) {
+        const rng = this.selection.getRange();
+        if (rng.eo - rng.so === 0) {
           return false;
         }
       }
@@ -608,7 +611,7 @@ export default class Editor {
   }
 
   /**
-   * create range
+   * Creates range at end of editor document.
    * @return {WrappedRange}
    */
   createRange() {
@@ -617,15 +620,15 @@ export default class Editor {
   }
 
   /**
-   * create a new range from the list of elements
+   * Creates a new range from the list of elements.
    *
-   * @param {list} dom element list
+   * @param {li} dom element list
    * @return {WrappedRange}
    */
-  createRangeFromList(lst) {
-    const startRange = range.createFromNodeBefore(lists.head(lst));
+  createRangeFromList(li) {
+    const startRange = range.createFromNodeBefore(lists.head(li));
     const startPoint = startRange.getStartPoint();
-    const endRange = range.createFromNodeAfter(lists.last(lst));
+    const endRange = range.createFromNodeAfter(lists.last(li));
     const endPoint = endRange.getEndPoint();
 
     return range.create(
@@ -636,71 +639,29 @@ export default class Editor {
     );
   }
 
-  /**
-   * set the last range
-   *
-   * if given rng exist, set rng as the last range
-   * or create a new range at the end of the document
-   *
-   * @param {WrappedRange} rng
-   */
   setLastRange(rng) {
-    if (rng) {
-      this.lastRange = range.getWrappedRange(rng);
-    } 
-    else {
-      this.lastRange = range.create(this.editable);
-
-      if ($(this.lastRange.sc).closest('.note-editable').length === 0) {
-        this.lastRange = range.createFromBodyElement(this.editable);
-      }
-    }
+    // Compat
+    this.selection.setBookmark(rng);
   }
 
-  /**
-   * get the last range
-   *
-   * if there is a saved last range, return it
-   * or create a new range and return it
-   *
-   * @return {WrappedRange}
-   */
   getLastRange() {
-    return this.selection.getRange();
-    // if (!this.lastRange) {
-    //   this.setLastRange();
-    // }
-    // return this.lastRange;
+    // Compat
+    if (!this.selection.bookmark) {
+      this.selection.setBookmark();
+    }
+    return this.selection.bookmark;
   }
 
-  /**
-   * saveRange
-   *
-   * save current range
-   *
-   * @param {Boolean} [thenCollapse=false]
-   */
   saveRange(thenCollapse) {
+    // Compat
     if (thenCollapse) {
       this.selection.collapse();
     }
   }
 
-  /**
-   * restoreRange
-   *
-   * restore lately range
-   */
   restoreRange() {
-    // TODO: selection bookmarks/restore (TryRestoreBookmark?)
-    if (this.selection.bookmark) {
-      this.selection.setRange(this.selection.bookmark);
-      this.focus();
-    }
-    // if (this.lastRange) {
-    //   this.lastRange.select();
-    //   this.focus();
-    // }
+    // Compat
+    this.selection.restoreBookmark();
   }
 
   html(sanitize) {
@@ -714,15 +675,15 @@ export default class Editor {
   }
 
   saveTarget(node) {
-    this.$editable.data('target', node);
+    this.selection.selectedControl = node;
   }
 
   clearTarget() {
-    this.$editable.removeData('target');
+    this.selection.selectedControl = null;
   }
 
   restoreTarget() {
-    return this.$editable.data('target');
+    return this.selection.selectedControl;
   }
 
   /**
@@ -976,7 +937,7 @@ export default class Editor {
           $(newNode).removeClass(currentStyleClass);
         }
 
-        rng.select();
+        this.selection.setRange(rng);
 
         // TODO: Implement custom class support.
       }
@@ -1081,7 +1042,7 @@ export default class Editor {
    * @type command
    */
   unlink() {
-    let img = $(this.$editable.data('target'));
+    let img = $(this.selection.selectedControl);
     if (img.is('img') && img.parent().is('a')) {
       // Special handling for image unlinking
       this.beforeCommand();
@@ -1115,7 +1076,7 @@ export default class Editor {
   getLinkInfo() {
     let img, a, rng;
 
-    img = this.$editable.data('target')
+    img = this.selection.selectedControl;
     if (img?.parentElement?.matches('a')) {
       // First check if a linked image is selected
       a = img.parentElement;

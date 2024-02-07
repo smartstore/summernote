@@ -58,7 +58,7 @@ export default class LinkPopover {
       return;
     }
 
-    const rng = this.context.invoke('editor.getLastRange');
+    const rng = this.context.invoke('editor.selection.getRange');
     if (rng.collapsed && rng.isOnAnchor()) {
       const anchor = dom.ancestor(rng.sc, dom.isAnchor);
       const href = $(anchor).attr('href');

@@ -11,6 +11,7 @@ export default class HintPopover {
   constructor(context) {
     this.context = context;
 
+    this.editor = context.modules.editor;
     this.ui = $.summernote.ui;
     this.$editable = context.layoutInfo.editable;
     this.options = context.options;
@@ -122,9 +123,9 @@ export default class HintPopover {
       if (this.options.hintSelect === 'next') {
         var blank = document.createTextNode('');
         $(node).after(blank);
-        range.createFromNodeBefore(blank).select();
+        this.editor.selection.setRange(range.createFromNodeBefore(blank));
       } else {
-        range.createFromNodeAfter(node).select();
+        this.editor.selection.setRange(range.createFromNodeAfter(node));
       }
 
       this.lastWordRange = null;
@@ -205,7 +206,7 @@ export default class HintPopover {
 
   handleKeyup(event) {
     if (!lists.contains([key.code.ENTER, key.code.UP, key.code.DOWN], event.keyCode)) {
-      let range = this.context.invoke('editor.getLastRange');
+      let range = this.context.invoke('editor.selection.getRange');
       let wordRange, keyword;
       if (this.options.hintMode === 'words') {
         wordRange = range.getWordsRange(range);

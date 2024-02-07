@@ -41,8 +41,8 @@ describe('LinkDialog', () => {
   describe('LinkDialog', () => {
     // open-in-new-window
     it('should check new window when target=_blank', () => {
-      range.createFromNode($editable.find('a')[0]).normalize().select();
-      context.invoke('editor.setLastRange');
+      context.invoke('editor.selection.setRange', range.createFromNode($editable.find('a')[0]).normalize());
+      context.invoke('editor.selection.setBookmark');
       dialog.show();
 
       var checked = dialog.$dialog
@@ -52,8 +52,8 @@ describe('LinkDialog', () => {
     });
 
     it('should uncheck new window without target=_blank', () => {
-      range.createFromNode($editable.find('a')[1]).normalize().select();
-      context.invoke('editor.setLastRange');
+      context.invoke('editor.selection.setRange', range.createFromNode($editable.find('a')[1]).normalize());
+      context.invoke('editor.selection.setBookmark');
       dialog.show();
 
       var checked = dialog.$dialog
@@ -64,8 +64,8 @@ describe('LinkDialog', () => {
 
     // add protocol automatically
     it('should not modify linkInfo.url when initializing the dialog if linkInfo.url is defined and protocol exists', () => {
-      range.createFromNode($editable.find('p')[2]).normalize().select();
-      context.invoke('editor.setLastRange');
+      context.invoke('editor.selection.setRange', range.createFromNode($editable.find('p')[2]).normalize());
+      context.invoke('editor.selection.setBookmark');
       dialog.show();
 
       var linkUrl = dialog.$dialog.find('.note-link-url').val();
@@ -73,8 +73,8 @@ describe('LinkDialog', () => {
     });
 
     it('should add protocol when initializing the dialog if linkInfo.url is defined and protocol not exists', () => {
-      range.createFromNode($editable.find('p')[3]).normalize().select();
-      context.invoke('editor.setLastRange');
+      context.invoke('editor.selection.setRange', range.createFromNode($editable.find('p')[3]).normalize());
+      context.invoke('editor.selection.setBookmark');
       dialog.show();
 
       var linkUrl = dialog.$dialog.find('.note-link-url').val();
@@ -82,8 +82,8 @@ describe('LinkDialog', () => {
     });
 
     it('should add http protocol during the onChange event if linkInfo.url is undefined and protocol not exists', () => {
-      range.createFromNode($editable.find('p')[4]).normalize().select();
-      context.invoke('editor.setLastRange');
+      context.invoke('editor.selection.setRange', range.createFromNode($editable.find('p')[4]).normalize());
+      context.invoke('editor.selection.setBookmark');
       dialog.show();
 
       var $input = dialog.$dialog.find('.note-link-url');
@@ -93,8 +93,8 @@ describe('LinkDialog', () => {
     });
     
     it('should add mailto protocol during the onchange event if linkinfo.url is undefined and protocol not exists', () => {
-      range.createFromNode($editable.find('p')[4]).normalize().select();
-      context.invoke('editor.setLastRange');
+      context.invoke('editor.selection.setRange', range.createFromNode($editable.find('p')[4]).normalize());
+      context.invoke('editor.selection.setBookmark');
       dialog.show();
 
       var $input = dialog.$dialog.find('.note-link-url');
@@ -104,8 +104,8 @@ describe('LinkDialog', () => {
     });
 
     it('should add tel protocol during the onchange event if linkinfo.url is undefined and protocol not exists', () => {
-      range.createFromNode($editable.find('p')[4]).normalize().select();
-      context.invoke('editor.setLastRange');
+      context.invoke('editor.selection.setRange', range.createFromNode($editable.find('p')[4]).normalize());
+      context.invoke('editor.selection.setBookmark');
       dialog.show();
 
       var $input = dialog.$dialog.find('.note-link-url');

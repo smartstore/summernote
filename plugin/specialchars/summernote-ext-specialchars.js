@@ -126,9 +126,8 @@
 
       this.show = function() {
         var text = context.invoke('editor.getSelectedText');
-        context.invoke('editor.saveRange');
         this.showSpecialCharDialog(text).then(function(selectChar) {
-          context.invoke('editor.restoreRange');
+          context.invoke('editor.selection.restoreBookmark');
 
           // build node
           var $node = $('<span></span>').html(selectChar)[0];
@@ -138,7 +137,7 @@
             context.invoke('editor.insertNode', $node);
           }
         }).fail(function() {
-          context.invoke('editor.restoreRange');
+          context.invoke('editor.selection.restoreBookmark');
         });
       };
 

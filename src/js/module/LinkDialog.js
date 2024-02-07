@@ -178,12 +178,11 @@ export default class LinkDialog {
   show() {
     const linkInfo = this.context.invoke('editor.getLinkInfo');
 
-    this.context.invoke('editor.saveRange');
     this.showLinkDialog(linkInfo).then((linkInfo) => {
-      this.context.invoke('editor.restoreRange');
+      this.context.invoke('editor.selection.restoreBookmark');
       this.context.invoke('editor.createLink', linkInfo);
     }).fail(() => {
-      this.context.invoke('editor.restoreRange');
+      this.context.invoke('editor.selection.restoreBookmark');
     });
   }
 }

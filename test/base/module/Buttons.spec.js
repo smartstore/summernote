@@ -47,7 +47,7 @@ describe('Buttons', () => {
     $editable = context.layoutInfo.editable;
 
     // Select the first paragraph
-    range.createFromNode($editable.find('p')[0]).normalize().select();
+    context.modules.editor.selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());
 
     // [workaround]
     //  - IE8~11 can't create range in headless mode

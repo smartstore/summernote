@@ -4,11 +4,11 @@ import lists from './lists';
 import dom from './dom';
 import Point from './Point';
 
-const makeIsOn = (selector) => {
+const makeIsOn = (selector, root) => {
   const pred = dom.matchSelector(selector);
   return function() {
-    const ancestor = dom.closest(this.sc, pred);
-    return !!ancestor && (ancestor === dom.closest(this.ec, pred));
+    const ancestor = dom.closest(this.sc, pred, true, root);
+    return !!ancestor && (ancestor === dom.closest(this.ec, pred, true, root));
   };
 };
 
@@ -43,8 +43,15 @@ const getWrappedRange = (rng) => {
   return rng.isWrapper ? rng : createFromNativeRange(rng);
 };
 
+/**
+ * Checks whether the given range is completely within the boundaries of the given node.
+ */
+const isFullyContainedInNode = (rng, node) => {
+  return dom.isChildOf(rng.startContainer, node, true) && (rng.endContainer == rng.startContainer || dom.isChildOf(rng.endContainer, node, true));
+}
+
 // Judge whether range is on editable or not
-const isOnEditable = makeIsOn(dom.isEditableRoot);
+const isOnEditable = makeIsOn(dom.isEditableRoot, 'div.note-editing-area');
 // Judge whether range is on list node or not
 const  isOnList = makeIsOn(dom.isList);
 // Judge whether range is on anchor node or not
@@ -376,6 +383,10 @@ class WrappedRange {
     return callNative(this, x => x.comparePoint(referenceNode, offset));
   }
 
+  createContextualFragment(content) {
+    return callNative(this, x => x.createContextualFragment(content));
+  }
+
   deleteContents() {
     callNative(this, x => x.deleteContents());
     return this;
@@ -402,7 +413,7 @@ class WrappedRange {
    * Insert node at current cursor
    *
    * @param {Node} node
-   * @param {Boolean} doNotInsertPara - default is false, removes added <p> that's added if true
+   * @param {Boolean} [doNotInsertPara] - Default is false, removes added <p> that's added if true
    * @return {Node}
    */
     insertNode(node, doNotInsertPara = false) {
@@ -981,17 +992,6 @@ class WrappedRange {
   }
 
   /**
-   * Checks if the current range’s start and end containers are editable within their parent’s contexts.
-   */
-  isEditable() {
-    if (this.collapsed) {
-      return dom.isContentEditable(this.startContainer);
-    } else {
-      return dom.isContentEditable(this.startContainer) && dom.isContentEditable(this.endContainer);
-    }
-  }
-
-  /**
    * Wrap inline nodes which children of body with paragraph
    *
    * @return {WrappedRange} - A new `WrappedRange` instance.
@@ -1044,8 +1044,8 @@ class WrappedRange {
    */
   pasteHTML(markup) {
     markup = markup.trim();
-
-    const contentsContainer = $('<div></div>').html(markup)[0];
+    
+    const contentsContainer = dom.create('div', null, markup); // $('<div></div>').html(markup)[0];
     let childNodes = lists.from(contentsContainer.childNodes);
 
     // const rng = this.wrapBodyInlineWithPara().deleteContents();
@@ -1222,5 +1222,6 @@ export default {
   createFromNativeRange,
   createFromPoints,
   getWrappedRange,
-  getNativeRange
+  getNativeRange,
+  isFullyContainedInNode
 };

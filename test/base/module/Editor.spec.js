@@ -194,23 +194,25 @@ describe('Editor', () => {
   });
 
   describe('setLastRange', () => {
+    const sel = editor.selection;
     it('should set last range', (done) => {
       document.body.trigger('click');
-      editor.setLastRange();
+      sel.setBookmark();
 
-      expect(editor.lastRange.sc).await(done).to.equal(editor.editable.lastChild);
+      expect(sel.bookmark.sc).await(done).to.equal(editor.editable.lastChild);
     });
 
     it('should set last range without content', (done) => {
       context.layoutInfo.editable.html('');
       document.body.trigger('click');
-      editor.setLastRange();
+      sel.setBookmark();
 
-      expect(editor.lastRange.sc).await(done).to.equal(editor.editable);
+      expect(sel.bookmark.sc).await(done).to.equal(editor.editable);
     });
   });
 
   describe('insertNode', () => {
+    const sel = editor.selection;
     it('should insert node', (done) => {
       editor.insertNode($('<span> world</span>')[0]);
       expectContentsAwait(context, '<p>hello<span> world</span></p>', done);
@@ -232,7 +234,7 @@ describe('Editor', () => {
 
       setTimeout(() => {
         var textNode = $editable.find('p')[0].firstChild;
-        editor.setLastRange(range.create(textNode, 0, textNode, 0).select());
+        sel.setRange(range.create(textNode, 0, textNode, 0));
 
         setTimeout(() => {
           editor.insertNode($('<span> world</span>')[0]);
@@ -249,6 +251,7 @@ describe('Editor', () => {
   });
 
   describe('insertText', () => {
+    const sel = editor.selection;
     it('should insert text', (done) => {
       editor.insertText(' world');
       expectContentsAwait(context, '<p>hello world</p>', done);
@@ -269,7 +272,7 @@ describe('Editor', () => {
       context.invoke('editor.focus');
 
       var textNode = $editable.find('p')[0].firstChild;
-      editor.setLastRange(range.create(textNode, 0, textNode, 0).select());
+      sel.setRange(range.create(textNode, 0, textNode, 0));
 
       setTimeout(() => {
         editor.insertText(' world');
@@ -362,7 +365,7 @@ describe('Editor', () => {
   describe('styleWithCSS', () => {
     it('should style with tag when it is false (default)', (done) => {
       $editable.appendTo('body');
-      range.createFromNode($editable.find('p')[0]).normalize().select();
+      editor.selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());
       editor.bold();
       expectContentsAwait(context, '<p><b>hello</b></p>', done);
     });
@@ -377,18 +380,19 @@ describe('Editor', () => {
       $editable = context.layoutInfo.editable;
       $editable.appendTo('body');
 
-      range.createFromNode($editable.find('p')[0]).normalize().select();
+      editor.selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());
       editor.bold();
       expectContentsAwait(context, '<p><span style="font-weight: bold;">hello</span></p>', done);
     });
   });
 
   describe('formatBlock', () => {
+    const sel = editor.selection;
     it('should apply formatBlock', (done) => {
       $editable.appendTo('body');
 
       var textNode = $editable.find('p')[0].firstChild;
-      editor.setLastRange(range.create(textNode, 0, textNode, 0).select());
+      sel.setRange(range.create(textNode, 0, textNode, 0));
 
       setTimeout(() => {
         editor.formatBlock('h1');
@@ -409,7 +413,7 @@ describe('Editor', () => {
       var endNode = $editable.find('p').last()[0];
 
       // all p tags is wrapped
-      range.create(startNode, 0, endNode, 1).normalize().select();
+      sel.setRange(range.create(startNode, 0, endNode, 1).normalize());
 
       editor.insertUnorderedList();
       expectContentsAwait(context, '<ul><li><br></li><li>endpoint</li></ul>', done);
@@ -429,7 +433,7 @@ describe('Editor', () => {
       var endNode = $editable.find('p').last()[0];
 
       // all p tags is wrapped
-      range.create(startNode, 0, endNode, 1).normalize().select();
+      sel.setRange(range.create(startNode, 0, endNode, 1).normalize());
 
       editor.formatBlock('h3');
 
@@ -443,7 +447,7 @@ describe('Editor', () => {
     it('should apply custom className in formatBlock', (done) => {
       var $target = $('<h4 class="customH4Class"></h4>');
       $editable.appendTo('body');
-      range.createFromNode($editable.find('p')[0]).normalize().select();
+      sel.setRange(range.createFromNode($editable.find('p')[0]).normalize());
       editor.formatBlock('h4', $target);
 
       // start <p>hello</p> => <h4 class="h4">hello</h4>
@@ -453,7 +457,7 @@ describe('Editor', () => {
     it('should find exact target in formatBlock', (done) => {
       var $target = $('<a class="dropdown-item" href="#" data-value="h6" role="listitem" aria-label="h6"><h6 class="customH6Class">H6</h6></a>');
       $editable.appendTo('body');
-      range.createFromNode($editable.find('p')[0]).normalize().select();
+      sel.setRange(range.createFromNode($editable.find('p')[0]).normalize());
       editor.formatBlock('h6', $target);
 
       // start <p>hello</p> => <h6 class="h6">hello</h6>
@@ -463,7 +467,7 @@ describe('Editor', () => {
     it('should replace existing class in formatBlock if target has class', (done) => {
       const $target1 = $('<p class="old"></p>');
       $editable.appendTo('body');
-      range.createFromNode($editable.find('p')[0]).normalize().select();
+      sel.setRange(range.createFromNode($editable.find('p')[0]).normalize());
       editor.formatBlock('p', $target1);
       const $target2 = $('<p class="new"></p>');
       editor.formatBlock('p', $target2);
@@ -475,7 +479,7 @@ describe('Editor', () => {
     it('should remove existing class in formatBlock if target has no class', (done) => {
       const $target1 = $('<p class="customClass" />');
       $editable.appendTo('body');
-      range.createFromNode($editable.find('p')[0]).normalize().select();
+      sel.setRange(range.createFromNode($editable.find('p')[0]).normalize();
       editor.formatBlock('p', $target1);
       const $target2 = $('<p />');
       editor.formatBlock('p', $target2);
@@ -490,7 +494,7 @@ describe('Editor', () => {
 
       setTimeout(() => {
         var textNode = $editable.find('p')[0].firstChild;
-        editor.setLastRange(range.create(textNode, 0, textNode, 0).select());
+        editor.selection.setRange(range.create(textNode, 0, textNode, 0));
 
         setTimeout(() => {
           editor.fontSize(20);
@@ -509,7 +513,7 @@ describe('Editor', () => {
       var startIndex = textNode.wholeText.indexOf(text);
       var endIndex = startIndex + text.length;
 
-      range.create(textNode, startIndex, textNode, endIndex).normalize().select();
+      editor.selection.setRange(range.create(textNode, startIndex, textNode, endIndex).normalize());
 
       // check creation normal link
       editor.createLink({

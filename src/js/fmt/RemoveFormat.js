@@ -570,9 +570,6 @@ const removeFormatInternal = (ed, name, vars, node, similar) => {
     } else {
       removeRngStyle(node);
     }
-    
-    // TODO: fireFormatRemove ?
-    //Events.fireFormatRemove(ed, name, node, vars);
     return;
   }
 
@@ -602,9 +599,6 @@ const removeFormatInternal = (ed, name, vars, node, similar) => {
   }
 
   removeListStyleFormats(ed, name, vars);
-
-  // TODO: fireFormatRemove ?
-  //Events.fireFormatRemove(ed, name, node, vars);
 };
 
 const removeFormat = (editor, name, vars, node, similar) => {

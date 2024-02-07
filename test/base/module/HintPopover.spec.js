@@ -64,7 +64,7 @@ describe('HintPopover', () => {
 
     it('should be shown when it matches the given condition', (done) => {
       var textNode = $editable.find('p')[0].firstChild;
-      editor.setLastRange(range.create(textNode, 5, textNode, 5).select());
+      editor.selection.setRange(range.create(textNode, 5, textNode, 5));
       editor.insertText(' #');
       $editable.keyup();
 
@@ -76,7 +76,7 @@ describe('HintPopover', () => {
 
     it('should select the best matched item with the given condition', (done) => {
       var textNode = $editable.find('p')[0].firstChild;
-      editor.setLastRange(range.create(textNode, 5, textNode, 5).select());
+      editor.selection.setRange(range.create(textNode, 5, textNode, 5));
       editor.insertText(' #al');
       $editable.keyup();
 
@@ -91,7 +91,7 @@ describe('HintPopover', () => {
 
     it('should be replaced with the selected hint', (done) => {
       var textNode = $editable.find('p')[0].firstChild;
-      editor.setLastRange(range.create(textNode, 5, textNode, 5).select());
+      editor.selection.setRange(range.create(textNode, 5, textNode, 5));
       editor.insertText(' #');
       $editable.keyup();
 
@@ -113,7 +113,7 @@ describe('HintPopover', () => {
 
     it('should move selection by pressing arrow key', (done) => {
       var textNode = $editable.find('p')[0].firstChild;
-      editor.setLastRange(range.create(textNode, 5, textNode, 5).select());
+      editor.selection.setRange(range.create(textNode, 5, textNode, 5));
       editor.insertText(' #');
       $editable.keyup();
 
@@ -192,7 +192,7 @@ describe('HintPopover', () => {
 
     it('should select the best matched item with the given condition', (done) => {
       var textNode = $editable.find('p')[0].firstChild;
-      editor.setLastRange(range.create(textNode, 5, textNode, 5).select());
+      editor.selection.setRange(range.create(textNode, 5, textNode, 5));
       editor.insertText(' @David S');
       $editable.keyup();
 
@@ -207,7 +207,7 @@ describe('HintPopover', () => {
 
     it('should render hint result with given content', (done) => {
       var textNode = $editable.find('p')[0].firstChild;
-      editor.setLastRange(range.create(textNode, 5, textNode, 5).select());
+      editor.selection.setRange(range.create(textNode, 5, textNode, 5));
       editor.insertText(' @David S');
       $editable.keyup();
 

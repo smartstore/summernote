@@ -12,7 +12,8 @@ import ListItemFormat from './ListItemFormat';
 const each = lists.each;
 
 const canFormatBR = (format, node, parentName) => {
-  // TODO: implement canFormatBR
+  // Can format 'br' if it is contained in a valid empty block and an inline format is being applied
+  // TODO: Implement ApplyFormat.canFormatBR ?
   return false;
 };
 
@@ -20,16 +21,6 @@ const applyStyles = (elm, format, vars) => {
   each(format.styles, (value, name) => {
     dom.setStyle(elm, name, FormatUtils.replaceVars(value, vars));
   });
-
-  // // Needed for the WebKit span spam bug
-  // // TODO: Remove this once WebKit/Blink fixes this
-  // if (format.styles) {
-  //   const styleVal = dom.getAttr(elm, 'style');
-
-  //   if (styleVal) {
-  //     dom.setAttrib(elm, 'data-note-style', styleVal);
-  //   }
-  // }
 };
 
 const applyFormatAction = (editor, name, vars = null, node = null) => {

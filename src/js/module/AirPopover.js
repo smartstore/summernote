@@ -32,7 +32,7 @@ export default class AirPopover {
       'summernote.keyup summernote.mouseup summernote.scroll': (we, event) => {
         if (this.options.editing && !this.onContextmenu) {
           if (event.type == 'keyup') {
-            let range = this.context.invoke('editor.getLastRange');
+            let range = this.context.invoke('editor.selection.getRange');
             let wordRange = range.getWordRange();
             const bnd = Convert.rect2bnd(lists.last(wordRange.getClientRects()));
             this.pageX = bnd.left;

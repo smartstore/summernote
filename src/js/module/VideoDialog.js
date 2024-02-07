@@ -190,11 +190,10 @@ export default class VideoDialog {
 
   show() {
     const text = this.context.invoke('editor.getSelectedText');
-    this.context.invoke('editor.saveRange');
     this.showVideoDialog(text).then((url) => {
       // [workaround] hide dialog before restore range for IE range focus
       this.ui.hideDialog(this.$dialog);
-      this.context.invoke('editor.restoreRange');
+      this.context.invoke('editor.selection.restoreBookmark');
 
       // build node
       const $node = this.createVideoNode(url);
@@ -204,7 +203,7 @@ export default class VideoDialog {
         this.context.invoke('editor.insertNode', $node);
       }
     }).fail(() => {
-      this.context.invoke('editor.restoreRange');
+      this.context.invoke('editor.selection.restoreBookmark');
     });
   }
 

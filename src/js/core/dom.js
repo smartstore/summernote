@@ -1,5 +1,4 @@
 import $ from 'jquery';
-import sanitizer from '../util/HtmlSanitizer';
 import Type from './Type';
 import Obj from './Obj';
 import Str from './Str';
@@ -590,15 +589,29 @@ const skipEmptyTextNodes = (node, forwards) => {
 }
 
 /**
- * @param {jQuery} $node
+ * @param {jQuery|Node} $node
  * @param {Boolean} [stripLinebreaks] - default: false
  */
-const value = ($node, stripLinebreaks) => {
-  const val = isTextarea(getNode($node)) ? $node.val() : $node.html();
+const value = (node, stripLinebreaks) => {
+  const val = isTextarea(getNode(node)) ? $(node).val() : $(node).html();
   if (stripLinebreaks) {
     return val.replace(/[\n\r]/g, '');
   }
   return val;
+}
+
+const outerHtml = (node) => {
+  if (Type.isNode(node)) {
+    if (isElement(node)) {
+      return node.outerHTML;
+    } else {
+      const container = create('div');
+      append(container, node.cloneNode(true));
+      return container.innerHTML;
+    }
+  } else {
+    return '';
+  }
 }
 
 const posFromPlaceholder = (placeholder) => {
@@ -664,15 +677,18 @@ const parent = (node) => {
  * Finds closest parent that matches the given selector.
  *
  * @param {Function|String} selector - Selector function, string or node.
- * @param {bool} [includeSelf] - Whether to start with `node`. Default is true.
+ * @param {bool} [includeSelf] - Optional. Whether to start with `node`. Default is true.
  */
-const closest = (node, selector, includeSelf = true) => {
+const closest = (node, selector, includeSelf = true, rootSelector = null) => {
   node = getNode(includeSelf ? node : node.parentNode);
   if (node) {
     const pred = matchSelector(selector);
+    const rootPred = matchSelector(rootSelector, isEditableRoot);
     while (node) {
       if (pred(node)) { return node; }
-      node = parent(node);
+      node = node.parentNode;
+      if (!node || rootPred(node)) break;
+      //node = parent(node);
     }
   }
   return null;
@@ -1297,6 +1313,7 @@ export default {
   replace,
   split,
   value,
+  outerHtml,
   posFromPlaceholder,
   attachEvents,
   detachEvents,

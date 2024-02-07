@@ -70,9 +70,8 @@ export default class HelpDialog {
   }
 
   show() {
-    this.context.invoke('editor.saveRange');
     this.showHelpDialog().then(() => {
-      this.context.invoke('editor.restoreRange');
+      this.context.invoke('editor.selection.restoreBookmark');
     });
   }
 }

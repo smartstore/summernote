@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import Str from './core/Str';
+import Type from './core/Type';
 import func from './core/func';
 import lists from './core/lists';
 import dom from './core/dom';
@@ -234,14 +235,20 @@ export default class Context {
     const args = lists.tail(lists.from(arguments));
 
     const splits = namespace.split('.');
-    const hasSeparator = splits.length > 1;
-    const moduleName = hasSeparator && lists.head(splits);
-    const methodName = hasSeparator ? lists.last(splits) : lists.head(splits);
+    const moduleName = splits.length > 1 && splits[0];
+    const propertyName = splits.length > 2 ? splits[1] : null; // e.g.: editor.*selection*.getRange
+    const methodName = splits.length > 1 ? lists.last(splits) : splits[0]; // e.g.: editor.*unlink*
+    let module = this.modules[moduleName || 'editor'];
 
-    const module = this.modules[moduleName || 'editor'];
     if (!moduleName && this[methodName]) {
       return this[methodName].apply(this, args);
-    } else if (module && module[methodName] && module.shouldInitialize()) {
+    } 
+    else if (module && module[propertyName || methodName] && module.shouldInitialize()) {
+      if (propertyName) {
+        // Get editor.*selection*
+        module = Type.isFunction(module[propertyName]) ? module[propertyName].apply(module) : module[propertyName];
+      }
+      
       return module[methodName].apply(module, args);
     }
   }

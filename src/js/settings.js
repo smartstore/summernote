@@ -42,7 +42,7 @@ $.summernote = $.extend($.summernote, {
     langInfo: $.summernote.lang['en-US'],
     editing: true,
     modules: {
-      'editor': Editor,
+      'editor': Editor, // MUST be first
       'clipboard': Clipboard,
       'dropzone': Dropzone,
       'codeview': Codeview,
@@ -51,7 +51,7 @@ $.summernote = $.extend($.summernote, {
       'handle': Handle,
       // FIXME: HintPopover must be front of autolink
       //  - Script error about range when Enter key is pressed on hint popover
-      'hintPopover': HintPopover,
+      //'hintPopover': HintPopover,
       'autoLink': AutoLink,
       'autoSync': AutoSync,
       'autoReplace': AutoReplace,

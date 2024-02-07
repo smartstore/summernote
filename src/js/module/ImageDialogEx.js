@@ -6,6 +6,7 @@ import dom from '../core/dom';
 export default class ImageDialog {
   constructor(context) {
     this.context = context;
+    this.editor = context.modules.editor;
     this.ui = $.summernote.ui;
     this.$body = $(document.body);
     this.$editor = context.layoutInfo.editor;
@@ -90,7 +91,7 @@ export default class ImageDialog {
 
   show() {
     let imgInfo = {},
-        img = $(this.context.layoutInfo.editable.data('target'));
+        img = $(this.editor.selection.selectedControl);
 
     if (img.length) {
       imgInfo = {
@@ -103,11 +104,10 @@ export default class ImageDialog {
       }
     }
 
-    this.context.invoke('editor.saveRange');
     this.showImageDialog(imgInfo).then((imgInfo) => {
       // [workaround] hide dialog before restore range for IE range focus
       this.ui.hideDialog(this.$dialog);
-      this.context.invoke('editor.restoreRange');
+      this.context.invoke('editor.selection.restoreBookmark');
 
       const setAttrs = (img, withSrc) => {
         if (withSrc) {
@@ -133,7 +133,7 @@ export default class ImageDialog {
         this.context.layoutInfo.note.change();
       }
     }).fail(() => {
-      this.context.invoke('editor.restoreRange');
+      this.context.invoke('editor.selection.restoreBookmark');
     });
   };
 

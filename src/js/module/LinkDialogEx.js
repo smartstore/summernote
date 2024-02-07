@@ -227,14 +227,12 @@ export default class LinkDialog {
     // Hide "text" control if img is selected
     this.$dialog.find('.form-group-text').toggle(!linkInfo.img);
 
-    this.context.invoke('editor.saveRange');
-
     this.showLinkDialog(linkInfo).then((linkInfo) => {
-      this.context.invoke('editor.restoreRange');
+      this.context.invoke('editor.selection.restoreBookmark');
       this.context.invoke('editor.createLink', linkInfo);
 
     }).fail(() => {
-      this.context.invoke('editor.restoreRange');
+      this.context.invoke('editor.selection.restoreBookmark');
     });
   };
 }

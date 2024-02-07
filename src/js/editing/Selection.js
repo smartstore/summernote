@@ -3,15 +3,12 @@ import func from '../core/func';
 import lists from '../core/lists';
 import dom from '../core/dom';
 import range from '../core/range';
-import Point from '../core/Point';
+import DomTreeWalker from '../core/DomTreeWalker';
 
 const win = window;
 
 const createRootRange = (editor) => {
-  rng = range.createFromBodyElement(editor.editable.lastChild || editor.editable, true);
-  if (!dom.isChildOf(rng.startContainer, editor.editable, true)) {
-    rng = range.createFromBodyElement(editor.editable);
-  }
+  return range.createFromBodyElement(editor.editable.lastChild || editor.editable, true);
 };
 
 const getEndpointElement = (
@@ -24,7 +21,7 @@ const getEndpointElement = (
 ) => {
   let container = start ? rng.startContainer : rng.endContainer;
   let offset = start ? rng.startOffset : rng.endOffset;
-
+  
   if (container) {
     if (!real || !rng.collapsed) {
       container = container.childNodes[resolve(container, offset)] || container;
@@ -34,17 +31,21 @@ const getEndpointElement = (
     }
   }
 
-  // TODO: Ist das korrekt?
-  return root;
+  return container || root;
 };
 
-// TODO: Implement Selection.getContent() ?
-// TODO: Implement Selection.setContent() ?
 export default class Selection {
   constructor(context) {
     this.context = context;
-    this.selectedRange = null;
+    // e.g. selected image with handler
+    this.selectedControl = null;
+    // The last range that was set explicitly via setRange()
     this.explicitRange = null;
+    // The last range that was set explicitly via setRange() AND was successfully selected.
+    this.selectedRange = null;
+    // The last range that was set explicitly via setRange(), 
+    // OR the range that was remembered on 'keydown', 'keyup', 'mouseup', 'paste', 'focus' events
+    // so that after a blur, we know what the last selected range was.
     this.bookmark = null;
   }
 
@@ -57,10 +58,7 @@ export default class Selection {
       if (sel.rangeCount > 0) {
         rng = range.createFromNativeRange(sel.getRangeAt(0));
       } else {
-        let rng = range.create(this.editor.$editable);
-        if ($(rng).closest('.note-editable').length === 0) {
-          rng = range.createFromBodyElement(this.editor.$editable);
-        }
+        rng = createRootRange(this.editor);
       }
 
       return rng;
@@ -72,11 +70,9 @@ export default class Selection {
       }
       if (e.type === 'focus') {
         this.hasFocus = true;
-        //this.editor.setLastRange();
         this.bookmark = createBookmarkFromSelection();
       }
       else if (e.type !== 'summernote') {
-        //this.editor.setLastRange();
         this.bookmark = createBookmarkFromSelection();
       }  
     }, 200);
@@ -96,6 +92,7 @@ export default class Selection {
     this.context = null;
     this.selectedRange = null;
     this.explicitRange = null;
+    this.bookmark = null;
     win = null;
   }
 
@@ -118,20 +115,7 @@ export default class Selection {
     if (!isValidObj) return false;
 
     const root = this.editor.editable;
-    return dom.isChildOf(rng.startContainer, root, true) && (rng.endContainer == rng.startContainer || dom.isChildOf(rng.endContainer, root, true));
-  }
-
-  /**
-   * Saves the bookmark location for the given range. This bookmark
-   * can then be used to restore the selection after some content modification to the document.
-   */
-  setBookmark(rng) {
-    if (this.isValidRange(rng)) {
-      rng = range.getWrappedRange(rng);
-      this.bookmark = rng;
-    } else {
-      console.warn('Range is not within the editor boundaries.', rng?.toString());
-    }
+    return range.isFullyContainedInNode(rng, root);
   }
 
   /**
@@ -192,6 +176,7 @@ export default class Selection {
       } else {
         this.selectedRange = null;
         this.explicitRange = null;
+        this.bookmark = null;
       }
     }
 
@@ -213,14 +198,16 @@ export default class Selection {
     const sel = this.nativeSelection;
 
     if (sel) {
-      const nativeRange = rng.isWrapper ? range.getNativeRange(rng) : rng;
-      const wrappedRange = rng.isWrapper ? rng : range.getWrappedRange(rng);
+      if (!rng.isWrapper) {
+        rng = range.getWrappedRange(rng);
+      }
 
-      this.explicitRange = wrappedRange;
+      this.explicitRange = rng;
+      this.bookmark = rng;
 
       try {
         sel.removeAllRanges();
-        sel.addRange(nativeRange);
+        sel.addRange(range.getNativeRange(rng));
       } catch (ex) {
         // IE might throw errors here if the editor is within a hidden container and selection is changed
       }
@@ -232,7 +219,7 @@ export default class Selection {
       }
 
       // adding range isn't always successful so we need to check range count otherwise an exception can occur
-      this.selectedRange = sel.rangeCount > 0 ? wrappedRange : null;
+      this.selectedRange = sel.rangeCount > 0 ? rng : null;
     }
 
     // WebKit edge case selecting images works better using setBaseAndExtent when the image is floated
@@ -332,26 +319,104 @@ export default class Selection {
     return dom.isHTMLElement(elm) ? elm : root;
   }
 
-  /**
-   * Move the selection cursor range to the specified node and offset.
-   * If there is no node specified it will move it to the first suitable location within the body.
-   *
-   * @method setCursorLocation
-   * @param {Node} [node] Optional node to put the cursor in.
-   * @param {Number} [offset] Optional offset from the start of the node to put the cursor at.
-   */
-  setCursorLocation(node, offset) {
-    const rng = document.createRange();
+  getSelectedBlocks(startElm = null, endElm = null) {
+    const rng = this.getRange();
+    const selectedBlocks = [];
 
-    if (Type.isAssigned(node) && Type.isAssigned(offset)) {
-      rng.setStart(node, offset);
-      rng.setEnd(node, offset);
-      this.setRange(rng);
-      this.collapse(false);
-    } else {
-      this.moveEndPoint(rng, this.editor.editable, true);
-      this.setRange(rng);
+    const root = this.editor.editable;
+    const start = dom.closest(startElm || this.getStart(rng.collapsed, rng), dom.isBlock);
+    const end = dom.closest(endElm || this.getEnd(rng.collapsed, rng), dom.isBlock);
+  
+    if (start && start !== root) {
+      selectedBlocks.push(start);
     }
+  
+    if (start && end && start !== end) {
+      let node;
+  
+      const walker = new DomTreeWalker(start, root);
+      while ((node = walker.next()) && node !== end) {
+        if (dom.isBlock(node)) {
+          selectedBlocks.push(node);
+        }
+      }
+    }
+  
+    if (end && start !== end && end !== root) {
+      selectedBlocks.push(end);
+    }
+  
+    return selectedBlocks;
+  }
+
+  /**
+   * Returns the selected contents as plain text.
+   *
+   * @method getContent
+   * @return {String} Selected text contents.
+   */
+  getTextContent() {
+    let rng = this.getRange();
+    // if range is on anchor, expand range with anchor.
+    if (rng.isOnAnchor()) {
+      rng = range.createFromNode(dom.closest(rng.startContainer, dom.isAnchor));
+    }
+
+    return rng.toString();     
+  }
+
+  /**
+   * Returns the selected contents as HTML.
+   *
+   * @method getContent
+   * @return {String} Selected HTML contents.
+   */
+  getHtmlContent() {
+    // TODO: Perform cleanup in Selection.getContent() before returning content.
+    let rng = this.getRange();
+    var container = rng.commonAncestorContainer.parentNode.cloneNode(false);
+    container.appendChild( rng.cloneContents() );
+    return container.innerHTML;
+  }
+
+  /**
+   * Pastes given text or HTML content to the the current selection. If any contents is selected it will be replaced
+   * with the contents passed in to this function. If there is no selection the contents will be inserted
+   * where the caret is placed in the editor/page.
+   *
+   * @method setContent
+   * @param {String} content HTML contents to set.
+   * @return {Node[]} The inserted nodes.
+   */
+  pasteContent(content) {
+    // TODO: Make this better: SetSelectionContent.setContent()
+    if (!content || this.editor.isLimited(content.length)) {
+      return;
+    }
+
+    content = this.context.invoke('codeview.purify', content.trim());
+    
+    const rng = this.getRange();
+    const container = $('<div></div>').html(content)[0]; // dom.create('div', null, content);
+    let childNodes = lists.from(container.childNodes);
+    
+    let reversed = false;
+
+    if (rng.so >= 0) {
+      childNodes = childNodes.reverse();
+      reversed = true;
+    }
+
+    childNodes = childNodes.map(node => {
+      return rng.insertNode(node, !dom.isInline(node));
+    });
+
+    if (reversed) {
+      childNodes = childNodes.reverse();
+    }
+
+    this.setRange(range.createFromNodeAfter(lists.last(childNodes)));
+    return childNodes;
   }
 
   /**
@@ -362,8 +427,8 @@ export default class Selection {
    * @param {Boolean} [real] Optional state to get the real parent when the selection is collapsed, not the closest element.
    * @return {Element} Start element of selection range.
    */
-  getStart(real) {
-    return getEndpointElement(this.editor.editable, this.getRange(), true, real, (elm, offset) => Math.min(elm.childNodes.length, offset));
+  getStart(real, rng = null) {
+    return getEndpointElement(this.editor.editable, rng || this.getRange(), true, real, (elm, offset) => Math.min(elm.childNodes.length, offset));
   }
 
   /**
@@ -374,22 +439,31 @@ export default class Selection {
    * @param {Boolean} [real] Optional state to get the real parent when the selection is collapsed not the closest element.
    * @return {Element} End element of selection range.
    */
-  getEnd(real) {
-    return getEndpointElement(this.editor.editable, this.getRange(), false, real, (elm, offset) => offset > 0 ? offset - 1 : offset);
+  getEnd(real, rng = null) {
+    return getEndpointElement(this.editor.editable, rng || this.getRange(), false, real, (elm, offset) => offset > 0 ? offset - 1 : offset);
   }
 
   /**
    * Returns a bookmark location for the current selection. This bookmark object
    * can then be used to restore the selection after some content modification to the document.
    *
-   * @method getBookmark
-   * @param {Number} [type] Optional state if the bookmark should be simple or not. Default is complex.
-   * @param {Boolean} [normalized] Optional state that enables you to get a position that it would be after normalization.
+   * @method createBookmark
    * @return {Object} Bookmark object, use moveToBookmark with this object to restore the selection.
    */
-  getBookmark(type, normalized) {
-    // TODO: Implement Selection.getBookmark
-    return null;
+  createBookmark() {
+    return this.getRange().bookmark(this.editor.editable);
+  }
+
+  /**
+   * Returns a paragraph bookmark location for the current selection. This bookmark object
+   * can then be used to restore the selection after some content modification to the document.
+   *
+   * @method createParaBookmark
+   * @param {Node[]} paras
+   * @return {Object} Bookmark object, use moveToBookmark with this object to restore the selection.
+   */
+  createParaBookmark(paras) {
+    return this.getRange().paraBookmark(paras);
   }
 
   /**
@@ -399,21 +473,74 @@ export default class Selection {
    * @param {Object} bookmark Bookmark to restore selection from.
    */
   moveToBookmark(bookmark) {
-    // TODO: Implement Selection.moveToBookmark
-    return null;
+    let rng;
+    if (this.isValidRange(bookmark)) {
+      rng = bookmark;
+    } else if (bookmark.s && bookmark.e) {
+      rng = range.createFromBookmark(this.editor.editable, bookmark);
+      if (!this.isValidRange(rng)) {
+        rng = null;
+      }
+    }
+
+    if (rng) {
+      this.setRange(rng);
+      rng.scrollIntoView(this.editor.editable);
+    }   
+  }
+
+  /**
+   * Saves the bookmark location for the given range. This bookmark
+   * can then be used to restore the selection after some content modification to the document.
+   */
+  setBookmark(rng) {
+    if (this.isValidRange(rng)) {
+      rng = range.getWrappedRange(rng);
+      this.bookmark = rng;
+    } else {
+      //console.warn('Passed Range is not within the editor boundaries.', rng?.toString());
+      // Create a new range at the end of the document
+      this.bookmark = createRootRange(this.editor);
+    }
+  }
+
+  /**
+   * Tries to restore the last saved range bookmark (if any).
+   * Then sets focus to editor.
+   */
+  restoreBookmark() {
+    if (this.bookmark) {
+      this.setRange(this.bookmark);
+      this.editor.focus();
+    }
   }
 
   /**
    * Selects the specified element. This will place the start and end of the selection range around the element.
    *
    * @method select
-   * @param {Element} node HTML DOM element to select.
-   * @return {Element} Selected element the same element as the one that got passed in.
+   * @param {Node} node HTML DOM element to select.
+   * @return {Node} Returns the element that got passed in.
    */
   select(node) {
-    // TODO: What about Selection.select(node, content)?
-    const rng = range.createFromNode(node);
-    this.setRange(rng);
+    if (dom.isChildOf(node, this.editor.editable, true)) {
+      const rng = range.createFromNode(node);
+      this.setRange(rng);
+    }
+    return node;
+  }
+
+  /**
+   * Sets the current selection to the specified DOM element.
+   *
+   * @method setNode
+   * @param {Element} elm Element to set as the contents of the selection.
+   * @return {Element} Returns the element that got passed in.
+   */
+  setNode(elm) {
+    const content = dom.outerHtml(elm);
+    this.pasteContent(content);
+    return elm;
   }
 
   /**
@@ -443,5 +570,74 @@ export default class Selection {
     }
   }
 
-  // TODO: Mach weiter ab Selection.collapse
+  /**
+   * Moves the scrollbar to start container (sc) of current range.
+   */
+  scrollIntoView() {
+    this.getRange().scrollIntoView(this.editor.editable);
+  }
+
+  /**
+   * Move the selection cursor range to the specified node and offset.
+   * If there is no node specified it will move it to the first suitable location within the body.
+   *
+   * @method setCursorLocation
+   * @param {Node} [node] Optional node to put the cursor in.
+   * @param {Number} [offset] Optional offset from the start of the node to put the cursor at.
+   */
+  setCursorLocation(node, offset) {
+    const rng = document.createRange();
+
+    if (Type.isAssigned(node) && Type.isAssigned(offset)) {
+      rng.setStart(node, offset);
+      rng.setEnd(node, offset);
+      this.setRange(rng);
+      this.collapse(false);
+    } else {
+      this.moveEndPoint(rng, this.editor.editable, true);
+      this.setRange(rng);
+    }
+  }
+
+  isForward() {
+    const sel = this.nativeSelection;
+
+    const anchorNode = sel?.anchorNode;
+    const focusNode = sel?.focusNode;
+
+    // No support for selection direction then always return true
+    if (!sel || !anchorNode || !focusNode || dom.isRestrictedNode(anchorNode) || dom.isRestrictedNode(focusNode)) {
+      return true;
+    }
+
+    const anchorRange = document.createRange();
+    const focusRange = document.createRange();
+
+    try {
+      anchorRange.setStart(anchorNode, sel.anchorOffset);
+      anchorRange.collapse(true);
+
+      focusRange.setStart(focusNode, sel.focusOffset);
+      focusRange.collapse(true);
+    } catch (e) {
+      // Safari can generate an invalid selection and error. Silently handle it and default to forward.
+      // See https://bugs.webkit.org/show_bug.cgi?id=230594.
+      return true;
+    }
+
+    return anchorRange.compareBoundaryPoints(anchorRange.START_TO_START, focusRange) <= 0;   
+  }
+
+  normalize() {
+    const rng = this.getRange();
+    const sel = this.nativeSelection;
+
+    if (sel.rangeCount > 0) {
+      const normRng = rng.normalize();
+      this.setRange(normRng, this.isForward());
+      return normRng;
+    }
+
+    return rng;    
+  }
 }

@@ -4,6 +4,7 @@ import dom from '../core/dom';
 export default class Handle {
   constructor(context) {
     this.context = context;
+    this.editor = context.modules.editor;
     this.$document = $(document);
     this.$editingArea = context.layoutInfo.editingArea;
     this.options = context.options;
@@ -91,11 +92,11 @@ export default class Handle {
       return false;
     }
 
-    target = target || this.context.layoutInfo.editable.data('target');
+    target = target || this.editor.selection.selectedControl;
 
     const isScroll = e?.type == 'scroll';
     if (isScroll) {
-      target = this.context.layoutInfo.editable.data('target');
+      target = this.editor.selection.selectedControl;
     }
 
     const isImage = dom.isImg(target);

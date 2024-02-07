@@ -60,11 +60,10 @@ export default class ImageDialog {
   }
 
   show() {
-    this.context.invoke('editor.saveRange');
     this.showImageDialog().then((data) => {
       // [workaround] hide dialog before restore range for IE range focus
       this.ui.hideDialog(this.$dialog);
-      this.context.invoke('editor.restoreRange');
+      this.context.invoke('editor.selection.restoreBookmark');
 
       if (typeof data === 'string') { // image url
         if (this.options.callbacks.onImageLinkInsert) {
@@ -76,7 +75,7 @@ export default class ImageDialog {
         this.context.invoke('editor.insertImagesOrCallback', data);
       }
     }).fail(() => {
-      this.context.invoke('editor.restoreRange');
+      this.context.invoke('editor.selection.restoreBookmark');
     });
   }
 

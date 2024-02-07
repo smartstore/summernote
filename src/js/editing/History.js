@@ -9,10 +9,14 @@ export default class History {
     this.editable = this.$editable[0];
   }
 
+  get editor() {
+    return this.context.modules.editor;
+  }
+
   makeSnapshot() {
     const rng = range.create(this.editable);
     const emptyBookmark = { s: { path: [], offset: 0 }, e: { path: [], offset: 0 } };
-
+    console.log('makeSnapshot', rng.isOnEditable(), rng);
     return {
       contents: this.$editable.html(),
       bookmark: ((rng && rng.isOnEditable()) ? rng.bookmark(this.editable) : emptyBookmark),
@@ -24,7 +28,7 @@ export default class History {
       this.$editable.html(snapshot.contents);
     }
     if (snapshot.bookmark !== null) {
-      range.createFromBookmark(this.editable, snapshot.bookmark).select();
+      this.editor.selection.moveToBookmark(snapshot.bookmark);
     }
   }
 
