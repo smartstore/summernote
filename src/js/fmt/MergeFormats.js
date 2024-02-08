@@ -1,6 +1,6 @@
 import lists from '../core/lists';
 import dom from '../core/dom';
-import NodeComparer from '../core/NodeComparer';
+import NodeComparer from '../util/NodeComparer';
 import FormatUtils from './FormatUtils';
 import MatchFormat from './MatchFormat';
 import RemoveFormat from './RemoveFormat';

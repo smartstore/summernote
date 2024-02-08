@@ -3,9 +3,9 @@ import func from '../core/func';
 import lists from '../core/lists';
 import dom from '../core/dom';
 import range from '../core/range';
-import DomTreeWalker from '../core/DomTreeWalker';
+import DomTreeWalker from '../util/DomTreeWalker';
 
-const win = window;
+let win = window;
 
 const createRootRange = (editor) => {
   return range.createFromBodyElement(editor.editable.lastChild || editor.editable, true);

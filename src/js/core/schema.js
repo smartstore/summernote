@@ -165,7 +165,7 @@ const isValid = (name, attr = null) => {
 const isBlock = (name) => Obj.has(blockElementsMap, name);
 
 // Check if name starts with # to detect non-element node names like #text and #comment
-const isInline = (name) => !Str.startsWith(name, '#') && isValid(name) && !isBlock(name);
+const isInline = (name) => !Str.startsWith(name, '#') && isValid(name) && !Obj.has(blockElementsMap, name);
 
 const isWrapper = (name) => Obj.has(wrapBlockElementsMap, name) || isInline(name);
 const isVoid = (name) => Obj.has(voidElementsMap, name);

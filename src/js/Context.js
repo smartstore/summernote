@@ -101,7 +101,7 @@ export default class Context {
     if (html === undefined) {
       // Get
       this.invoke('codeview.sync');
-      return isActivated ? this.layoutInfo.codable.val() : this.layoutInfo.editable.html();
+      return isCodeView ? this.layoutInfo.codable.val() : this.layoutInfo.editable.html();
     } else {
       // Set
       if (isCodeView) {

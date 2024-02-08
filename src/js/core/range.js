@@ -3,6 +3,10 @@ import func from './func';
 import lists from './lists';
 import dom from './dom';
 import Point from './Point';
+import Str from './Str';
+import Obj from './Obj';
+import * as NormalizeRange from '../util/NormalizeRange';
+import schema from './schema';
 
 const makeIsOn = (selector, root) => {
   const pred = dom.matchSelector(selector);
@@ -711,6 +715,15 @@ class WrappedRange {
    * @return {WrappedRange} - Current instance for chaining.
    */
   normalize() {
+    // const normRng = NormalizeRange.normalize(this);
+    // if (normRng) {
+    //   // this.setStart(normRng.startContainer, normRng.startOffset);
+    //   // this.setEnd(normRng.endContainer, normRng.endOffset);
+    //   return normRng;
+    // }
+
+    // return this;
+
     /**
      * @param {BoundaryPoint} point
      * @param {Boolean} isLeftToRight - true: prefer to choose right node
@@ -772,10 +785,12 @@ class WrappedRange {
     const endPoint = getVisiblePoint(this.getEndPoint(), false);
     const startPoint = this.collapsed ? endPoint : getVisiblePoint(this.getStartPoint(), true);
 
-    this.setStart(startPoint.node, startPoint.offset);
-    this.setEnd(endPoint.node, endPoint.offset);
-
-    return this;
+    return new WrappedRange(
+      startPoint.node,
+      startPoint.offset,
+      endPoint.node,
+      endPoint.offset
+    );
   }
 
   /**
@@ -798,7 +813,7 @@ class WrappedRange {
 
     const nodes = [];
     const leftEdgeNodes = [];
-
+    
     Point.walkPoint(startPoint, endPoint, function(point) {
       if (dom.isEditableRoot(point.node)) {
         return;
@@ -816,7 +831,7 @@ class WrappedRange {
         node = dom.closest(point.node, pred);
       } else {
         node = point.node;
-      }
+      }  
 
       if (node && pred(node)) {
         nodes.push(node);
@@ -1014,10 +1029,10 @@ class WrappedRange {
 
     // find inline top ancestor
     let topAncestor;
-    if (dom.isInline(rng.sc)) {
-      const ancestors = dom.parents(rng.sc, func.not(dom.isInline));
+    if (!dom.isBlock(rng.sc)) {
+      const ancestors = dom.parents(rng.sc, dom.isBlock);
       topAncestor = lists.last(ancestors);
-      if (!dom.isInline(topAncestor)) {
+      if (dom.isBlock(topAncestor)) {
         topAncestor = ancestors[ancestors.length - 2] || rng.sc.childNodes[rng.so];
       }
     } else {

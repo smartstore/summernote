@@ -220,7 +220,7 @@ const walkPoint = (startPoint, endPoint, handler, skipInnerOffset) => {
 
 const comparePoints = (point1, point2) => {
   // See http://www.w3.org/TR/DOM-Level-2-Traversal-Range/ranges.html#Level-2-Range-Comparing
-  const nodeA = point1.mode, offsetA = point1.offset, nodeB = point2.node, offsetB = point2.offset;
+  const nodeA = point1.node, offsetA = point1.offset, nodeB = point2.node, offsetB = point2.offset;
   let nodeC, root, childA, childB, n;
   if (nodeA == nodeB) {
     // Case 1: nodes are the same

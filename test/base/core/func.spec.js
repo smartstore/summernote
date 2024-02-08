@@ -148,7 +148,7 @@ describe('base:core.func', () => {
     });
 
     it('should return false with invalid URLs', () => {
-      expect(fuStrnc.isValidUrl('summernote')).to.be.not.ok;
+      expect(Str.isValidUrl('summernote')).to.be.not.ok;
     });
   });
 });

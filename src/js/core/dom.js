@@ -195,6 +195,7 @@ const isAnchor = matchNodeName('A');
 const isDiv = matchNodeName('DIV');
 const isSpan = matchNodeName('SPAN');
 const isB = matchNodeName('B');
+const isU = matchNodeName('U');
 const isBR = matchNodeName('BR');
 const isImg = matchNodeName('IMG');
 const isFigure = matchNodeName('FIGURE');
@@ -210,9 +211,9 @@ const isHeading = matchSchemaMap(schema.getHeadingElements());
 const isPara = (node) => !isEditableRoot(node) && Obj.has(schema.getTextBlockElements(), node.nodeName);
 const isPurePara = (node) => isPara(node) && !isLi(node);
 const isInline = (node) => schema.isInline(node.nodeName);
-const isBlock = (node) => !schema.isInline(node.nodeName);
-const isParaInline = (node) => isInline(node) && !!closest(node, isPara);
-const isBodyInline = (node) => isInline(node) && !closest(node, isPara);
+const isBlock = (node) => schema.isBlock(node.nodeName);
+const isParaInline = (node) => (isText(node) || isInline(node)) && !!closest(node, isPara);
+const isBodyInline = (node) => (isText(node) || isInline(node)) && !closest(node, isPara);
 const isBodyContainer = (node) => isCell(node) || isBlockquote(node) || isEditableRoot(node);
 
 const isBookmarkNode = func.and(matchNodeName('SPAN'), matchAttributeValue('data-note-type', 'bookmark'))
@@ -662,33 +663,18 @@ const select = (node, selector) => {
 };
 
 /**
- * Gets the direct parent of given node but does not go beyond editor root.
- */
-const parent = (node) => {
-  const parentNode = node?.parentNode;
-  if (!parentNode || isEditableRoot(parentNode)) {
-    return null;
-  }
-
-  return parentNode;
-};
-
-/**
  * Finds closest parent that matches the given selector.
  *
  * @param {Function|String} selector - Selector function, string or node.
- * @param {bool} [includeSelf] - Optional. Whether to start with `node`. Default is true.
  */
-const closest = (node, selector, includeSelf = true, rootSelector = null) => {
+const closest = (node, selector, includeSelf = true, parentSelector = null) => {
   node = getNode(includeSelf ? node : node.parentNode);
   if (node) {
     const pred = matchSelector(selector);
-    const rootPred = matchSelector(rootSelector, isEditableRoot);
     while (node) {
-      if (pred(node)) { return node; }
+      if (pred(node)) return node;
+      if (isEditableRoot(node)) break;
       node = node.parentNode;
-      if (!node || rootPred(node)) break;
-      //node = parent(node);
     }
   }
   return null;
@@ -700,13 +686,15 @@ const closest = (node, selector, includeSelf = true, rootSelector = null) => {
  * @param {Function|String} selector - Selector function or string.
  */
 function closestSingleParent(node, selector) {
-  node = parent(getNode(node));
+  node = getNode(node)?.parentNode;
   if (node) {
     const pred = matchSelector(selector);
     while (node) {
-      if (nodeLength(node) !== 1) { break; }
-      if (pred(node)) { return node; }
-      node = parent(node);
+      if (nodeLength(node) !== 1) break;
+      if (pred(node)) return node;
+      if (isEditableRoot(node)) break;
+
+      node = node.parentNode;
     }
   }
   return null;
@@ -723,7 +711,10 @@ const parents = (node, selector, includeSelf = true) => {
   const parents = [];
 
   closest(node, (el) => {
-    parents.push(el);
+    if (!isEditableRoot(el)) {
+      parents.push(el);
+    }
+
     return pred(el);
   }, includeSelf);
 
@@ -739,7 +730,7 @@ const parents = (node, selector, includeSelf = true) => {
  */
 const parentsWhile = (node, selector = null, rootSelector = null) => {
   const pred = matchSelector(selector, func.ok);
-  const rootPred = matchSelector(rootSelector, func.fail);
+  const rootPred = matchSelector(rootSelector, isEditableRoot);
   const parents = [];
   
   closest(node, (el) => {
@@ -1265,6 +1256,7 @@ export default {
   isBR,
   isSpan,
   isB,
+  isU,
   isImg,
   isFigure,
   isTextarea,
@@ -1282,6 +1274,7 @@ export default {
   ancestor: closest, // Alias
   closestSingleParent,
   parents,
+  ancestors: parents, // Alias
   parentsWhile,
   farthestParent,
   commonParent,

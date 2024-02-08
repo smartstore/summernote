@@ -7,12 +7,19 @@
 import chai from 'chai';
 import $ from 'jquery';
 import range from 'src/js/core/range';
+import Context from 'src/js/Context';
 import Style from 'src/js/editing/Style';
+import Formatter from 'src/js/fmt/Formatter';
 
 var expect = chai.expect;
 
 describe('base:editing.Style', () => {
-  var style = new Style();
+  $('body').empty(); // important !
+  var options = $.extend({}, $.summernote.options);
+  options.historyLimit = 5;
+  var context = new Context($('<div><p>hello</p></div>'), options);
+  var editor = context.modules.editor;
+  var style = editor.style;
 
   describe('styleNodes', () => {
     it('should wrap selected text with span', () => {

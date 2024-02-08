@@ -100,12 +100,34 @@ const isEmpty = (list) =>
 /**
  * Cluster elements by selector function.
  *
- * @param {Array|Object} array - array
+ * @param {Array|Object} list - Array or collection
  * @param {Function|String} selector - selector function or property name for cluster rule
  * @param {Array[]}
  */
-const clusterBy = (list, selector, scope) =>
+const clusterBy = (list, selector) => {
+  if (!list.length) { return []; }
+  const tl = tail(list);
+  return tl.reduce(function(memo, v) {
+    const lastItem = last(memo);
+    if (selector(last(lastItem), v)) {
+      lastItem[lastItem.length] = v;
+    } else {
+      memo[memo.length] = [v];
+    }
+    return memo;
+  }, [[head(list)]]); 
+}
+
+/**
+ * Groups elements by selector function.
+ *
+ * @param {Array|Object} list - Array or collection
+ * @param {Function|String} selector - selector function or property name for cluster rule
+ * @param {Array[]}
+ */
+const groupBy = (list, selector, scope) =>
   _.groupBy(list, selector, scope);
+
 
 /**
  * Returns a copy of the array with all falsy  values removed
@@ -299,6 +321,7 @@ export default {
   from,
   isEmpty,
   clusterBy,
+  groupBy,
   compact,
   unique,
   each,
