@@ -308,6 +308,7 @@ export default class Buttons {
 
     this.context.memo('button.clear', () => {
       return this.button({
+        className: 'note-btn-removeformat',
         contents: this.ui.icon(this.options.icons.eraser),
         tooltip: this.lang.font.clear + this.representShortcut('removeFormat'),
         click: this.context.createInvokeHandler('editor.removeFormat'),
@@ -320,7 +321,6 @@ export default class Buttons {
       tooltip: this.lang.font.strikethrough + this.representShortcut('strikethrough'),
       click: this.context.createInvokeHandlerAndUpdateState('editor.strikethrough'),
     });
-    this.context.memo('button.strikethrough', func.invoke(strikethrough, 'render'));
 
     const superscript = this.button({
       className: 'note-btn-superscript',
@@ -328,23 +328,25 @@ export default class Buttons {
       tooltip: this.lang.font.superscript,
       click: this.context.createInvokeHandlerAndUpdateState('editor.superscript'),
     });
-    this.context.memo('button.superscript', func.invoke(superscript, 'render'));
-
+    
     const subscript = this.button({
       className: 'note-btn-subscript',
       contents: this.ui.icon(this.options.icons.subscript),
       tooltip: this.lang.font.subscript,
       click: this.context.createInvokeHandlerAndUpdateState('editor.subscript'),
     });
-    this.context.memo('button.subscript', func.invoke(subscript, 'render'));
-
+    
     const code = this.button({
       className: 'note-btn-inlinecode',
       contents: this.ui.icon(this.options.icons.inlineCode),
       tooltip: this.lang.font.code,
       click: this.context.createInvokeHandlerAndUpdateState('editor.code'),
     });
-    this.context.memo('button.inlinecode', func.invoke(code, 'render'));
+    
+    this.context.memo('button.strikethrough', () => strikethrough.render());
+    this.context.memo('button.superscript', () => superscript.render());
+    this.context.memo('button.subscript', () => subscript.render());
+    this.context.memo('button.inlinecode', () => code.render());
 
     this.context.memo('button.moreFontStyles', () => {
       return this.ui.buttonGroup([

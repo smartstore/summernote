@@ -378,7 +378,7 @@ const expandRng = (rng, formatList) => {
   // TODO: Implement ExpandRange.isSelfOrParentBookmark() (?)
 
   if (rng.collapsed) {
-    rng = rng.getWordRange(true);
+    rng = rng.getWordRange({ forward: true });
     startContainer = rng.sc;
     startOffset = rng.so;
     endContainer = rng.ec;
@@ -425,13 +425,13 @@ const expandRng = (rng, formatList) => {
   }
 
   // Setup index for startContainer
-  if (dom.isElement(startContainer) && startContainer.parentNode) {
+  if (dom.isElement(startContainer) && startContainer.parentNode && !dom.isEditableRoot(startContainer.parentNode)) {
     startOffset = dom.position(startContainer);
     startContainer = startContainer.parentNode;
   }
 
   // Setup index for endContainer
-  if (dom.isElement(endContainer) && endContainer.parentNode) {
+  if (dom.isElement(endContainer) && endContainer.parentNode && !dom.isEditableRoot(endContainer.parentNode)) {
     endOffset = dom.position(endContainer) + 1;
     endContainer = endContainer.parentNode;
   }

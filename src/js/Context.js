@@ -248,7 +248,7 @@ export default class Context {
         // Get editor.*selection*
         module = Type.isFunction(module[propertyName]) ? module[propertyName].apply(module) : module[propertyName];
       }
-      
+
       return module[methodName].apply(module, args);
     }
   }

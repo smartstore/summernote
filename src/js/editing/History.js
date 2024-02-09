@@ -16,7 +16,6 @@ export default class History {
   makeSnapshot() {
     const rng = range.create(this.editable);
     const emptyBookmark = { s: { path: [], offset: 0 }, e: { path: [], offset: 0 } };
-    console.log('makeSnapshot', rng.isOnEditable(), rng);
     return {
       contents: this.$editable.html(),
       bookmark: ((rng && rng.isOnEditable()) ? rng.bookmark(this.editable) : emptyBookmark),

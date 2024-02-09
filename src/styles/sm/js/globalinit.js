@@ -1,3 +1,4 @@
+import CodeMirror from "codemirror";
 import $ from "jquery";
 
 let summernote_image_upload_url;
@@ -106,7 +107,15 @@ export var summernote_global_config = {
     'pre',
     { title: 'Blockquote', tag: 'blockquote', className: 'blockquote', value: 'blockquote' }
   ],
-  codemirror: {
+  imageAttributes: {
+    //icon: '<i class="fa fa-pencil"/>',
+    removeEmpty: true, // true = remove attributes | false = leave empty if present
+    disableUpload: true // true = don't display Upload Options | Display Upload Options
+  }
+};
+
+if (CodeMirror?.hint) {
+  const cmOptions = summernote_global_config.codemirror = {
     mode: "htmlmixed",
     theme: "eclipse",
     lineNumbers: true,
@@ -119,7 +128,14 @@ export var summernote_global_config = {
     autoCloseTags: true,
     autoCloseBrackets: true,
     styleActiveLine: true,
-    extraKeys: {
+    hintOptions: {
+      closeCharacters: /[\s()\[\]{};:>,.|%]/,
+      completeSingle: false
+    }
+  };
+
+  if (CodeMirror?.hint) {
+    cmOptions.extraKeys = {
       "'.'": CodeMirror.hint.completeAfter,
       "'<'": CodeMirror.hint.completeAfter,
       "'/'": CodeMirror.hint.completeIfAfterLt,
@@ -128,18 +144,9 @@ export var summernote_global_config = {
       "Ctrl-Space": "autocomplete",
       "F11": function (cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); },
       "Esc": function (cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }
-    },
-    hintOptions: {
-      closeCharacters: /[\s()\[\]{};:>,.|%]/,
-      completeSingle: false
     }
-  },
-  imageAttributes: {
-    //icon: '<i class="fa fa-pencil"/>',
-    removeEmpty: true, // true = remove attributes | false = leave empty if present
-    disableUpload: true // true = don't display Upload Options | Display Upload Options
   }
-};
+}
 
 function sendFile(file, editor, welEditable) {
   data = new FormData();

@@ -5,12 +5,13 @@
  */
 
 import $ from 'jquery';
+import 'bootstrap';
 import chai from 'chai';
 import chaidom from 'test/chaidom';
 import env from 'src/js/core/env';
 import range from 'src/js/core/range';
 import Context from 'src/js/Context';
-import 'src/styles/bs4/summernote-bs4';
+import 'src/styles/sm/summernote-sm';
 
 chai.use(chaidom);
 
@@ -32,7 +33,7 @@ describe('Buttons', () => {
     var options = $.extend({}, $.summernote.options);
     options.toolbar = [
       ['font1', ['style', 'clear']],
-      ['font2', ['bold', 'underline', 'italic', 'superscript', 'subscript', 'strikethrough']],
+      ['font2', ['bold', 'underline', 'italic', 'xxxxmoreFontStyles', 'subscript', 'strikethrough', 'inlinecode']],
       ['font3', ['fontname', 'fontsize']],
       ['color', ['color', 'forecolor', 'backcolor']],
       ['para', ['ul', 'ol', 'paragraph']],
@@ -56,37 +57,50 @@ describe('Buttons', () => {
     }
   });
 
+  function isActiveButton(className) {
+    var $button = $toolbar.find(className);
+    assert.isTrue($button.length === 1);
+    assert.isFalse($button.hasClass('active'));
+    $button.click();
+    return $button.hasClass('active');
+  }
+
   describe('bold button', () => {
     it('should execute bold command when it is clicked', (done) => {
       $toolbar.find('.note-btn-bold').click();
-      expect($editable.html()).await(done).to.equalsIgnoreCase('<p><b>hello</b></p>');
+      expect($editable.html()).await(done).to.equalsIgnoreCase('<p><strong>hello</strong></p>');
     });
   });
 
   describe('bold button state updated', () => {
     it('should look toggled immediately when clicked', (done) => {
-      var $button = $toolbar.find('.note-btn-bold');
-      assert.isTrue($button.length === 1);
-      assert.isFalse($button.hasClass('active'));
-      $button.click();
-      expect($button.hasClass('active')).await(done).to.be.true;
+      expect(isActiveButton('.note-btn-bold')).await(done).to.be.true;
+    });
+  });
+
+  describe('code button', () => {
+    it('should execute code command when it is clicked', (done) => {
+      $toolbar.find('.note-btn-inlinecode').click();
+      expect($editable.html()).await(done).to.equalsIgnoreCase('<p><code>hello</code></p>');
+    });
+  });
+
+  describe('code button state updated', () => {
+    it('should look toggled immediately when clicked', (done) => {
+      expect(isActiveButton('.note-btn-inlinecode')).await(done).to.be.true;
     });
   });
 
   describe('italic button', () => {
     it('should execute italic command when it is clicked', (done) => {
       $toolbar.find('.note-btn-italic').click();
-      expect($editable.html()).await(done).to.equalsIgnoreCase('<p><i>hello</i></p>');
+      expect($editable.html()).await(done).to.equalsIgnoreCase('<p><em>hello</em></p>');
     });
   });
 
   describe('italic button state updated', () => {
     it('should look toggled immediately when clicked', (done) => {
-      var $button = $toolbar.find('.note-btn-italic');
-      assert.isTrue($button.length === 1);
-      assert.isFalse($button.hasClass('active'));
-      $button.click();
-      expect($button.hasClass('active')).await(done).to.be.true;
+      expect(isActiveButton('.note-btn-italic')).await(done).to.be.true;
     });
   });
 
@@ -99,30 +113,26 @@ describe('Buttons', () => {
 
   describe('underline button state updated', () => {
     it('should look toggled immediately when clicked', (done) => {
-      var $button = $toolbar.find('.note-btn-underline');
-      assert.isTrue($button.length === 1);
-      assert.isFalse($button.hasClass('active'));
-      $button.click();
-      expect($button.hasClass('active')).await(done).to.be.true;
+      expect(isActiveButton('.note-btn-underline')).await(done).to.be.true;
     });
   });
 
-  describe('superscript button', () => {
-    it('should execute superscript command when it is clicked', (done) => {
-      $toolbar.find('.note-btn-superscript').click();
-      expect($editable.html()).await(done).to.equalsIgnoreCase('<p><sup>hello</sup></p>');
-    });
-  });
+  // describe('superscript button', () => {
+  //   it('should execute superscript command when it is clicked', (done) => {
+  //     $toolbar.find('.note-btn-superscript').click();
+  //     expect($editable.html()).await(done).to.equalsIgnoreCase('<p><sup>hello</sup></p>');
+  //   });
+  // });
 
-  describe('superscript button state updated', () => {
-    it('should look toggled immediately when clicked', (done) => {
-      var $button = $toolbar.find('.note-btn-superscript');
-      assert.isTrue($button.length === 1);
-      assert.isFalse($button.hasClass('active'));
-      $button.click();
-      expect($button.hasClass('active')).await(done).to.be.true;
-    });
-  });
+  // describe('superscript button state updated', () => {
+  //   it('should look toggled immediately when clicked', (done) => {
+  //     var $button = $toolbar.find('.note-btn-superscript');
+  //     assert.isTrue($button.length === 1);
+  //     assert.isFalse($button.hasClass('active'));
+  //     $button.click();
+  //     expect($button.hasClass('active')).await(done).to.be.true;
+  //   });
+  // });
 
   describe('subscript button', () => {
     it('should execute subscript command when it is clicked', (done) => {
@@ -133,38 +143,26 @@ describe('Buttons', () => {
 
   describe('subscript button state updated', () => {
     it('should look toggled immediately when clicked', (done) => {
-      var $button = $toolbar.find('.note-btn-subscript');
-      assert.isTrue($button.length === 1);
-      assert.isFalse($button.hasClass('active'));
-      $button.click();
-      expect($button.hasClass('active')).await(done).to.be.true;
+      expect(isActiveButton('.note-btn-subscript')).await(done).to.be.true;
     });
   });
 
   describe('strikethrough button', () => {
     it('should execute strikethrough command when it is clicked', (done) => {
       $toolbar.find('.note-btn-strikethrough').click();
-      expect($editable.html()).await(done).to.equalsIgnoreCase('<p><strike>hello</strike></p>');
+      expect($editable.html()).await(done).to.equalsIgnoreCase('<p><s>hello</s></p>');
     });
   });
 
   describe('strikethrough button state updated', () => {
     it('should look toggled immediately when clicked', (done) => {
-      var $button = $toolbar.find('.note-btn-strikethrough');
-      assert.isTrue($button.length === 1);
-      assert.isFalse($button.hasClass('active'));
-      $button.click();
-      expect($button.hasClass('active')).await(done).to.be.true;
+      expect(isActiveButton('.note-btn-strikethrough')).await(done).to.be.true;
     });
   });
 
   describe('clear button state not updated when clicked', () => {
     it('should never look toggled when clicked', (done) => {
-      var $button = $toolbar.find('i.note-icon-eraser').parent();
-      assert.isTrue($button.length === 1);
-      assert.isFalse($button.hasClass('active'));
-      $button.click();
-      expect($button.hasClass('active')).await(done).to.be.false;
+      expect(isActiveButton('.note-btn-removeformat')).await(done).to.be.false;
     });
   });
 

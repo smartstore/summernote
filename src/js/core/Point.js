@@ -8,9 +8,9 @@ const SOFT_HYPHEN = '\u00AD';
 
 const CharTypes = {
   UNKNOWN: -1,
-  CHAR: 0,
+  SPACE: 0,
   PUNC: 1,
-  SPACE: 2
+  CHAR: 2 
 };
 
 // Private
@@ -179,19 +179,28 @@ const nextPointWithEmptyNode = (point, skipInnerOffset) => {
 }
 
 // Private
-const pointUntil = (point, selector, next) => {
-  const pred = dom.matchSelector(selector);
+const pointUntil = (point, pred, next) => {
   while (point) {
-    if (pred(point)) {
-      return point;
-    }
+    if (pred(point)) return point;
     point = next ? nextPoint(point) : prevPoint(point);
   }
   return null;
 }
 
-const prevPointUntil = (point, selector) => pointUntil(point, selector, false);
-const nextPointUntil = (point, selector) => pointUntil(point, selector, true);
+const pointWhile = (point, pred, next) => {
+  let prev = point;
+  while (point) {
+    if (!pred(point)) return prev;
+    prev = point;
+    point = next ? nextPoint(point) : prevPoint(point);
+  }
+  return null;
+}
+
+const prevPointUntil = (point, pred) => pointUntil(point, pred, false);
+const nextPointUntil = (point, pred) => pointUntil(point, pred, true);
+const prevPointWhile = (point, pred) => pointWhile(point, pred, false);
+const nextPointWhile = (point, pred) => pointWhile(point, pred, true);
 
 /**
  * @method walkPoint - Preorder / depth first traversal of the DOM
@@ -439,7 +448,7 @@ const isVisiblePoint = (point) => {
  * Gets the char type at given point.
  *
  * @param {Point} point
- * @return {Number} - -1 = unknown, 0 = char, 1 = interpunctuation, 2 = space
+ * @return {Number} - -1 = unknown, 0 = space, 1 = interpunctuation, 2 = char
  */
 const getCharType = (point) => {
   if (!dom.isText(point.node)) {
@@ -447,17 +456,15 @@ const getCharType = (point) => {
   }
 
   const ch = point.node.nodeValue.charAt(point.offset - 1);
-
-  if (ch === ' ' || ch === NBSP_CHAR) {
+  if (!ch) {
+    return CharTypes.UNKNOWN;
+  } else if (ch === ' ' || ch === NBSP_CHAR) {
     return CharTypes.SPACE;
-  }
-  else if (ch === '_') {
+  } else if (ch === '_') {
     return CharTypes.CHAR;
-  }
-  else if (/^\p{P}$/u.test(ch)) {
+  } else if (/^\p{P}$/u.test(ch)) {
     return CharTypes.PUNC;
-  }
-  else {
+  } else {
     return CharTypes.CHAR;
   }
 }
@@ -507,6 +514,8 @@ export default {
   isVisiblePoint,
   prevPointUntil,
   nextPointUntil,
+  prevPointWhile,
+  nextPointWhile,
   isCharPoint,
   isSpacePoint,
   walkPoint,

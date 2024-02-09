@@ -408,7 +408,7 @@ export default class Selection {
     }
 
     childNodes = childNodes.map(node => {
-      return rng.insertNode(node, !dom.isInline(node));
+      return rng.insertNode(node, dom.isBlock(node));
     });
 
     if (reversed) {

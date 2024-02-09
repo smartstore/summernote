@@ -120,6 +120,6 @@ export default class Typing {
       }
     }
 
-    range.create(nextPara, 0).normalize().select().scrollIntoView(editable);
+    return range.create(nextPara, 0).normalize().select().scrollIntoView(editable);
   }
 }

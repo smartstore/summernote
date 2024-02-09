@@ -11,6 +11,7 @@ import $ from 'jquery';
 import env from 'src/js/core/env';
 import range from 'src/js/core/range';
 import Context from 'src/js/Context';
+import 'bootstrap';
 import 'src/styles/bs4/summernote-bs4';
 
 describe('Editor', () => {
@@ -196,7 +197,7 @@ describe('Editor', () => {
 
   describe('setLastRange', () => {
     it('should set last range', (done) => {
-      document.body.trigger('click');
+      $(document.body).trigger('click');
       selection.setBookmark();
 
       expect(selection.bookmark.sc).await(done).to.equal(editor.editable.lastChild);
@@ -204,7 +205,7 @@ describe('Editor', () => {
 
     it('should set last range without content', (done) => {
       context.layoutInfo.editable.html('');
-      document.body.trigger('click');
+      $(document.body).trigger('click');
       selection.setBookmark();
 
       expect(selection.bookmark.sc).await(done).to.equal(editor.editable);
@@ -482,7 +483,7 @@ describe('Editor', () => {
       editor.formatBlock('p', $target2);
 
       // start <p class="customClass">hello</p> => <p>hello</p>
-      expectContentsAwait(context, '<p class="">hello</p>', done);
+      expectContentsAwait(context, '<p>hello</p>', done);
     });
 
     it('should add fontSize to block', (done) => {

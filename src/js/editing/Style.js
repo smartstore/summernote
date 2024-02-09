@@ -4,11 +4,6 @@ import lists from '../core/lists';
 import dom from '../core/dom';
 
 export default class Style {
-  constructor(context, formatter) {
-    this.options = context.options;
-    this.formatter = formatter;
-  }
-
   /**
    * @method jQueryCSS
    *
@@ -134,36 +129,11 @@ export default class Style {
         // 'font-subscript': document.queryCommandState('subscript') ? 'subscript' : 'normal',
         // 'font-superscript': document.queryCommandState('superscript') ? 'superscript' : 'normal',
         // 'font-strikethrough': document.queryCommandState('strikethrough') ? 'strikethrough' : 'normal',
-        //'font-family': document.queryCommandValue('fontname') || styleInfo['font-family'],
+        'font-family': document.queryCommandValue('fontname') || styleInfo['font-family'],
       });
     } catch (e) {
       // eslint-disable-next-line
     }
-
-    const formatter = this.formatter;
-    const formats = ['bold', 'italic', 'underline', 'code', 'strikethrough', 'subscript', 'superscript']; // Object.keys(formatter.formats.get());
-    const matches = formatter.matchAll(formats);
-
-    lists.each(formats, name => {
-      styleInfo['font-' + name] = 'normal';
-      if (lists.contains(matches, name)) {
-        styleInfo['font-' + name] = name;
-      }
-    });
-    
-    // const controller = this.commandController;
-    // const node = rng.sc; // rng.commonAncestorContainer; 
-    // const ancestors = dom.parents(node/*, dom.isBlock*/);
-    // styleInfo = $.extend(styleInfo, {
-    //   'font-bold': controller.matchRange('bold', rng, ancestors) ? 'bold' : 'normal',
-    //   'font-italic': controller.matchRange('italic', rng, ancestors) ? 'italic' : 'normal',
-    //   'font-underline': controller.matchRange('underline', rng, ancestors) ? 'underline' : 'normal',
-    //   'font-strikethrough': controller.matchRange('strikethrough', rng, ancestors) ? 'strikethrough' : 'normal',
-    //   'font-subscript': controller.matchRange('subscript', rng, ancestors) ? 'subscript' : 'normal',
-    //   'font-superscript': controller.matchRange('superscript', rng, ancestors) ? 'superscript' : 'normal',
-    //   'font-code': controller.matchRange('code', rng, ancestors) ? 'code' : 'normal',
-    //   'font-family': controller.matchRange('fontname', rng, ancestors)?.styleMatch
-    // });
 
     // list-style-type to list-style(unordered, ordered)
     if (!rng.isOnList()) {

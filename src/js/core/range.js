@@ -3,10 +3,9 @@ import func from './func';
 import lists from './lists';
 import dom from './dom';
 import Point from './Point';
-import Str from './Str';
-import Obj from './Obj';
-import * as NormalizeRange from '../util/NormalizeRange';
-import schema from './schema';
+import Type from './Type';
+// import * as NormalizeRange from '../util/NormalizeRange';
+// import schema from './schema';
 
 const makeIsOn = (selector, root) => {
   const pred = dom.matchSelector(selector);
@@ -14,6 +13,16 @@ const makeIsOn = (selector, root) => {
     const ancestor = dom.closest(this.sc, pred, true, root);
     return !!ancestor && (ancestor === dom.closest(this.ec, pred, true, root));
   };
+};
+
+const makeCharPredicate = (opts) => {
+  // -1 = UNKNOWN, 0 = SPACE, 1 = PUNC, 2 = CHAR
+  const stopAtPunc = opts?.stopAtPunc === true;
+  if (stopAtPunc) {
+    return func.not(Point.isCharPoint); // Stop at any non-char
+  } else {
+    return (pt) => Point.getCharType(pt) < 1; // Stop at space/unknown only
+  }
 };
 
 const detachRange = (rng) => {
@@ -80,10 +89,10 @@ const createFromNativeRange = (nativeRange) => {
 /**
  * Create a `WrappedRange` object from boundary points.
  *
- * @param {Node} [sc] - start container
- * @param {Number} [so] - start offset
- * @param {Node} [ec] - end container
- * @param {Number} [eo] - end offset
+ * @param {Node} [sc] - Start container
+ * @param {Number} [so] - Start offset
+ * @param {Node} [ec] - End container
+ * @param {Number} [eo] - End offset
  * @return {WrappedRange}
  */
 function create(sc, so, ec, eo) {
@@ -102,12 +111,11 @@ function create(sc, so, ec, eo) {
   let rng = createFromSelection();
 
   if (!rng && len === 1) {
-    let bodyElement = arguments[0];
-    if (dom.isEditableRoot(bodyElement)) {
-      bodyElement = bodyElement.lastChild;
+    if (dom.isEditableRoot(sc)) {
+      sc = sc.lastChild;
     }
     
-    return createFromBodyElement(bodyElement, dom.emptyPara === arguments[0].innerHTML);
+    return createFromBodyElement(sc, dom.emptyPara === sc.innerHTML);
   }
 
   return rng;
@@ -132,7 +140,7 @@ const createFromPoints = (startPoint, endPoint) => {
  * @return {WrappedRange}
  */
 const createFromSelection = () => {
-  const selection = document.getSelection();
+  const selection = window.getSelection ? window.getSelection() : window.document.selection;
   if (!selection || selection.rangeCount === 0) {
     return null;
   } else if (dom.isBody(selection.anchorNode)) {
@@ -427,7 +435,7 @@ class WrappedRange {
         rng = this.wrapBodyInlineWithPara().deleteContents();
       }
   
-      const info = Point.splitPoint(rng.getStartPoint(), dom.isInline(node));
+      const info = Point.splitPoint(rng.getStartPoint(), !dom.isBlock(node));
       if (info.rightNode) {
         info.rightNode.parentNode.insertBefore(node, info.rightNode);
         if (dom.isEmpty(info.rightNode) && (doNotInsertPara || dom.isPara(node))) {
@@ -874,53 +882,6 @@ class WrappedRange {
     return this;
   }
 
-  getNode(root) {
-    const rng = this;
-    const startOffset = rng.startOffset;
-    const endOffset = rng.endOffset;
-    let startContainer = rng.startContainer;
-    let endContainer = rng.endContainer;
-    let node = rng.commonAncestorContainer;
-
-    // Handle selection a image or other control like element such as anchors
-    if (!rng.collapsed) {
-      if (startContainer === endContainer) {
-        if (endOffset - startOffset < 2) {
-          if (startContainer.hasChildNodes()) {
-            node = startContainer.childNodes[startOffset];
-          }
-        }
-      }
-
-      // If the anchor node is a element instead of a text node then return this element
-      // if (isWebKit && sel.anchorNode && sel.anchorNode.nodeType == 1)
-      // return anchorNode.childNodes[sel.anchorOffset];
-
-      // Handle cases where the selection is immediately wrapped around a node and return that node instead of it's parent.
-      // This happens when you double click an underlined word in FireFox.
-      if (dom.isText(startContainer) && dom.isText(endContainer)) {
-        if (startContainer.length === startOffset) {
-          startContainer = skipEmptyTextNodes(startContainer.nextSibling, true);
-        } else {
-          startContainer = startContainer.parentNode;
-        }
-
-        if (endOffset === 0) {
-          endContainer = skipEmptyTextNodes(endContainer.previousSibling, false);
-        } else {
-          endContainer = endContainer.parentNode;
-        }
-
-        if (startContainer && startContainer === endContainer) {
-          node = startContainer;
-        }
-      }
-    }
-
-    const elm = dom.isText(node) ? node.parentNode : node;
-    return dom.isHTMLElement(elm) ? elm : root || dom.getEditableRoot(elm);
-  }
-
   /**
    * Splits text on range and returns a new range.
    */
@@ -1073,7 +1034,7 @@ class WrappedRange {
     }
 
     childNodes = childNodes.map(function(childNode) {
-      return rng.insertNode(childNode, !dom.isInline(childNode));
+      return rng.insertNode(childNode, dom.isBlock(childNode));
     });
 
     if (reversed) {
@@ -1086,32 +1047,39 @@ class WrappedRange {
   /**
    * Returns range for word before and (optionally) after cursor
    *
-   * @param {Boolean} [findAfter] - Find after cursor also, default: false
+   * @param {Boolean} [forward] - Find after cursor also, default: false
+   * @param {Object|boolean|null} [options] - Optional find word options.
+   * @param {Boolean} [options.forward] - Find after cursor also, default: false.
+   * @param {Boolean} [options.stopAtPunc] - Stop at punctuation char, default: false.
+   * @param {Boolean} [options.stopAtElement] - Don't span element/tag boundaries, default: false.
+   * @param {Boolean} [options.trim] - Skip trailing space char, default: false.
    * @return {WrappedRange} - A new `WrappedRange` instance.
    */
-  getWordRange(findAfter) {
+  getWordRange(options) {
     let endPoint = this.getEndPoint();
     const endOffset = endPoint.offset;
-    
-    if (!Point.isCharPoint(endPoint)) {
+    const pred = makeCharPredicate(options);
+    const forward = Type.isBoolean(options) ? options : (options?.forward === true);
+    const trim = options?.trim === true;
+    const stopAtElement = options?.stopAtElement === true;
+
+    if (pred(endPoint)) {
       return this;
     }
 
-    const startPoint = Point.prevPointUntil(endPoint, function(point) {
-      return !Point.isCharPoint(point);
-    });
+    const startPoint = Point.prevPointUntil(endPoint, pred);
+    //console.log('startPoint', startPoint);
 
-    if (findAfter) {
-      endPoint = Point.nextPointUntil(endPoint, function(point) {
-        return !Point.isCharPoint(point);
-      });
+    if (forward) {
+      endPoint = Point.nextPointUntil(endPoint, pred);
+      //console.log('endPoint', endPoint);
     }
 
     return new WrappedRange(
       startPoint.node,
       startPoint.offset,
       endPoint.node,
-      Math.max(endPoint.offset - 1, endOffset)
+      !trim ? endPoint.offset : Math.max(endPoint.offset - 1, endOffset)
     );
   }
 
@@ -1124,15 +1092,15 @@ class WrappedRange {
   getWordsRange(findAfter) {
     var endPoint = this.getEndPoint();
 
-    var isNotTextPoint = function(point) {
-      return !Point.isCharPoint(point) && !Point.isSpacePoint(point);
+    const isNotTextPoint = (point) => {
+      return Point.getCharType(point) === -1;
     };
 
     if (isNotTextPoint(endPoint)) {
       return this;
     }
 
-    var startPoint = Point.prevPointUntil(endPoint, isNotTextPoint);
+    const startPoint = Point.prevPointUntil(endPoint, isNotTextPoint);
 
     if (findAfter) {
       endPoint = Point.nextPointUntil(endPoint, isNotTextPoint);
@@ -1160,8 +1128,8 @@ class WrappedRange {
   getWordsMatchRange(regex) {
     const endPoint = this.getEndPoint();
 
-    const startPoint = Point.prevPointUntil(endPoint, function(point) {
-      if (!Point.isCharPoint(point) && !Point.isSpacePoint(point)) {
+    const startPoint = Point.prevPointUntil(endPoint, (point) => {
+      if (Point.getCharType(point) === -1) {
         return true;
       }
       const rng = createFromPoints(point, endPoint);

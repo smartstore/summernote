@@ -124,7 +124,9 @@ export default class Editor {
     }
 
     this.insertParagraph = this.wrapCommand(() => {
-      this.typing.insertParagraph(this.editable);
+      const rng = this.typing.insertParagraph(this.editable);
+      this.selection.setRange(rng);
+      rng.scrollIntoView(this.editable);
     });
 
     this.insertOrderedList = this.wrapCommand(() => {
@@ -179,8 +181,7 @@ export default class Editor {
         return;
       }
       markup = this.context.invoke('codeview.purify', markup);
-      // TODO: rng.pasteHTML() --> selection.setContent
-      const contents = this.selection.getRange().pasteHTML(markup);
+      const contents = this.selection.pasteContent(markup);
       this.selection.setRange(range.createFromNodeAfter(lists.last(contents)));
     });
 
@@ -696,9 +697,23 @@ export default class Editor {
     let rng = range.create();
     if (rng) {
       rng = rng.normalize();
+      const styleInfo = this.style.current(rng);
+      // TEST START
+      const formatter = this.formatter;
+      const formats = ['bold', 'italic', 'underline', 'code', 'strikethrough', 'subscript', 'superscript'];
+      const matches = formatter.matchAll(formats);
+  
+      lists.each(formats, name => {
+        styleInfo['font-' + name] = 'normal';
+        if (lists.contains(matches, name)) {
+          styleInfo['font-' + name] = name;
+        }
+      });
+      // TEST END
+      return styleInfo;
     }
 
-    return rng ? this.style.current(rng) : this.style.fromNode(this.$editable);
+    return this.style.fromNode(this.$editable);
   }
 
   /**

@@ -26,7 +26,6 @@ const applyStyles = (elm, format, vars) => {
 const applyFormatAction = (editor, name, vars = null, node = null) => {
   const sel = editor.selection;
   let rng = sel.getRange();
-
   const formatList = editor.formatter.get(name);
   const format = formatList[0];
   const isCollapsed = !node && rng.collapsed;

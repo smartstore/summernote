@@ -90,12 +90,6 @@ const popover = renderer.create([
     '<div class="popover-content note-toolbar note-children-container"></div>',
   '</div>',
 ].join(''), function($node, options) {
-  const direction = typeof options.direction !== 'undefined' ? options.direction : 'bottom';
-
-  //$node.addClass(direction);
-  //$node.addClass('bs-popover-' + direction);
-  //$node.attr('x-placement', direction);
-
   if (options.hideArrow) {
     $node.find('.arrow').hide();
   }
