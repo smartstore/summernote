@@ -216,7 +216,7 @@ const walkPoint = (startPoint, endPoint, handler, skipInnerOffset) => {
   while (point) {
     handler(point);
 
-    if (isSamePoint(point, endPoint)) {
+    if (equals(point, endPoint)) {
       break;
     }
 
@@ -286,6 +286,8 @@ const splitNode = (point, options) => {
     isSkipPaddingBlankHTML = true;
   }
 
+  //console.log('SplitNode Before Edge Case', point.node.nodeName);
+
   // Edge case
   if (isEdgePoint(point) && (dom.isText(point.node) || isNotSplitEdgePoint)) {
     if (isLeftEdgePoint(point)) {
@@ -297,8 +299,10 @@ const splitNode = (point, options) => {
 
   // split #text
   if (dom.isText(point.node)) {
+    //console.log('SplitNode isText', point);
     return point.node.splitText(point.offset);
   } else {
+    //console.log('SplitNode NoText', point.node.nodeName);
     const childNode = point.node.childNodes[point.offset];
     let childNodes = dom.nextSiblings(childNode);
     // Remove empty nodes
@@ -338,8 +342,9 @@ const splitNode = (point, options) => {
  */
 const splitTree = (root, point, options) => {
   // ex) [#text, <span>, <p>]
-  let parents = dom.parents(point.node, root);
-
+  const rootPred = dom.matchSelector(root);
+  let parents = dom.parents(point.node, rootPred);
+  //console.log('splitTree', root.nodeName, point.node.nodeName, parents.length);
   if (!parents.length) {
     return null;
   } else if (parents.length === 1) {
@@ -354,17 +359,17 @@ const splitTree = (root, point, options) => {
       let textNode;
       if (nestSibling.nodeType == 1) {
         textNode = nestSibling.childNodes[0];
-        parents = dom.parents(textNode, root);
+        parents = dom.parents(textNode, rootPred);
         point = { node: textNode, offset: 0 };
       }
       else if (nestSibling.nodeType == 3 && !nestSibling.data.match(/[\n\r]/g)) {
         textNode = nestSibling;
-        parents = dom.parents(textNode, root);
+        parents = dom.parents(textNode, rootPred);
         point = { node: textNode, offset: 0 };
       }
     }
   }
-  return parents.reduce(function (node, parent) {
+  return parents.reduce((node, parent) => {
     if (node === point.node) {
       node = splitNode(point, options);
     }
@@ -415,13 +420,13 @@ const splitPoint = (point, isInline) => {
 }
 
 /**
- * Checks whether point1 and point2 is same or not.
+ * Checks whether point1 and point2 are equal.
  *
  * @param {BoundaryPoint} point1
  * @param {BoundaryPoint} point2
  * @return {Boolean}
  */
-const isSamePoint = (point1, point2) =>
+const equals = (point1, point2) =>
   point1.node === point2.node && point1.offset === point2.offset;
 
 /**
@@ -510,7 +515,7 @@ export default {
   pointAfterNode,
   nextPointWithEmptyNode,
   comparePoints,
-  isSamePoint,
+  equals,
   isVisiblePoint,
   prevPointUntil,
   nextPointUntil,

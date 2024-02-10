@@ -544,7 +544,6 @@ const removeFormatInternal = (ed, name, vars, node, similar) => {
         // Note that the return value should always be a node since it's wrapped above
         startContainer = unwrap(true);
         endContainer = unwrap();
-        console.log('After unwrap', startContainer, endContainer);
       } else {
         startContainer = endContainer = splitToFormatRoot(startContainer);
       }

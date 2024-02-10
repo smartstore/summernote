@@ -160,7 +160,7 @@ export default class Editor {
     });
 
     /**
-     * insert text
+     * Inserts text
      * @param {String} text
      */
     this.insertText = this.wrapCommand((text) => {
@@ -168,8 +168,10 @@ export default class Editor {
         return;
       }
       const rng = this.selection.getRange();
+      console.log('Before insertText setRange', this.selection.getRange());
       const textNode = rng.insertNode(dom.createText(text));
       this.selection.setRange(range.create(textNode, dom.nodeLength(textNode)));
+      console.log('After insertText setRange', this.selection.getRange());
     });
 
     /**
@@ -177,12 +179,7 @@ export default class Editor {
      * @param {String} markup
      */
     this.pasteHTML = this.wrapCommand((markup) => {
-      if (this.isLimited(markup.length)) {
-        return;
-      }
-      markup = this.context.invoke('codeview.purify', markup);
-      const contents = this.selection.pasteContent(markup);
-      this.selection.setRange(range.createFromNodeAfter(lists.last(contents)));
+      this.selection.pasteContent(markup);
     });
 
     /**
@@ -191,7 +188,6 @@ export default class Editor {
      * @param {String} tagName
      */
     this.formatBlock = this.wrapCommand((tagName, $target) => {
-      console.log('formatBlock', tagName, $target)
       const onApplyCustomStyle = this.options.callbacks.onApplyCustomStyle;
       if (onApplyCustomStyle) {
         onApplyCustomStyle.call(this, $target, this.context, this.onFormatBlock);
@@ -313,7 +309,7 @@ export default class Editor {
         }
       });
 
-      this.selection.setRange(this.createRangeFromList(anchors));
+      this.selection.setRange(range.createFromNodes(anchors));
     });
 
     /**
@@ -528,8 +524,7 @@ export default class Editor {
     }
 
     const eventName = keyMap[keys.join('+')];
-
-    if (keyName === 'TAB' && !this.options.tabDisable) {
+    if (keyName === 'TAB' && this.options.tabDisable) {
       this.afterCommand();
     } else if (eventName) {
       if (this.context.invoke(eventName) !== false) {
@@ -618,26 +613,6 @@ export default class Editor {
   createRange() {
     this.focus();
     return this.selection.getRange();
-  }
-
-  /**
-   * Creates a new range from the list of elements.
-   *
-   * @param {li} dom element list
-   * @return {WrappedRange}
-   */
-  createRangeFromList(li) {
-    const startRange = range.createFromNodeBefore(lists.head(li));
-    const startPoint = startRange.getStartPoint();
-    const endRange = range.createFromNodeAfter(lists.last(li));
-    const endPoint = endRange.getEndPoint();
-
-    return range.create(
-      startPoint.node,
-      startPoint.offset,
-      endPoint.node,
-      endPoint.offset
-    );
   }
 
   setLastRange(rng) {
@@ -905,19 +880,12 @@ export default class Editor {
   }
 
   /**
-   * return selected plain text
+   * Returns selected plain text
    * @return {String} text
    */
   getSelectedText() {
-    // TODO: Move this to Selection
-    let rng = this.selection.getRange();
-
-    // if range on anchor, expand range with anchor
-    if (rng.isOnAnchor()) {
-      rng = range.createFromNode(dom.ancestor(rng.sc, dom.isAnchor));
-    }
-
-    return rng.toString();
+    // Compat
+    return this.selection.getTextContent();
   }
 
   /**

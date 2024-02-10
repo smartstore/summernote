@@ -8,7 +8,11 @@ import DomTreeWalker from '../util/DomTreeWalker';
 let win = window;
 
 const createRootRange = (editor) => {
-  return range.createFromBodyElement(editor.editable.lastChild || editor.editable, true);
+  let rng = range.create(editor.editable);
+  if ($(rng.sc).closest('.note-editable').length === 0) {
+    rng = range.createFromBodyElement(editor.editable);
+  }
+  return rng;
 };
 
 const getEndpointElement = (
@@ -51,6 +55,7 @@ export default class Selection {
 
   initialize(editor) {
     this.hasFocus = editor.hasFocus();
+    this.testMode = false;
 
     const createBookmarkFromSelection = () => {
       const sel = this.nativeSelection;
@@ -151,7 +156,11 @@ export default class Selection {
       return this.bookmark;
     }
 
-    if (this.hasFocus) {
+    if (this.testMode) {
+      rng = this.bookmark || this.selectedRange || this.explicitRange;
+    }
+
+    if (!rng && this.hasFocus) {
       try {
         const selection = this.nativeSelection;
         if (selection && !dom.isRestrictedNode(selection.anchorNode)) {
@@ -397,7 +406,7 @@ export default class Selection {
     content = this.context.invoke('codeview.purify', content.trim());
     
     const rng = this.getRange();
-    const container = $('<div></div>').html(content)[0]; // dom.create('div', null, content);
+    const container = dom.create('div', null, content); // $('<div></div>').html(content)[0];
     let childNodes = lists.from(container.childNodes);
     
     let reversed = false;
@@ -408,7 +417,8 @@ export default class Selection {
     }
 
     childNodes = childNodes.map(node => {
-      return rng.insertNode(node, dom.isBlock(node));
+      //console.log('pasteContent childNodes.map', node.nodeName, dom.isBlock(node), dom.isData(node));
+      return rng.insertNode(node, true /* dom.isBlock(node) || dom.isData(node)*/);
     });
 
     if (reversed) {
@@ -451,7 +461,7 @@ export default class Selection {
    * @return {Object} Bookmark object, use moveToBookmark with this object to restore the selection.
    */
   createBookmark() {
-    return this.getRange().bookmark(this.editor.editable);
+    return this.getRange().createBookmark(this.editor.editable);
   }
 
   /**
@@ -463,7 +473,7 @@ export default class Selection {
    * @return {Object} Bookmark object, use moveToBookmark with this object to restore the selection.
    */
   createParaBookmark(paras) {
-    return this.getRange().paraBookmark(paras);
+    return this.getRange().createParaBookmark(paras);
   }
 
   /**
@@ -498,7 +508,6 @@ export default class Selection {
       rng = range.getWrappedRange(rng);
       this.bookmark = rng;
     } else {
-      //console.warn('Passed Range is not within the editor boundaries.', rng?.toString());
       // Create a new range at the end of the document
       this.bookmark = createRootRange(this.editor);
     }

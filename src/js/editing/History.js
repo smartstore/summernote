@@ -18,7 +18,7 @@ export default class History {
     const emptyBookmark = { s: { path: [], offset: 0 }, e: { path: [], offset: 0 } };
     return {
       contents: this.$editable.html(),
-      bookmark: ((rng && rng.isOnEditable()) ? rng.bookmark(this.editable) : emptyBookmark),
+      bookmark: ((rng && rng.isOnEditable()) ? rng.createBookmark(this.editable) : emptyBookmark),
     };
   }
 

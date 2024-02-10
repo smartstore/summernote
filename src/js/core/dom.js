@@ -921,7 +921,7 @@ const findPara = (node) => closest(node, isPara);
  */
 const wrap = (node, wrapperName) => {
   const parent = node.parentNode;
-  const wrapper = $('<' + wrapperName + '>')[0];
+  const wrapper = create(wrapperName);
 
   parent.insertBefore(wrapper, node);
   wrapper.appendChild(node);
@@ -1232,6 +1232,7 @@ export default {
   isPurePara,
   isHeading,
   isInline,
+  isInlineOrText: func.or(isInline, isText),
   isBlock,
   isBodyInline,
   isBody,

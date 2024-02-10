@@ -107,9 +107,10 @@ const isEmpty = (list) =>
 const clusterBy = (list, selector) => {
   if (!list.length) { return []; }
   const tl = tail(list);
+  const fn = Type.isFunction(selector) ? selector : func.peq2(selector);
   return tl.reduce(function(memo, v) {
     const lastItem = last(memo);
-    if (selector(last(lastItem), v)) {
+    if (fn(last(lastItem), v)) {
       lastItem[lastItem.length] = v;
     } else {
       memo[memo.length] = [v];

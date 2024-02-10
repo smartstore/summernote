@@ -3,6 +3,7 @@ import lists from '../core/lists';
 import dom from '../core/dom';
 import Point from '../core/Point';
 import range from '../core/range';
+import func from '../core/func';
 
 export default class Bullet {
   /**
@@ -90,15 +91,17 @@ export default class Bullet {
    */
   toggleList(listName, editable) {
     const rng = range.create(editable).wrapBodyInlineWithPara();
-
+    //if (listName == 'UL') console.log('toggleList HTML', editable.innerHTML);
+    //if (listName == 'UL') console.log('toggleList rng', rng);
     let paras = rng.nodes(dom.isPara, { includeAncestor: true });
-    const bookmark = rng.paraBookmark(paras);
+    //if (listName == 'UL') console.log('toggleList paras', paras);
+    const bookmark = rng.createParaBookmark(paras);
     const clustereds = lists.clusterBy(paras, 'parentNode');
 
     // paragraph to list
     if (lists.find(paras, dom.isPurePara)) {
       let wrappedParas = [];
-      $.each(clustereds, (idx, paras) => {
+      lists.each(clustereds, (paras) => {
         wrappedParas = wrappedParas.concat(this.wrapList(paras, listName));
       });
       paras = wrappedParas;
@@ -111,7 +114,7 @@ export default class Bullet {
       });
 
       if (diffLists.length) {
-        $.each(diffLists, (idx, listNode) => {
+        lists.each(diffLists, (listNode) => {
           dom.rename(listNode, listName);
         });
       } else {
@@ -134,6 +137,7 @@ export default class Bullet {
     const prevList = dom.isList(head.previousElementSibling) && head.previousElementSibling;
     const nextList = dom.isList(last.nextElementSibling) && last.nextElementSibling;
 
+    //console.log('wrapList last', last);
     const listNode = prevList || dom.insertAfter(last, dom.create(listName || 'UL'));
 
     // P to LI

@@ -111,11 +111,12 @@ function create(sc, so, ec, eo) {
   let rng = createFromSelection();
 
   if (!rng && len === 1) {
+    let bodyElement = arguments[0];
     if (dom.isEditableRoot(sc)) {
-      sc = sc.lastChild;
+      bodyElement = bodyElement.lastChild;
     }
     
-    return createFromBodyElement(sc, dom.emptyPara === sc.innerHTML);
+    return createFromBodyElement(bodyElement, dom.emptyPara === arguments[0].innerHTML);
   }
 
   return rng;
@@ -152,9 +153,9 @@ const createFromSelection = () => {
   return createFromNativeRange(selection.getRangeAt(0));
 };
 
-const createFromBodyElement = (bodyElement, isCollapsedToStart = false) => {
+const createFromBodyElement = (bodyElement, collapseToStart = false) => {
   var wrappedRange = createFromNode(bodyElement);
-  return wrappedRange.collapse(isCollapsedToStart);
+  return wrappedRange.collapse(collapseToStart);
 };
 
 /**
@@ -199,6 +200,26 @@ const createFromNodeBefore = (node) => {
 const createFromNodeAfter = (node) => {
   return createFromNode(node).collapse(false);
 };
+
+  /**
+   * Creates a new range from the list of element nodes.
+   *
+   * @param {Node[]} nodes - DOM element list
+   * @return {WrappedRange}
+   */
+  const createFromNodes = (nodes) => {
+    const startRange = createFromNodeBefore(lists.head(nodes));
+    const startPoint = startRange.getStartPoint();
+    const endRange = createFromNodeAfter(lists.last(nodes));
+    const endPoint = endRange.getEndPoint();
+
+    return create(
+      startPoint.node,
+      startPoint.offset,
+      endPoint.node,
+      endPoint.offset
+    );
+  }
 
 /**
  * Create a `WrappedRange` object from a bookmark.
@@ -399,9 +420,47 @@ class WrappedRange {
     return callNative(this, x => x.createContextualFragment(content));
   }
 
-  deleteContents() {
+  deleteContents_temp() {
     callNative(this, x => x.deleteContents());
     return this;
+  }
+
+  deleteContents() {
+    if (this.collapsed) {
+      return this;
+    }
+
+    const rng = this.splitText();
+    const nodes = rng.nodes(null, {
+      fullyContains: true,
+    });
+
+    // Find new cursor point
+    const point = Point.prevPointUntil(rng.getStartPoint(), (point) => {
+      return !lists.contains(nodes, point.node);
+    });
+
+    const emptyParents = [];
+    lists.each(nodes, (node) => {
+      // find empty parents
+      const parent = node.parentNode;
+      if (point.node !== parent && dom.nodeLength(parent) === 1) {
+        emptyParents.push(parent);
+      }
+      dom.remove(node, false);
+    });
+
+    // remove empty parents
+    lists.each(emptyParents, (node) => {
+      dom.remove(node, false);
+    });
+
+    return new WrappedRange(
+      point.node,
+      point.offset,
+      point.node,
+      point.offset
+    ).normalize();
   }
 
   detach() {
@@ -431,17 +490,19 @@ class WrappedRange {
     insertNode(node, doNotInsertPara = false) {
       let rng = this;
   
-      if (dom.isText(node) || dom.isInline(node)) {
+      if (dom.isInlineOrText(node)) {
         rng = this.wrapBodyInlineWithPara().deleteContents();
       }
-  
+
+      console.log('insertNode before splitPoint', rng.sc);
       const info = Point.splitPoint(rng.getStartPoint(), !dom.isBlock(node));
+      console.log('insertNode after splitPoint', info);
       if (info.rightNode) {
         info.rightNode.parentNode.insertBefore(node, info.rightNode);
         if (dom.isEmpty(info.rightNode) && (doNotInsertPara || dom.isPara(node))) {
           info.rightNode.parentNode.removeChild(info.rightNode);
         }
-      } else {
+      } else if (info.container) {
         info.container.appendChild(node);
       }
   
@@ -995,6 +1056,7 @@ class WrappedRange {
       topAncestor = lists.last(ancestors);
       if (dom.isBlock(topAncestor)) {
         topAncestor = ancestors[ancestors.length - 2] || rng.sc.childNodes[rng.so];
+        console.log('wrapBodyInlineWithPara topAncestor', topAncestor);
       }
     } else {
       topAncestor = rng.sc.childNodes[rng.so > 0 ? rng.so - 1 : 0];
@@ -1051,35 +1113,41 @@ class WrappedRange {
    * @param {Object|boolean|null} [options] - Optional find word options.
    * @param {Boolean} [options.forward] - Find after cursor also, default: false.
    * @param {Boolean} [options.stopAtPunc] - Stop at punctuation char, default: false.
-   * @param {Boolean} [options.stopAtElement] - Don't span element/tag boundaries, default: false.
    * @param {Boolean} [options.trim] - Skip trailing space char, default: false.
    * @return {WrappedRange} - A new `WrappedRange` instance.
    */
   getWordRange(options) {
     let endPoint = this.getEndPoint();
-    const endOffset = endPoint.offset;
+    //const endOffset = endPoint.offset;
     const pred = makeCharPredicate(options);
     const forward = Type.isBoolean(options) ? options : (options?.forward === true);
     const trim = options?.trim === true;
-    const stopAtElement = options?.stopAtElement === true;
 
     if (pred(endPoint)) {
       return this;
     }
 
     const startPoint = Point.prevPointUntil(endPoint, pred);
-    //console.log('startPoint', startPoint);
 
     if (forward) {
       endPoint = Point.nextPointUntil(endPoint, pred);
-      //console.log('endPoint', endPoint);
+    }
+
+    if (forward && trim && !Point.equals(this.getEndPoint(), endPoint)) {
+      // Trim last space or punc
+      const stopAtPunc = options?.stopAtPunc === true;
+      const charType = Point.getCharType(endPoint);
+      if (charType < 1 || (!stopAtPunc || charType === 1)) {
+        // Walk back one point
+        endPoint = Point.prevPoint(endPoint);
+      }
     }
 
     return new WrappedRange(
       startPoint.node,
       startPoint.offset,
       endPoint.node,
-      !trim ? endPoint.offset : Math.max(endPoint.offset - 1, endOffset)
+      endPoint.offset, //!trim ? endPoint.offset : Math.max(endPoint.offset - 1, endOffset)
     );
   }
 
@@ -1154,7 +1222,7 @@ class WrappedRange {
    *
    * @param {Node} editable
    */
-  bookmark(editable) {
+  createBookmark(editable) {
     return {
       s: {
         path: dom.makeOffsetPath(editable, this.sc),
@@ -1172,7 +1240,7 @@ class WrappedRange {
    *
    * @param {Node[]} paras
    */
-  paraBookmark(paras) {
+  createParaBookmark(paras) {
     return {
       s: {
         path: lists.tail(dom.makeOffsetPath(lists.head(paras), this.sc)),
@@ -1200,6 +1268,7 @@ export default {
   createFromNode,
   createFromNodeBefore,
   createFromNodeAfter,
+  createFromNodes,
   createFromBookmark,
   createFromParaBookmark,
   createFromNativeRange,

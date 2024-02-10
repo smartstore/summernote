@@ -419,6 +419,7 @@ describe('base:core.range', () => {
     });
 
     it('should return whole trimmed word', () => {
+      // super |simp*le| wysiwyg-editor
       var rng = range.create(text, 10).getWordRange({ forward: true, trim: true });
 
       expect(rng.sc).to.deep.equal(text);
@@ -428,6 +429,7 @@ describe('base:core.range', () => {
     });
 
     it('should stop at punc', () => {
+      // super simple |w*ysiwyg|-editor
       var rng = range.create(text, 14).getWordRange({ forward: true, stopAtPunc: true, trim: true });
 
       expect(rng.sc).to.deep.equal(text);
@@ -436,26 +438,15 @@ describe('base:core.range', () => {
       expect(rng.eo).to.equal(20);
     });
 
-    // it('should stop at punc 2', () => {
-    //   var rng = range.create(text, 22).getWordRange({ forward: true, stopAtPunc: true, trim: true });
+    it('should stop at punc 2', () => {
+      // super simple wysiwyg-|e*ditor|
+      var rng = range.create(text, 22).getWordRange({ forward: true, stopAtPunc: true, trim: true });
 
-    //   // var rng1 = range.create(text, 21, text, 27);
-    //   // var rng2 = range.create(text, 22, text, 26).getWordRange({forward: true, stopAtPunc: true});
-    //   // var rng3 = range.create(text, 21).getWordRange();
-    //   // var rng4 = range.create(text, 23).getWordRange();
-    //   // // super simple wysiwyg-editor
-    //   // console.log('WORD', '', range.create(text, 0).getWordRange().toString());
-    //   // console.log('WORD', 'super ', range.create(text, 0).getWordRange({forward: true}).toString());
-    //   // console.log('WORD', 'super', range.create(text, 0).getWordRange({forward: true}).toString());
-    //   // console.log('WORD', 'super', range.create(text, 1).getWordRange({forward: true}).toString());
-    //   // console.log('WORD', 'simple ', range.create(text, 8).getWordRange({forward: true}).toString());
-    //   // console.log('WORD', 'simple', range.create(text, 8).getWordRange({forward: true, trim: true}).toString());
-
-    //   expect(rng.sc).to.deep.equal(text);
-    //   expect(rng.so).to.equal(21);
-    //   expect(rng.ec).to.deep.equal(text);
-    //   expect(rng.eo).to.equal(27);
-    // });
+      expect(rng.sc).to.deep.equal(text);
+      expect(rng.so).to.equal(21);
+      expect(rng.ec).to.deep.equal(text);
+      expect(rng.eo).to.equal(27);
+    });
   });
 
   describe('getWordsRange', () => {
