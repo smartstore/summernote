@@ -12,6 +12,7 @@ const createRootRange = (editor) => {
   if ($(rng.sc).closest('.note-editable').length === 0) {
     rng = range.createFromBodyElement(editor.editable);
   }
+  
   return rng;
 };
 
@@ -55,7 +56,7 @@ export default class Selection {
 
   initialize(editor) {
     this.hasFocus = editor.hasFocus();
-    this.testMode = false;
+    //this.testMode = false;
 
     const createBookmarkFromSelection = () => {
       const sel = this.nativeSelection;
@@ -156,23 +157,17 @@ export default class Selection {
       return this.bookmark;
     }
 
-    if (this.testMode) {
-      rng = this.bookmark || this.selectedRange || this.explicitRange;
-    }
-
     if (!rng && this.hasFocus) {
       try {
         const selection = this.nativeSelection;
-        if (selection && !dom.isRestrictedNode(selection.anchorNode)) {
-          if (selection.rangeCount > 0) {
-            rng = range.createFromNativeRange(selection.getRangeAt(0));
-          }
+        if (selection && selection.rangeCount > 0 && !dom.isRestrictedNode(selection.anchorNode)) {
+          rng = range.createFromNativeRange(selection.getRangeAt(0));
         }
       } catch {}
     }
 
-    // No range found. Create one from root editable.
     if (!rng) {
+      // No range found. Create one from root editable.
       rng = createRootRange(editor);
     }
 
@@ -198,10 +193,11 @@ export default class Selection {
    * @method setRange
    * @param {WrappedRange|Range} rng Range to select.
    * @param {Boolean} [forward] Optional boolean if the selection is forwards or backwards.
+   * @returns {Selection} - The `Selection` object for chaining.
    */
   setRange(rng, forward) {
     if (!this.isValidRange(rng)) {
-      return;
+      return this;
     }
 
     const sel = this.nativeSelection;
@@ -255,6 +251,8 @@ export default class Selection {
         }
       }
     }
+
+    return this;
   }
 
   /**
@@ -418,7 +416,7 @@ export default class Selection {
 
     childNodes = childNodes.map(node => {
       //console.log('pasteContent childNodes.map', node.nodeName, dom.isBlock(node), dom.isData(node));
-      return rng.insertNode(node, true /* dom.isBlock(node) || dom.isData(node)*/);
+      return rng.insertNode(node, /* true */ dom.isBlock(node) || dom.isData(node));
     });
 
     if (reversed) {

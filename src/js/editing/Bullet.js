@@ -3,28 +3,35 @@ import lists from '../core/lists';
 import dom from '../core/dom';
 import Point from '../core/Point';
 import range from '../core/range';
-import func from '../core/func';
 
 export default class Bullet {
-  /**
-   * toggle ordered list
-   */
-  insertOrderedList(editable) {
-    this.toggleList('OL', editable);
+  constructor(context) {
+    this.context = context;
+  }
+
+  get selection() {
+    return this.context.modules.editor.selection;
   }
 
   /**
-   * toggle unordered list
+   * Toggle ordered list
    */
-  insertUnorderedList(editable) {
-    this.toggleList('UL', editable);
+  insertOrderedList(rng) {
+    this.toggleList('OL', rng);
+  }
+
+  /**
+   * Toggle unordered list
+   */
+  insertUnorderedList(rng) {
+    this.toggleList('UL', rng);
   }
 
   /**
    * indent
    */
-  indent(editable) {
-    const rng = range.create(editable).wrapBodyInlineWithPara();
+  indent() {
+    const rng = this.selection.getRange().wrapBodyInlineWithPara();
     
     const paras = rng.nodes(dom.isPara, { includeAncestor: true });
     const clustereds = lists.clusterBy(paras, 'parentNode');
@@ -55,24 +62,24 @@ export default class Bullet {
       }
     });
 
-    rng.select();
+    this.selection.setRange(rng);
   }
 
   /**
    * outdent
    */
-  outdent(editable) {
-    const rng = range.create(editable).wrapBodyInlineWithPara();
+  outdent() {
+    const rng = this.selection.getRange().wrapBodyInlineWithPara();
 
     const paras = rng.nodes(dom.isPara, { includeAncestor: true });
     const clustereds = lists.clusterBy(paras, 'parentNode');
 
-    $.each(clustereds, (idx, paras) => {
+    lists.each(clustereds, (paras) => {
       const head = lists.head(paras);
       if (dom.isLi(head)) {
         this.releaseList([paras]);
       } else {
-        $.each(paras, (idx, para) => {
+        lists.each(paras, (para) => {
           $(para).css('marginLeft', (idx, val) => {
             val = (parseInt(val, 10) || 0);
             return val > 25 ? val - 25 : '';
@@ -81,7 +88,7 @@ export default class Bullet {
       }
     });
 
-    rng.select();
+    this.selection.setRange(rng);
   }
 
   /**
@@ -89,14 +96,18 @@ export default class Bullet {
    *
    * @param {String} listName - OL or UL
    */
-  toggleList(listName, editable) {
-    const rng = range.create(editable).wrapBodyInlineWithPara();
+  toggleList(listName, rng) {
+    console.log('toggleList before rng', listName, this.selection.getRange());
+    rng = (rng || this.selection.getRange()).wrapBodyInlineWithPara();
+    console.log('toggleList after rng', listName, rng);
     //if (listName == 'UL') console.log('toggleList HTML', editable.innerHTML);
-    //if (listName == 'UL') console.log('toggleList rng', rng);
+    //console.log('toggleList rng', listName, rng.commonAncestorContainer);
     let paras = rng.nodes(dom.isPara, { includeAncestor: true });
-    //if (listName == 'UL') console.log('toggleList paras', paras);
+    //console.log('toggleList paras', listName, paras);
     const bookmark = rng.createParaBookmark(paras);
     const clustereds = lists.clusterBy(paras, 'parentNode');
+    //console.log('toggleList bookmark', listName, bookmark.s.path);
+    //console.log('toggleList clustereds', listName, clustereds);
 
     // paragraph to list
     if (lists.find(paras, dom.isPurePara)) {
@@ -122,7 +133,7 @@ export default class Bullet {
       }
     }
 
-    range.createFromParaBookmark(bookmark, paras).select();
+    this.selection.setRange(range.createFromParaBookmark(bookmark, paras));
   }
 
   /**
@@ -166,7 +177,7 @@ export default class Bullet {
   releaseList(clustereds, isEscapseToBody) {
     let releasedParas = [];
 
-    $.each(clustereds, (idx, paras) => {
+    lists.each(clustereds, (paras) => {
       const head = lists.head(paras);
       const last = lists.last(paras);
 
@@ -225,15 +236,15 @@ export default class Bullet {
           });
         }
 
-        $.each(lists.from(paras).reverse(), (idx, para) => {
+        lists.each(lists.from(paras).reverse(), (para) => {
           dom.insertAfter(headList, para);
         });
 
         // remove empty lists
         const rootLists = lists.compact([headList, middleList, lastList]);
-        $.each(rootLists, (idx, rootList) => {
+        lists.each(rootLists, (rootList) => {
           const listNodes = [rootList].concat(dom.children(rootList, dom.isList));
-          $.each(listNodes.reverse(), (idx, listNode) => {
+          lists.each(listNodes.reverse(), (listNode) => {
             if (!dom.nodeLength(listNode)) {
               dom.remove(listNode, true);
             }

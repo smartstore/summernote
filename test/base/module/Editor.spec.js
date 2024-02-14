@@ -45,7 +45,10 @@ describe('Editor', () => {
   }
 
   beforeEach(function() {
-    $('body').empty(); // important !
+    // important cleanup!
+    $('body').empty();
+    window.getSelection().removeAllRanges();
+
     var options = $.extend({}, $.summernote.options);
     options.historyLimit = 5;
     context = new Context($('<div><p>hello</p></div>'), options);
@@ -53,8 +56,6 @@ describe('Editor', () => {
     editor = context.modules.editor;
     $editable = context.layoutInfo.editable;
     selection = editor.selection;
-
-    selection.testMode = true;
 
     // [workaround]
     //  - IE8-11 can't create range in headless mode
@@ -81,51 +82,45 @@ describe('Editor', () => {
   });
 
   describe('undo and redo', () => {
-    // KAPUTT
     it('should control history', (done) => {
-      editor.insertText(' world');
+      editor.insertText(' world1');
+      
       setTimeout(() => {
-        expectContents(context, '<p>hello world</p>');
+        expectContents(context, '<p>hello world1</p>');
         editor.undo();
         setTimeout(() => {
           expectContents(context, '<p>hello</p>');
           editor.redo();
           setTimeout(() => {
-            expectContents(context, '<p>hello world</p>');
+            expectContents(context, '<p>hello world1</p>');
+            done();
+          }, 10);
+        }, 10);
+      }, 100);
+    });
+
+    it('should be limited by option.historyLimit value', (done) => {
+      editor.insertText(' world1');
+      editor.insertText(' world2');
+      editor.insertText(' world3');
+      editor.insertText(' world4');
+      editor.insertText(' world5');
+      setTimeout(() => {
+        expectContents(context, '<p>hello world1 world2 world3 world4 world5</p>');
+        editor.undo();
+        editor.undo();
+        editor.undo();
+        setTimeout(() => {
+          expectContents(context, '<p>hello world1 world2</p>');
+          editor.undo();
+          editor.undo();
+          editor.undo();
+          setTimeout(() => {
+            expectContents(context, '<p>hello world1</p>');
             done();
           }, 10);
         }, 10);
       }, 10);
-    });
-
-    it('should be limited by option.historyLimit value', (done) => {
-      //console.log('Before insertText1', selection.getRange());
-      console.log('---------------------------------');
-      editor.insertText(' world1');
-      //selection.setBookmark();
-      console.log('Before insertText2', selection.getRange());
-      editor.insertText(' world2');
-      //console.log('After insertText2', selection.getRange());
-      done();
-      // editor.insertText(' world3');
-      // editor.insertText(' world4');
-      // editor.insertText(' world5');
-      // setTimeout(() => {
-      //   expectContents(context, '<p>hello world world world world world</p>');
-      //   editor.undo();
-      //   editor.undo();
-      //   editor.undo();
-      //   setTimeout(() => {
-      //     expectContents(context, '<p>hello world world</p>');
-      //     editor.undo();
-      //     editor.undo();
-      //     editor.undo();
-      //     setTimeout(() => {
-      //       expectContents(context, '<p>hello world</p>');
-      //       done();
-      //     }, 10);
-      //   }, 10);
-      // }, 10);
     });
   });
 
@@ -159,55 +154,57 @@ describe('Editor', () => {
     });
   });
 
-  // describe('insertOrderedList and insertUnorderedList', () => {
-  //   // KAPUTT
-  //   it('should toggle paragraph to list', (done) => {
-  //     console.log('Before OL', editor.$editable.html());
-  //     editor.insertOrderedList();
-  //     expectContentsChain(context, '<ol><li>hello</li></ol>', () => {
-  //       console.log('Before UL', editor.$editable.html());
-  //       editor.insertUnorderedList();
-  //       console.log('After UL', editor.$editable.html());
-  //       expectContentsChain(context, '<ul><li>hello</li></ul>', () => {
-  //         editor.insertUnorderedList();
-  //         expectContentsChain(context, '<p>hello</p>', () => {
-  //           done();
-  //         });
-  //       });
-  //     });
-  //   });
-  // });
+  describe('insertOrderedList and insertUnorderedList', () => {
+    //return;
+    // KAPUTT
+    it('should toggle paragraph to list', (done) => {
+      // $editable.appendTo('body');
+      // context.invoke('editor.focus');
 
-  describe('indent and outdent', () => {
-    // // KAPUTT
-    // // [workaround] style is different by browser
-    // it('should indent and outdent paragraph', (done) => {
-    //   editor.indent();
-    //   expectContentsChain(context, '<p style="margin-left: 25px;">hello</p>', () => {
-    //     editor.outdent();
-    //     expect($editable.find('p').css('margin-left')).await(done).to.be.empty;
-    //   });
-    // });
+      editor.insertOrderedList();
 
-    // it('should indent and outdent list', (done) => {
-    //   editor.insertOrderedList();
-    //   expectContentsChain(context, '<ol><li>hello</li></ol>', () => {
-    //     editor.indent();
-    //     expectContentsChain(context, '<ol><li><ol><li>hello</li></ol></li></ol>', () => {
-    //       editor.indent();
-    //       expectContentsChain(context, '<ol><li><ol><li><ol><li>hello</li></ol></li></ol></li></ol>', () => {
-    //         editor.outdent();
-    //         expectContentsChain(context, '<ol><li><ol><li>hello</li></ol></li></ol>', () => {
-    //           editor.outdent();
-    //           expectContentsChain(context, '<ol><li>hello</li></ol>', () => {
-    //             done();
-    //           });
-    //         });
-    //       });
-    //     });
-    //   });
-    // });
+      expectContentsChain(context, '<ol><li>hello</li></ol>', () => {
+        editor.insertUnorderedList(getTextRange('li'));
+        expectContentsChain(context, '<ul><li>hello</li></ul>', () => {
+          editor.insertUnorderedList(getTextRange('li'));
+          expectContentsChain(context, '<p>hello</p>', () => {
+            done();
+          });
+        });
+      });
+    });
   });
+
+  // describe('indent and outdent', () => {
+  //   // // KAPUTT
+  //   // // [workaround] style is different by browser
+  //   // it('should indent and outdent paragraph', (done) => {
+  //   //   editor.indent();
+  //   //   expectContentsChain(context, '<p style="margin-left: 25px;">hello</p>', () => {
+  //   //     editor.outdent();
+  //   //     expect($editable.find('p').css('margin-left')).await(done).to.be.empty;
+  //   //   });
+  //   // });
+
+  //   // it('should indent and outdent list', (done) => {
+  //   //   editor.insertOrderedList();
+  //   //   expectContentsChain(context, '<ol><li>hello</li></ol>', () => {
+  //   //     editor.indent();
+  //   //     expectContentsChain(context, '<ol><li><ol><li>hello</li></ol></li></ol>', () => {
+  //   //       editor.indent();
+  //   //       expectContentsChain(context, '<ol><li><ol><li><ol><li>hello</li></ol></li></ol></li></ol>', () => {
+  //   //         editor.outdent();
+  //   //         expectContentsChain(context, '<ol><li><ol><li>hello</li></ol></li></ol>', () => {
+  //   //           editor.outdent();
+  //   //           expectContentsChain(context, '<ol><li>hello</li></ol>', () => {
+  //   //             done();
+  //   //           });
+  //   //         });
+  //   //       });
+  //   //     });
+  //   //   });
+  //   // });
+  // });
 
   describe('setLastRange', () => {
     it('should set last range', (done) => {
@@ -242,26 +239,26 @@ describe('Editor', () => {
       expectContentsAwait(context, '<p>hello</p>', done);
     });
 
-    // it('should insert node in last focus', (done) => {
-    //   $editable.appendTo('body');
-    //   context.invoke('editor.focus');
+    it('should insert node in last focus', (done) => {
+      $editable.appendTo('body');
+      context.invoke('editor.focus');
 
-    //   setTimeout(() => {
-    //     var textNode = $editable.find('p')[0].firstChild;
-    //     selection.setRange(range.create(textNode, 0, textNode, 0));
+      setTimeout(() => {
+        var textNode = $editable.find('p')[0].firstChild;
+        selection.setRange(range.create(textNode, 0, textNode, 0));
 
-    //     setTimeout(() => {
-    //       editor.insertNode($('<span> world</span>')[0]);
-    //       setTimeout(() => {
-    //         $('body').trigger('focus');
-    //         editor.insertNode($('<span> hello</span>')[0]);
-    //         setTimeout(() => {
-    //           expectContentsAwait(context, '<p><span> world</span><span> hello</span>hello</p>', done);
-    //         }, 10);
-    //       }, 10);
-    //     }, 10);
-    //   }, 10);
-    // });
+        setTimeout(() => {
+          editor.insertNode($('<span> world</span>')[0]);
+          setTimeout(() => {
+            $('body').trigger('focus');
+            editor.insertNode($('<span> hello</span>')[0]);
+            setTimeout(() => {
+              expectContentsAwait(context, '<p><span> world</span><span> hello</span>hello</p>', done);
+            }, 10);
+          }, 10);
+        }, 10);
+      }, 10);
+    });
   });
 
   describe('insertText', () => {
@@ -280,26 +277,26 @@ describe('Editor', () => {
       expectContentsAwait(context, '<p>hello</p>', done);
     });
 
-    // it('should insert text in last focus', (done) => {
-    //   $editable.appendTo('body');
-    //   context.invoke('editor.focus');
+    it('should insert text in last focus', (done) => {
+      $editable.appendTo('body');
+      context.invoke('editor.focus');
 
-    //   var textNode = $editable.find('p')[0].firstChild;
-    //   selection.setRange(range.create(textNode, 0, textNode, 0));
+      var textNode = $editable.find('p')[0].firstChild;
+      selection.setRange(range.create(textNode, 0, textNode, 0));
 
-    //   setTimeout(() => {
-    //     editor.insertText(' world');
-    //     setTimeout(() => {
-    //       $('body').focus();
-    //       setTimeout(() => {
-    //         editor.insertText(' summernote');
-    //         setTimeout(() => {
-    //           expectContentsAwait(context, '<p> world summernotehello</p>', done);
-    //         }, 10);
-    //       }, 10);
-    //     }, 10);
-    //   }, 10);
-    // });
+      setTimeout(() => {
+        editor.insertText(' world');
+        setTimeout(() => {
+          $('body').focus();
+          setTimeout(() => {
+            editor.insertText(' summernote');
+            setTimeout(() => {
+              expectContentsAwait(context, '<p> world summernotehello</p>', done);
+            }, 10);
+          }, 10);
+        }, 10);
+      }, 10);
+    });
   });
 
   describe('pasteHTML', () => {

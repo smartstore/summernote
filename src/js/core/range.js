@@ -247,13 +247,13 @@ const createFromParaBookmark = (bookmark, paras) => {
   return new WrappedRange(sc, so, ec, eo);
 };
 
-const skipEmptyTextNodes = (node, forwards) => {
-  const orig = node;
-  while (node && dom.isText(node) && node.length === 0) {
-    node = forwards ? node.nextSibling : node.previousSibling;
-  }
-  return node || orig;  
-}
+// const skipEmptyTextNodes = (node, forwards) => {
+//   const orig = node;
+//   while (node && dom.isText(node) && node.length === 0) {
+//     node = forwards ? node.nextSibling : node.previousSibling;
+//   }
+//   return node || orig;  
+// }
 
 /**
  * Wrapped Range
@@ -494,9 +494,9 @@ class WrappedRange {
         rng = this.wrapBodyInlineWithPara().deleteContents();
       }
 
-      console.log('insertNode before splitPoint', rng.sc);
+      //console.log('insertNode before splitPoint', rng.sc);
       const info = Point.splitPoint(rng.getStartPoint(), !dom.isBlock(node));
-      console.log('insertNode after splitPoint', info);
+      //console.log('insertNode after splitPoint', info);
       if (info.rightNode) {
         info.rightNode.parentNode.insertBefore(node, info.rightNode);
         if (dom.isEmpty(info.rightNode) && (doNotInsertPara || dom.isPara(node))) {

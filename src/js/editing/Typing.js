@@ -1,6 +1,4 @@
 import $ from 'jquery';
-import Obj from '../core/Obj';
-import schema from '../core/schema';
 import dom from '../core/dom';
 import range from '../core/range';
 import Point from '../core/Point';
@@ -14,9 +12,13 @@ import Bullet from '../editing/Bullet';
  */
 export default class Typing {
   constructor(context) {
+    this.context = context;
     // a Bullet instance to toggle lists off
-    this.bullet = new Bullet();
-    this.options = context.options;
+    this.bullet = new Bullet(context);
+  }
+
+  get selection() {
+    return this.context.modules.editor.selection;
   }
 
   /**
@@ -37,7 +39,6 @@ export default class Typing {
   /**
    * insert paragraph
    *
-   * @param {jQuery} $editable
    * @param {WrappedRange} rng Can be used in unit tests to "mock" the range
    *
    * blockquoteBreakingLevel
@@ -45,8 +46,8 @@ export default class Typing {
    *   1 - Break the first blockquote in the ancestors list
    *   2 - Break all blockquotes, so that the new paragraph is not quoted (this is the default)
    */
-  insertParagraph(editable, rng) {
-    rng = rng || range.create(editable);
+  insertParagraph(rng) {
+    rng = rng || this.selection.getRange();
 
     // deleteContents on range.
     rng = rng.deleteContents();
@@ -68,9 +69,9 @@ export default class Typing {
       } 
       else {
         let blockquote = null;
-        if (this.options.blockquoteBreakingLevel === 1) {
+        if (this.context.options.blockquoteBreakingLevel === 1) {
           blockquote = dom.ancestor(splitRoot, dom.isBlockquote);
-        } else if (this.options.blockquoteBreakingLevel === 2) {
+        } else if (this.context.options.blockquoteBreakingLevel === 2) {
           blockquote = dom.farthestParent(splitRoot, dom.isBlockquote);
         }
 
@@ -120,6 +121,6 @@ export default class Typing {
       }
     }
 
-    return range.create(nextPara, 0).normalize().select().scrollIntoView(editable);
+    this.selection.setRange(range.create(nextPara, 0).normalize()).scrollIntoView();
   }
 }

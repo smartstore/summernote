@@ -37,8 +37,8 @@ export default class Editor {
     this.snapshot = null;
 
     this.table = new Table();
-    this.typing = new Typing(context);
-    this.bullet = new Bullet();
+    this.bullet = new Bullet(context);
+    this.typing = new Typing(context, this.bullet);
     this.history = new History(context);
     this.formatter = new Formatter(context);
     this.style = new Style(context, this.formatter);
@@ -97,7 +97,8 @@ export default class Editor {
     }
 
     // this.bold = this.wrapCommand((value) => {
-    //   return this.selection.pasteContent('<span class="text-white bg-danger">Hallo Welt Yooooooooooo</span>');
+    //   //return this.selection.pasteContent('<span class="text-white bg-danger">Hallo Welt Yooooooooooo</span>');
+    //   this.insertText(' world');
     // });
 
     this.fontName = this.wrapCommand((value) => {
@@ -123,26 +124,24 @@ export default class Editor {
       this.context.memo('help.formatH' + idx, this.lang.help['formatH' + idx]);
     }
 
-    this.insertParagraph = this.wrapCommand(() => {
-      const rng = this.typing.insertParagraph(this.editable);
-      this.selection.setRange(rng);
-      rng.scrollIntoView(this.editable);
+    this.insertParagraph = this.wrapCommand((rng) => {
+      this.typing.insertParagraph(rng);
     });
 
-    this.insertOrderedList = this.wrapCommand(() => {
-      this.bullet.insertOrderedList(this.editable);
+    this.insertOrderedList = this.wrapCommand((rng) => {
+      this.bullet.insertOrderedList(rng);
     });
 
-    this.insertUnorderedList = this.wrapCommand(() => {
-      this.bullet.insertUnorderedList(this.editable);
+    this.insertUnorderedList = this.wrapCommand((rng) => {
+      this.bullet.insertUnorderedList(rng);
     });
 
-    this.indent = this.wrapCommand(() => {
-      this.bullet.indent(this.editable);
+    this.indent = this.wrapCommand((rng) => {
+      this.bullet.indent(rng);
     });
 
-    this.outdent = this.wrapCommand(() => {
-      this.bullet.outdent(this.editable);
+    this.outdent = this.wrapCommand((rng) => {
+      this.bullet.outdent(rng);
     });
 
     /**
@@ -168,10 +167,10 @@ export default class Editor {
         return;
       }
       const rng = this.selection.getRange();
-      console.log('Before insertText setRange', this.selection.getRange());
+      //console.log('Before insertText setRange', this.selection.getRange());
       const textNode = rng.insertNode(dom.createText(text));
       this.selection.setRange(range.create(textNode, dom.nodeLength(textNode)));
-      console.log('After insertText setRange', this.selection.getRange());
+      //console.log('After insertText setRange', this.selection.getRange());
     });
 
     /**
