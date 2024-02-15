@@ -420,10 +420,10 @@ class WrappedRange {
     return callNative(this, x => x.createContextualFragment(content));
   }
 
-  deleteContents_temp() {
-    callNative(this, x => x.deleteContents());
-    return this;
-  }
+  // deleteContents_temp() {
+  //   callNative(this, x => x.deleteContents());
+  //   return this;
+  // }
 
   deleteContents() {
     if (this.collapsed) {
@@ -494,9 +494,8 @@ class WrappedRange {
         rng = this.wrapBodyInlineWithPara().deleteContents();
       }
 
-      //console.log('insertNode before splitPoint', rng.sc);
       const info = Point.splitPoint(rng.getStartPoint(), !dom.isBlock(node));
-      //console.log('insertNode after splitPoint', info);
+
       if (info.rightNode) {
         info.rightNode.parentNode.insertBefore(node, info.rightNode);
         if (dom.isEmpty(info.rightNode) && (doNotInsertPara || dom.isPara(node))) {
@@ -1056,7 +1055,7 @@ class WrappedRange {
       topAncestor = lists.last(ancestors);
       if (dom.isBlock(topAncestor)) {
         topAncestor = ancestors[ancestors.length - 2] || rng.sc.childNodes[rng.so];
-        console.log('wrapBodyInlineWithPara topAncestor', topAncestor);
+        //console.log('wrapBodyInlineWithPara topAncestor', topAncestor);
       }
     } else {
       topAncestor = rng.sc.childNodes[rng.so > 0 ? rng.so - 1 : 0];
@@ -1083,7 +1082,7 @@ class WrappedRange {
   pasteHTML(markup) {
     markup = markup.trim();
     
-    const contentsContainer = dom.create('div', null, markup); // $('<div></div>').html(markup)[0];
+    const contentsContainer = dom.create('div', null, markup);
     let childNodes = lists.from(contentsContainer.childNodes);
 
     // const rng = this.wrapBodyInlineWithPara().deleteContents();

@@ -107,6 +107,7 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
           FormatUtils.isNonWrappingBlockFormat(format) &&
           FormatUtils.isTextBlock(node) &&
           FormatUtils.isValid(parentName, wrapName);
+        
         return isEditableDescendant && isValidBlockCommandForNode;
     };
   

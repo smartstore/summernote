@@ -36,7 +36,7 @@ export default class Editor {
     this.editable = this.$editable[0];
     this.snapshot = null;
 
-    this.table = new Table();
+    this.table = new Table(context);
     this.bullet = new Bullet(context);
     this.typing = new Typing(context, this.bullet);
     this.history = new History(context);

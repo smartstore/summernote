@@ -839,7 +839,7 @@ const nextSiblings = (node, selector) => siblings(node, selector, true);
  * Gets array of child nodes that match the given (optional) selector.
  *
  * @param {Function|String} [optional] selector - Selector function or string.
- * @param {bool} deep - If `true`, traverses all sub-children also.
+ * @param {bool} deep - If `true`, traverses all sub-children also. Default: true.
  */
 const children = (node, selector, deep = true) => {
   const pred = matchSelector(selector, func.ok);
@@ -854,7 +854,7 @@ const children = (node, selector, deep = true) => {
       
       if (d) {
         for (let idx = 0, len = current.childNodes.length; idx < len; idx++) {
-          walk(current.childNodes[idx]);
+          walk(current.childNodes[idx], d);
         }
       }
     })(node, deep);

@@ -50,9 +50,9 @@ export default class Style {
    * @param {Object} styleInfo
    */
   stylePara(rng, styleInfo) {
-    $.each(rng.nodes(dom.isPara, {
+    lists.each(rng.nodes(dom.isPara, {
       includeAncestor: true,
-    }), (idx, para) => {
+    }), (para) => {
       $(para).css(styleInfo);
     });
   }

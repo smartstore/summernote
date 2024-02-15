@@ -15,7 +15,7 @@ const CharTypes = {
 
 // Private
 /**
- * padding blankHTML if node is empty (for cursor position)
+ * Padding blankHTML if node is empty (for cursor position)
  */
 const paddingBlankHTML = (node) => {
   if (!dom.isVoid(node) && !dom.nodeLength(node)) {

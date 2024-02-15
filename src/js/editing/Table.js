@@ -282,6 +282,14 @@ TableResultAction.resultAction = { 'Ignore': 0, 'SubtractSpanCount': 1, 'RemoveC
  *
  */
 export default class Table {
+  constructor(context) {
+    this.context = context;
+  }
+
+  get selection() {
+    return this.context.modules.editor.selection;
+  }
+
   /**
    * handle tab key
    *
@@ -289,13 +297,13 @@ export default class Table {
    * @param {Boolean} isShift
    */
   tab(rng, isShift) {
-    const cell = dom.ancestor(rng.commonAncestorContainer, dom.isCell);
-    const table = dom.ancestor(cell, dom.isTable);
+    const cell = dom.closest(rng.commonAncestorContainer, dom.isCell);
+    const table = dom.closest(cell, dom.isTable);
     const cells = dom.children(table, dom.isCell);
 
     const nextCell = lists[isShift ? 'prev' : 'next'](cells, cell);
     if (nextCell) {
-      range.create(nextCell, 0).select();
+      this.selection.setRange(range.create(nextCell, 0));
     }
   }
 

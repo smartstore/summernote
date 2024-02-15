@@ -19,9 +19,12 @@ export default class Handle {
       'summernote.keyup summernote.scroll summernote.change summernote.dialog.shown': (_, e) => {
         this.update(e?.target, e);
       },
-      'summernote.disable summernote.blur': () => {
+      'summernote.disable': () => {
         this.hide();
       },
+      // 'summernote.blur': () => {
+      //   this.hide();
+      // },
       'summernote.codeview.toggled': () => {
         this.update();
       },
@@ -146,7 +149,7 @@ export default class Handle {
    * @param {jQuery} $handle
    */
   hide() {
-    this.context.invoke('editor.clearTarget');
     this.$handle.children().hide();
+    this.context.invoke('editor.clearTarget');
   }
 }

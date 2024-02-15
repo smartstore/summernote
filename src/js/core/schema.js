@@ -60,7 +60,7 @@ const moveCaretBeforeOnEnterElementsMap = createLookupTable('move_caret_before_o
 
 const headings = 'h1 h2 h3 h4 h5 h6';
 const headingElementsMap = createLookupTable('heading_elements', headings);
-const textBlockElementsMap = createLookupTable('text_block_elements', headings + ' p div address pre form ' +
+const textBlockElementsMap = createLookupTable('text_block_elements', headings + ' p div li address pre form ' +
   'blockquote center dir fieldset header footer article section hgroup aside main nav figure');
 const blockElementsMap = createLookupTable('block_elements', 'hr table tbody thead tfoot ' +
   'th tr td li ol ul caption dl dt dd noscript menu isindex option ' +

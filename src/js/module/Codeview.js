@@ -1,6 +1,11 @@
 import 'bootstrap';
 import dom from '../core/dom';
 import key from '../core/key';
+import range from '../core/range';
+import Str from '../core/Str';
+
+const jumpMarker = '__note-jm__';
+const jumpMarkerComment = '<!--' + jumpMarker + '-->';
 
 /**
  * @class Codeview
@@ -95,14 +100,44 @@ export default class CodeView {
     return value;
   }
 
+  normalizeSelRange() {
+    const editor = this.context.modules.editor;
+    const selection = editor.selection;
+
+    let rng;
+    if (selection.selectedControl) {
+      // TODO: selectedControl is always null due to Handle.js blur event firing beforehand.
+      rng = range.createFromNodeBefore(selection.selectedControl);
+    } else {
+      rng = selection.getRange().cloneRange().collapse(true);
+    }
+
+    return range.getNativeRange(rng);
+  }
+
   /**
-   * activate code view
+   * Activate code view
    */
   activate() {
     const CodeMirror = this.CodeMirrorConstructor;
     const editor = this.context.modules.editor;
     
-    this.$codable.val(editor.html());
+    // Create selection range
+    let rng = this.normalizeSelRange();
+    
+    // Create and insert jump marker node
+    rng.insertNode(document.createComment(jumpMarker));
+
+    let html = editor.html();
+
+    // Find the position of jump marker in markup
+    const jumpMarkerPos = Str.findPosition(html, jumpMarkerComment);
+    if (jumpMarkerPos) {
+      // Remove jump marker comment from markup
+      html = html.replace(jumpMarkerComment, '');
+    }
+
+    this.$codable.val(html);
     this.$codable.height(this.$editable.height());
 
     this.context.invoke('toolbar.updateCodeview', true);
@@ -134,7 +169,15 @@ export default class CodeView {
       // CodeMirror hasn't Padding.
       cmEditor.setSize(null, this.$editable.outerHeight());
       this.$codable.data('cmEditor', cmEditor);
-    } else {
+
+      // Jump to selection marker
+      if (jumpMarkerPos) {
+        const pos = {line: jumpMarkerPos.line, ch: jumpMarkerPos.column};
+        cmEditor.setCursor(pos);
+        cmEditor.scrollIntoView(pos);
+      }
+    } 
+    else {
       this.$codable.on('blur', (event) => {
         this.context.triggerEvent('blur.codeview', this.$codable.val(), event);
       });

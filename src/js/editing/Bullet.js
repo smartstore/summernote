@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import lists from '../core/lists';
+import func from '../core/func';
 import dom from '../core/dom';
 import Point from '../core/Point';
 import range from '../core/range';
@@ -30,13 +31,14 @@ export default class Bullet {
   /**
    * indent
    */
-  indent() {
-    const rng = this.selection.getRange().wrapBodyInlineWithPara();
+  indent(rng) {
+    rng = rng || this.selection.getRange();
+    rng = rng.wrapBodyInlineWithPara();
     
     const paras = rng.nodes(dom.isPara, { includeAncestor: true });
     const clustereds = lists.clusterBy(paras, 'parentNode');
 
-    $.each(clustereds, (idx, paras) => {
+    lists.each(clustereds, (paras) => {
       const head = lists.head(paras);
       if (dom.isLi(head)) {
         const previousList = this.findList(head.previousElementSibling);
@@ -54,7 +56,7 @@ export default class Bullet {
             .map((para) => this.appendToPrevious(para));
         }
       } else {
-        $.each(paras, (idx, para) => {
+        lists.each(paras, (para) => {
           $(para).css('marginLeft', (idx, val) => {
             return (parseInt(val, 10) || 0) + 25;
           });
@@ -68,8 +70,9 @@ export default class Bullet {
   /**
    * outdent
    */
-  outdent() {
-    const rng = this.selection.getRange().wrapBodyInlineWithPara();
+  outdent(rng) {
+    rng = rng || this.selection.getRange();
+    rng = rng.wrapBodyInlineWithPara();
 
     const paras = rng.nodes(dom.isPara, { includeAncestor: true });
     const clustereds = lists.clusterBy(paras, 'parentNode');
@@ -97,17 +100,12 @@ export default class Bullet {
    * @param {String} listName - OL or UL
    */
   toggleList(listName, rng) {
-    console.log('toggleList before rng', listName, this.selection.getRange());
-    rng = (rng || this.selection.getRange()).wrapBodyInlineWithPara();
-    console.log('toggleList after rng', listName, rng);
-    //if (listName == 'UL') console.log('toggleList HTML', editable.innerHTML);
-    //console.log('toggleList rng', listName, rng.commonAncestorContainer);
+    rng = rng || this.selection.getRange();
+    rng = rng.wrapBodyInlineWithPara();
+
     let paras = rng.nodes(dom.isPara, { includeAncestor: true });
-    //console.log('toggleList paras', listName, paras);
     const bookmark = rng.createParaBookmark(paras);
     const clustereds = lists.clusterBy(paras, 'parentNode');
-    //console.log('toggleList bookmark', listName, bookmark.s.path);
-    //console.log('toggleList clustereds', listName, clustereds);
 
     // paragraph to list
     if (lists.find(paras, dom.isPurePara)) {
@@ -133,7 +131,8 @@ export default class Bullet {
       }
     }
 
-    this.selection.setRange(range.createFromParaBookmark(bookmark, paras));
+    rng = range.createFromParaBookmark(bookmark, paras);
+    this.selection.setRange(rng);
   }
 
   /**

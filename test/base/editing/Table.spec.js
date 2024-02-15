@@ -8,12 +8,19 @@ import chai from 'chai';
 import chaidom from 'test/chaidom';
 import range from 'src/js/core/range';
 import Table from 'src/js/editing/Table';
+import Context from 'src/js/Context';
 
 var expect = chai.expect;
 chai.use(chaidom);
 
 describe('base:editing.Table', () => {
-  var table = new Table();
+  $('body').empty(); // important !
+  var $note = $('<div></div>').appendTo('body');
+  var options = $.extend({}, $.summernote.options);
+  var context = new Context($note, options);
+  context.initialize();
+  var table = new Table(context);
+
   describe('tableWorker', () => {
     it('should create simple 1x1 table', () => {
       var resultTable = table.createTable(1, 1);

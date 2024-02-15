@@ -47,7 +47,7 @@ describe('Editor', () => {
   beforeEach(function() {
     // important cleanup!
     $('body').empty();
-    window.getSelection().removeAllRanges();
+    document.getSelection()?.removeAllRanges();
 
     var options = $.extend({}, $.summernote.options);
     options.historyLimit = 5;
@@ -155,18 +155,13 @@ describe('Editor', () => {
   });
 
   describe('insertOrderedList and insertUnorderedList', () => {
-    //return;
-    // KAPUTT
     it('should toggle paragraph to list', (done) => {
-      // $editable.appendTo('body');
-      // context.invoke('editor.focus');
-
       editor.insertOrderedList();
 
       expectContentsChain(context, '<ol><li>hello</li></ol>', () => {
-        editor.insertUnorderedList(getTextRange('li'));
+        editor.insertUnorderedList();
         expectContentsChain(context, '<ul><li>hello</li></ul>', () => {
-          editor.insertUnorderedList(getTextRange('li'));
+          editor.insertUnorderedList();
           expectContentsChain(context, '<p>hello</p>', () => {
             done();
           });
@@ -175,36 +170,35 @@ describe('Editor', () => {
     });
   });
 
-  // describe('indent and outdent', () => {
-  //   // // KAPUTT
-  //   // // [workaround] style is different by browser
-  //   // it('should indent and outdent paragraph', (done) => {
-  //   //   editor.indent();
-  //   //   expectContentsChain(context, '<p style="margin-left: 25px;">hello</p>', () => {
-  //   //     editor.outdent();
-  //   //     expect($editable.find('p').css('margin-left')).await(done).to.be.empty;
-  //   //   });
-  //   // });
+  describe('indent and outdent', () => {
+    // [workaround] style is different by browser
+    it('should indent and outdent paragraph', (done) => {
+      editor.indent();
+      expectContentsChain(context, '<p style="margin-left: 25px;">hello</p>', () => {
+        editor.outdent();
+        expect($editable.find('p').css('margin-left')).await(done).to.be.empty;
+      });
+    });
 
-  //   // it('should indent and outdent list', (done) => {
-  //   //   editor.insertOrderedList();
-  //   //   expectContentsChain(context, '<ol><li>hello</li></ol>', () => {
-  //   //     editor.indent();
-  //   //     expectContentsChain(context, '<ol><li><ol><li>hello</li></ol></li></ol>', () => {
-  //   //       editor.indent();
-  //   //       expectContentsChain(context, '<ol><li><ol><li><ol><li>hello</li></ol></li></ol></li></ol>', () => {
-  //   //         editor.outdent();
-  //   //         expectContentsChain(context, '<ol><li><ol><li>hello</li></ol></li></ol>', () => {
-  //   //           editor.outdent();
-  //   //           expectContentsChain(context, '<ol><li>hello</li></ol>', () => {
-  //   //             done();
-  //   //           });
-  //   //         });
-  //   //       });
-  //   //     });
-  //   //   });
-  //   // });
-  // });
+    it('should indent and outdent list', (done) => {
+      editor.insertOrderedList();
+      expectContentsChain(context, '<ol><li>hello</li></ol>', () => {
+        editor.indent();
+        expectContentsChain(context, '<ol><li><br><ol><li>hello</li></ol></li></ol>', () => {
+          editor.indent();
+          expectContentsChain(context, '<ol><li><br><ol><li><br><ol><li>hello</li></ol></li></ol></li></ol>', () => {
+            editor.outdent();
+            expectContentsChain(context, '<ol><li><br><ol><li>hello</li></ol></li></ol>', () => {
+              editor.outdent();
+              expectContentsChain(context, '<ol><li>hello</li></ol>', () => {
+                done();
+              });
+            });
+          });
+        });
+      });
+    });
+  });
 
   describe('setLastRange', () => {
     it('should set last range', (done) => {

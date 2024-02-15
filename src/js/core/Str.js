@@ -83,6 +83,38 @@ const explode = (str, delim = null) => {
   }
 }
 
+const safeLastIndexOf = (str, term, index) =>
+  index < 0 ? -1 : str.lastIndexOf(term, index);
+
+/**
+ * Finds the line and column position of `term` in `string`
+ *
+ * @method findPosition
+ * @param {String} str
+ * @param {String} term Search term
+ * @return {Object|null} `null` if search term was not found or zero-based { line: #line, column: #col }.
+ */
+const findPosition = (str, term) => {
+  const textIndex = str.indexOf(term);
+  if (textIndex > 0) {
+    const lineBreakBefore = safeLastIndexOf(str, '\n', textIndex - 1);
+    const column = textIndex - lineBreakBefore - 1;
+  
+    let line = 0;
+    for (
+      let index = lineBreakBefore;
+      index >= 0;
+      index = safeLastIndexOf(str, '\n', index - 1)
+    ) {
+      line++;
+    }
+  
+    return {line, column};
+  }
+
+  return null;
+}
+
 export default {
   startsWith,
   endsWith,
@@ -99,5 +131,6 @@ export default {
   isValidTel,
   startsWithUrlScheme,
   isValidUrl,
-  explode
+  explode,
+  findPosition
 }

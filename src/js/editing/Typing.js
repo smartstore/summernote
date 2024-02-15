@@ -33,7 +33,7 @@ export default class Typing {
     rng.insertNode(tab, true);
 
     rng = range.create(tab, tabsize);
-    rng.select();
+    this.selection.setRange(rng);
   }
 
   /**
