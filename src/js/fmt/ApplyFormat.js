@@ -8,6 +8,8 @@ import MatchFormat from './MatchFormat';
 import CaretFormat from './CaretFormat';
 import MergeFormats from './MergeFormats';
 import ListItemFormat from './ListItemFormat';
+import RemoveFormat from './RemoveFormat';
+import Str from '../core/Str';
 
 const each = lists.each;
 
@@ -29,6 +31,12 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
   const formatList = editor.formatter.get(name);
   const format = formatList[0];
   const isCollapsed = !node && rng.collapsed;
+
+  if (format.group) {
+    each(format.group, (fmt) => {
+      //RemoveFormat.removeFormat(editor, fmt, vars, node);
+    });
+  }
 
   const setElementFormat = (elm, fmt = format) => {
     if (Type.isFunction(fmt.onformat)) {
@@ -103,12 +111,12 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
       FormatUtils.isWrappingBlockFormat(format) && MatchFormat.matchNode(editor, node, name, vars);
   
     const canRenameBlock = (node, parentName, isEditableDescendant) => {
-        const isValidBlockCommandForNode =
-          FormatUtils.isNonWrappingBlockFormat(format) &&
-          FormatUtils.isTextBlock(node) &&
-          FormatUtils.isValid(parentName, wrapName);
-        
-        return isEditableDescendant && isValidBlockCommandForNode;
+      const isValidBlockCommandForNode =
+        FormatUtils.isNonWrappingBlockFormat(format) &&
+        FormatUtils.isTextBlock(node) &&
+        FormatUtils.isValid(parentName, wrapName);
+      //console.log('canRenameBlock', parentName, node, FormatUtils.isNonWrappingBlockFormat(format), FormatUtils.isTextBlock(node), FormatUtils.isValid(parentName, wrapName));
+      return isEditableDescendant && isValidBlockCommandForNode;
     };
   
     const canWrapNode = (node, parentName, isEditableDescendant, isWrappableNoneditableElm) => {
@@ -116,17 +124,23 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
       const isValidWrapNode =
         FormatUtils.isValid(wrapName, nodeName) &&
         FormatUtils.isValid(parentName, wrapName);
-      
+
       // If it is not node specific, it means that it was not passed into 'Formatter.apply` and is within the editor selection
       const isZwsp = !nodeSpecific && dom.isText(node) && Point.isZwsp(node.data);
+      // if (dom.isText(node) && node.nodeValue == '\n') {
+      //   console.log('isZwsp', isZwsp, node?.nodeValue, Point.isZwsp(node.data));
+      // }
+      
       const isCaret = FormatUtils.isCaretNode(node);
       // TODO: Investigate: Why !FormatUtils.isInlineFormat(format) || !dom.isBlock(node) ?
       const isCorrectFormatForNode = true; // !FormatUtils.isInlineFormat(format) || !dom.isBlock(node);
       return (isEditableDescendant || isWrappableNoneditableElm) && isValidWrapNode && !isZwsp && !isCaret && isCorrectFormatForNode;
     };
-  
+
     rng.walk((nodes) => {
       let currentWrapElm;
+
+      //console.log('rng.walk nodes', nodes);
 
       const process = (node) => {
         let hasContentEditableState = false;
@@ -134,7 +148,11 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
         let isWrappableNoneditableElm = false;
         const parentNode = node.parentNode;
         const parentName = parentNode.nodeName.toLowerCase();
-        
+
+        if (dom.isText(node) && Str.startsWith(node.nodeValue, '\n  ')) {
+          console.log('rng.walk', node, 'prev', node.previousSibling, 'next', node.nextSibling);
+        }
+
         // Node has a contentEditable value
         const contentEditableValue = dom.getContentEditable(node);
         if (contentEditableValue) {
@@ -217,7 +235,7 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
       }
   
       each(nodes, process);
-    });
+    }, !FormatUtils.isNonWrappingBlockFormat(format));
   
     // Apply formats to links as well to get the color of the underline to change as well
     if (format.links === true) {

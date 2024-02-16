@@ -5,13 +5,26 @@ import * as DefaultFormats from './DefaultFormats';
 import * as TableFormats from './TableFormats';
 import FormatUtils from './FormatUtils';
 
+const prepareGroups = (formats, groups) => {
+  lists.each(formats, (format) => {
+    lists.each(format, (fmt) => {
+      if (fmt.group && groups[fmt.group]) {
+        fmt.group = lists.reject(groups[fmt.group], f => f == fmt);
+      }
+    });
+  });
+};
+
 export default class FormatRegistry {
   constructor(options) {
     this.formats = {};
+    this.groups = {}; // { 'groupname': [...format]  }
 
     this.register(DefaultFormats.get());
     this.register(TableFormats.get());
     this.register(options.formats);
+
+    prepareGroups(this.formats, this.groups);
   }
 
   get(name) {
@@ -60,6 +73,11 @@ export default class FormatRegistry {
           // Split classes if needed
           if (Type.isString(format.classes)) {
             format.classes = format.classes.split(/\s+/);
+          }
+
+          if (format.group) {
+            const groups = this.groups[format.group] || (this.groups[format.group] = []);
+            groups.push(format);
           }
         });
 

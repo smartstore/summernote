@@ -4,15 +4,15 @@ import dom from '../core/dom';
 
 const formats = {
   valigntop: [
-    { selector: 'td,th', classes: 'align-top', styles: { verticalAlign: 'top' }}
+    { selector: 'td,th', classes: 'align-top', styles: { verticalAlign: 'top' }, group: 'valign'}
   ],
 
   valignmiddle: [
-    { selector: 'td,th', classes: 'align-middle', styles: { verticalAlign: 'middle' }}
+    { selector: 'td,th', classes: 'align-middle', styles: { verticalAlign: 'middle' }, group: 'valign'}
   ],
 
   valignbottom: [
-    { selector: 'td,th', classes: 'align-bottom', styles: { verticalAlign: 'bottom' }}
+    { selector: 'td,th', classes: 'align-bottom', styles: { verticalAlign: 'bottom' }, group: 'valign'}
   ],
 
   alignleft: [
@@ -25,17 +25,19 @@ const formats = {
     // },
     {
       selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
-      //classes: 'text-left',
-      styles: { textAlign: 'left' },
+      classes: 'text-left',
+      //styles: { textAlign: 'left' },
       inherit: false,
-      preview: false
+      preview: false,
+      group: 'align'
     },
     {
       selector: 'img,audio,video',
       collapsed: false,
       classes: 'float-left',
-      styles: { float: 'left' },
-      preview: 'font-family font-size'
+      //styles: { float: 'left' },
+      preview: 'font-family font-size',
+      group: 'align'
     },
     // {
     //   selector: 'table',
@@ -62,10 +64,11 @@ const formats = {
     // },
     {
       selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
-      //classes: 'text-center',
-      styles: { textAlign: 'center' },
+      classes: 'text-center',
+      //styles: { textAlign: 'center' },
       inherit: false,
-      preview: 'font-family font-size'
+      preview: 'font-family font-size',
+      group: 'align'
     },
     {
       selector: 'img,audio,video',
@@ -75,7 +78,8 @@ const formats = {
         marginLeft: 'auto',
         marginRight: 'auto'
       },
-      preview: false
+      preview: false,
+      group: 'align'
     },
     // {
     //   selector: 'table',
@@ -98,17 +102,19 @@ const formats = {
     // },
     {
       selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
-      //classes: 'text-right',
-      styles: { textAlign: 'right' },
+      classes: 'text-right',
+      //styles: { textAlign: 'right' },
       inherit: false,
-      preview: 'font-family font-size'
+      preview: 'font-family font-size',
+      group: 'align'
     },
     {
       selector: 'img,audio,video',
       collapsed: false,
       classes: 'float-right',
-      styles: { float: 'right' },
-      preview: 'font-family font-size'
+      //styles: { float: 'right' },
+      preview: 'font-family font-size',
+      group: 'align'
     },
     // {
     //   selector: 'table',
@@ -128,10 +134,11 @@ const formats = {
   alignjustify: [
     {
       selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
-      //classes: 'text-justify',
-      styles: { textAlign: 'justify' },
+      classes: 'text-justify',
+      //styles: { textAlign: 'justify' },
       inherit: false,
-      preview: 'font-family font-size'
+      preview: 'font-family font-size',
+      group: 'align'
     }
   ],
 
@@ -174,8 +181,8 @@ const formats = {
   lineheight: { selector: 'h1,h2,h3,h4,h5,h6,p,li,td,th,div', styles: { lineHeight: '%value' }},
   fontsize_class: { inline: 'span', attributes: { class: '%value' }},
   blockquote: { block: 'blockquote', classes: 'blockquote', wrapper: true, remove: 'all' },
-  subscript: { inline: 'sub' },
-  superscript: { inline: 'sup' },
+  subscript: { inline: 'sub', group: 'scriptalign' },
+  superscript: { inline: 'sup', group: 'scriptalign' },
   code: { inline: 'code' },
 
   link: {

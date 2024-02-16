@@ -607,11 +607,14 @@ class WrappedRange {
     };
   }
 
-  walk(callback) {
+  walk(callback, inline) {
     const startOffset = this.startOffset;
-    const startContainer = dom.getRangeNode(this.startContainer, startOffset);
+    const startContainer = inline ? dom.getRangeNode(this.startContainer, startOffset) : this.startContainer;
     const endOffset = this.endOffset;
-    const endContainer = dom.getRangeNode(this.endContainer, endOffset - 1);
+    const endContainer = inline ? dom.getRangeNode(this.endContainer, endOffset - 1) : this.endContainer;
+
+    // console.log('walk startContainer', startContainer);
+    // console.log('walk endContainer', endContainer);
 
     /**
      * Excludes start/end text node if they are out side the range
@@ -622,18 +625,28 @@ class WrappedRange {
      */
     const exclude = (nodes) => {
       // First node is excluded
-      const firstNode = nodes[0];
+      let firstNode = nodes[0];
       if (dom.isText(firstNode) && firstNode === startContainer && startOffset >= firstNode.data.length) {
         nodes.splice(0, 1);
       }
 
       // Last node is excluded
-      const lastNode = nodes[nodes.length - 1];
+      let lastNode = nodes[nodes.length - 1];
       if (endOffset === 0 && nodes.length > 0 && lastNode === endContainer && dom.isText(lastNode)) {
         nodes.splice(nodes.length - 1, 1);
       }
 
+      nodes = lists.reject(nodes, n => isWhiteSpaceNode(n));
+
       return nodes;
+    };
+
+    const isWhiteSpaceNode = (node) => {
+      if (dom.isText(node) && node.nodeValue.trim().length === 0) {
+        return dom.isElement(node.previousSibling) || dom.isElement(node.nextSibling);
+      }
+
+      return false;
     };
 
     const collectSiblings = (node, name = 'nextSibling' | 'previousSibling', endNode) => {
@@ -649,6 +662,10 @@ class WrappedRange {
     const findEndPoint = (node, root) => {
       return dom.closest(node, n => n.parentNode === root);
     };
+
+    const executeCallback = (nodes) => {
+      if (nodes && nodes.length) callback(nodes);
+    };
       
     const walkBoundary = (startNode, endNode, next) => {
       const siblingName = next ? 'nextSibling' : 'previousSibling';
@@ -662,14 +679,14 @@ class WrappedRange {
             siblings.reverse();
           }
           
-          callback(exclude(siblings));
+          executeCallback(exclude(siblings));
         }
       }
     };
 
     // Same container
     if (startContainer === endContainer) {
-      return callback(exclude([ startContainer ]));
+      return executeCallback(exclude([ startContainer ]));
     }
 
     // Find common ancestor and end points
@@ -700,69 +717,11 @@ class WrappedRange {
     );
 
     if (siblings.length) {
-      callback(exclude(siblings));
+      executeCallback(exclude(siblings));
     }
 
     // Walk right leaf
     walkBoundary(endContainer, endPoint);
-  }
-
-
-
-  /**
-   * Changes the visible selection to this DOM range.
-   * 
-  * @param {Boolean} forward Optional boolean if the selection is forwards or backwards.
-   */
-  select(forward) {
-    const sel = window.getSelection ? window.getSelection() : document.selection;
-    const rng = getNativeRange(this);
-    let selectedRange;
-
-    if (sel) {
-      try {
-        sel.removeAllRanges();
-        sel.addRange(rng);
-      } catch (ex) {
-        // IE might throw errors here if the editor is within a hidden container and selection is changed
-      }
-
-      // Forward is set to false and we have an extend function
-      if (forward === false && sel.extend) {
-        sel.collapse(rng.endContainer, rng.endOffset);
-        sel.extend(rng.startContainer, rng.startOffset);
-      }
-
-      // Adding range isn't always successful so we need to check range count otherwise an exception can occur
-      selectedRange = sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
-    }
-
-    // WebKit edge case selecting images works better using setBaseAndExtent when the image is floated
-    if (!rng.collapsed && rng.startContainer === rng.endContainer && sel?.setBaseAndExtent) {
-      if (rng.endOffset - rng.startOffset < 2) {
-        if (rng.startContainer.hasChildNodes()) {
-          const node = rng.startContainer.childNodes[rng.startOffset];
-          if (node && node.nodeName === 'IMG') {
-            sel.setBaseAndExtent(
-              rng.startContainer,
-              rng.startOffset,
-              rng.endContainer,
-              rng.endOffset
-            );
-
-            // Since the setBaseAndExtent is fixed in more recent Blink versions we
-            // need to detect if it's doing the wrong thing and falling back to the
-            // crazy incorrect behavior api call since that seems to be the only way
-            // to get it to work on Safari WebKit as of 2017-02-23
-            if (sel.anchorNode !== rng.startContainer || sel.focusNode !== rng.endContainer) {
-              sel.setBaseAndExtent(node, 0, node, 1);
-            }
-          }
-        }
-      }
-    }
-
-    return this;
   }
 
   /**
@@ -882,7 +841,7 @@ class WrappedRange {
     const nodes = [];
     const leftEdgeNodes = [];
     
-    Point.walkPoint(startPoint, endPoint, function(point) {
+    Point.walkPoint(startPoint, endPoint, (point) => {
       if (dom.isEditableRoot(point.node)) {
         return;
       }

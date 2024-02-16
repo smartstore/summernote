@@ -286,8 +286,6 @@ const splitNode = (point, options) => {
     isSkipPaddingBlankHTML = true;
   }
 
-  //console.log('SplitNode Before Edge Case', point.node.nodeName);
-
   // Edge case
   if (isEdgePoint(point) && (dom.isText(point.node) || isNotSplitEdgePoint)) {
     if (isLeftEdgePoint(point)) {
