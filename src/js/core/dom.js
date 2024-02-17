@@ -208,7 +208,7 @@ const isCellOrRow = matchNodeNames(['TR', 'TD', 'TH']);
 const isCellOrCaption = matchNodeNames(['TD', 'TH', 'CAPTION']);
 const isMedia = matchNodeNames(['VIDEO', 'AUDIO', 'OBJECT', 'EMBED']);
 const isHeading = matchSchemaMap(schema.getHeadingElements());
-const isPara = (node) => !isEditableRoot(node) && Obj.has(schema.getTextBlockElements(), node.nodeName);
+const isPara = (node) => Obj.has(schema.getTextBlockElements(), node.nodeName) && !isEditableRoot(node);
 const isPurePara = (node) => isPara(node) && !isLi(node);
 const isInline = (node) => schema.isInline(node.nodeName);
 const isBlock = (node) => schema.isBlock(node.nodeName);

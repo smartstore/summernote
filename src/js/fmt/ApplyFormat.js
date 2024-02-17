@@ -33,8 +33,8 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
   const isCollapsed = !node && rng.collapsed;
 
   if (format.group) {
-    each(format.group, (fmt) => {
-      //RemoveFormat.removeFormat(editor, fmt, vars, node);
+    each(format.group, (fmtName) => {
+      RemoveFormat.removeFormat(editor, fmtName, vars, node);
     });
   }
 
@@ -43,12 +43,11 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
       fmt.onformat(elm, fmt, vars, node);
     }
 
-    applyStyles(elm, fmt, vars);
-
     each(fmt.attributes, (value, name) => {
       dom.setAttr(elm, name, FormatUtils.replaceVars(value, vars));
     });
 
+    const hasClasses = fmt.classes;
     each(fmt.classes, (value) => {
       const newValue = FormatUtils.replaceVars(value, vars);
 
@@ -56,6 +55,12 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
         dom.addClass(elm, newValue);
       }
     });
+
+    // Apply styles...
+    if (!hasClasses || fmt.compound === true) {
+      // ...but prefer classes if not compound
+      applyStyles(elm, fmt, vars);
+    }   
   };
 
   const applyNodeStyle = (formatList, node) => {
@@ -149,9 +154,9 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
         const parentNode = node.parentNode;
         const parentName = parentNode.nodeName.toLowerCase();
 
-        if (dom.isText(node) && Str.startsWith(node.nodeValue, '\n  ')) {
-          console.log('rng.walk', node, 'prev', node.previousSibling, 'next', node.nextSibling);
-        }
+        // if (dom.isText(node) && Str.startsWith(node.nodeValue, '\n  ')) {
+        //   console.log('rng.walk', node, 'prev', node.previousSibling, 'next', node.nextSibling);
+        // }
 
         // Node has a contentEditable value
         const contentEditableValue = dom.getContentEditable(node);

@@ -1,4 +1,3 @@
-import 'bootstrap';
 import dom from '../core/dom';
 import key from '../core/key';
 import range from '../core/range';

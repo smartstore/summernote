@@ -424,34 +424,34 @@ describe('Editor', () => {
       expectContentsAwait(context, '<ul><li><br></li><li>endpoint</li></ul>', done);
     });
 
-    // it('should apply multi formatBlock', (done) => {
-    //   // KAPUTT
-    //   var codes = [
-    //     '<p><a href="http://summernote.org">hello world</a></p>',
-    //     '<p><a href="http://summernote.org">hello world</a></p>',
-    //     '<p><a href="http://summernote.org">hello world</a></p>',
-    //   ];
+    it('should apply multi formatBlock', (done) => {
+      // KAPUTT
+      var codes = [
+        '<p><a href="http://summernote.org">hello world</a></p>',
+        '<p><a href="http://summernote.org">hello world</a></p>',
+        '<p><a href="http://summernote.org">hello world</a></p>',
+      ];
 
-    //   context.invoke('code', codes.join(''));
-    //   $editable.appendTo('body');
+      context.invoke('code', codes.join(''));
+      $editable.appendTo('body');
 
-    //   var startNode = $editable.find('p').first()[0];
-    //   var endNode = $editable.find('p').last()[0];
+      var startNode = $editable.find('p').first()[0];
+      var endNode = $editable.find('p').last()[0];
 
-    //   // all p tags is wrapped
-    //   selection.setRange(range.create(startNode, 0, endNode, 1).normalize());
+      // all p tags is wrapped
+      selection.setRange(range.create(startNode, 0, endNode, 1).normalize());
 
-    //   editor.formatBlock('h3');
+      editor.formatBlock('h3');
 
-    //   var nodeName = $editable.children()[0].nodeName;
-    //   expect(nodeName).to.equalsIgnoreCase('h3');
+      var nodeName = $editable.children()[0].nodeName;
+      expect(nodeName).to.equalsIgnoreCase('h3');
 
-    //   // p -> h3, p is none
-    //   expect($editable.find('p').length).await(done).to.equals(0);
-    // });
+      // p -> h3, p is none
+      expect($editable.find('p').length).await(done).to.equals(0);
+    });
 
     // it('should apply custom className in formatBlock', (done) => {
-    //   // KAPUTT
+    //   // Don't run this test anymore! No support for custom class.
     //   var $target = $('<h4 class="customH4Class"></h4>');
     //   $editable.appendTo('body');
     //   selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());
@@ -462,7 +462,7 @@ describe('Editor', () => {
     // });
 
     // it('should find exact target in formatBlock', (done) => {
-    //   // KAPUTT
+    //   // Don't run this test anymore! No support for custom class.
     //   var $target = $('<a class="dropdown-item" href="#" data-value="h6" role="listitem" aria-label="h6"><h6 class="customH6Class">H6</h6></a>');
     //   $editable.appendTo('body');
     //   selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());
@@ -473,7 +473,7 @@ describe('Editor', () => {
     // });
 
     // it('should replace existing class in formatBlock if target has class', (done) => {
-    //   // KAPUTT
+    //   // Don't run this test anymore! No support for custom class.
     //   const $target1 = $('<p class="old"></p>');
     //   $editable.appendTo('body');
     //   selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());

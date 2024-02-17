@@ -2,6 +2,8 @@ import func from '../core/func';
 import lists from '../core/lists';
 import dom from '../core/dom';
 
+const alignSelector = 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre';
+
 const formats = {
   valigntop: [
     { selector: 'td,th', classes: 'align-top', styles: { verticalAlign: 'top' }, group: 'valign'}
@@ -16,28 +18,22 @@ const formats = {
   ],
 
   alignleft: [
-    // {
-    //   selector: 'figure.image',
-    //   collapsed: false,
-    //   classes: 'float-left',
-    //   ceFalseOverride: true,
-    //   preview: 'font-family font-size'
-    // },
-    {
-      selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
-      classes: 'text-left',
-      //styles: { textAlign: 'left' },
-      inherit: false,
-      preview: false,
-      group: 'align'
+    { 
+      selector: alignSelector, 
+      classes: 'text-left', 
+      styles: { textAlign: 'left' }, 
+      compound: false, 
+      inherit: false, 
+      preview: 'font-family font-size', 
+      group: 'align' 
     },
     {
-      selector: 'img,audio,video',
+      selector: 'img,figure,audio,video',
       collapsed: false,
       classes: 'float-left',
-      //styles: { float: 'left' },
-      preview: 'font-family font-size',
-      group: 'align'
+      styles: { float: 'left' },
+      compound: false, 
+      preview: 'font-family font-size'
     },
     // {
     //   selector: 'table',
@@ -55,31 +51,22 @@ const formats = {
   ],
 
   aligncenter: [
-    // {
-    //   selector: 'figure.image',
-    //   collapsed: false,
-    //   classes: 'align-center',
-    //   ceFalseOverride: true,
-    //   preview: 'font-family font-size'
-    // },
-    {
-      selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
-      classes: 'text-center',
-      //styles: { textAlign: 'center' },
-      inherit: false,
-      preview: 'font-family font-size',
-      group: 'align'
+    { 
+      selector: alignSelector, 
+      classes: 'text-center', 
+      styles: { textAlign: 'center' }, 
+      compound: false, 
+      inherit: false, 
+      preview: 'font-family font-size', 
+      group: 'align' 
     },
     {
-      selector: 'img,audio,video',
+      selector: 'img,figure,audio,video',
       collapsed: false,
-      styles: {
-        display: 'block',
-        marginLeft: 'auto',
-        marginRight: 'auto'
-      },
-      preview: false,
-      group: 'align'
+      classes: 'd-block mx-auto',
+      styles: { display: 'block', marginLeft: 'auto', marginRight: 'auto' },
+      compound: false, 
+      preview: false
     },
     // {
     //   selector: 'table',
@@ -93,28 +80,22 @@ const formats = {
   ],
 
   alignright: [
-    // {
-    //   selector: 'figure.image',
-    //   collapsed: false,
-    //   classes: 'text-right',
-    //   ceFalseOverride: true,
-    //   preview: 'font-family font-size'
-    // },
-    {
-      selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
-      classes: 'text-right',
-      //styles: { textAlign: 'right' },
-      inherit: false,
-      preview: 'font-family font-size',
-      group: 'align'
+    { 
+      selector: alignSelector, 
+      classes: 'text-right', 
+      styles: { textAlign: 'right' },
+      compound: false,
+      inherit: false, 
+      preview: 'font-family font-size', 
+      group: 'align' 
     },
-    {
-      selector: 'img,audio,video',
-      collapsed: false,
-      classes: 'float-right',
-      //styles: { float: 'right' },
-      preview: 'font-family font-size',
-      group: 'align'
+    { 
+      selector: 'img,figure,audio,video', 
+      collapsed: false, 
+      classes: 'float-right', 
+      styles: { float: 'right' },
+      compound: false,
+      preview: 'font-family font-size' 
     },
     // {
     //   selector: 'table',
@@ -132,20 +113,21 @@ const formats = {
   ],
 
   alignjustify: [
-    {
-      selector: 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre',
+    { 
+      selector: alignSelector, 
       classes: 'text-justify',
-      //styles: { textAlign: 'justify' },
-      inherit: false,
-      preview: 'font-family font-size',
-      group: 'align'
+      styles: { textAlign: 'justify' },
+      compound: false,
+      inherit: false, 
+      preview: 'font-family font-size', 
+      group: 'align' 
     }
   ],
 
   bold: [
     { inline: 'strong', remove: 'all', preserve_attributes: [ 'class', 'style' ] },
     { inline: 'span', classes: 'fw-bold', styles: { fontWeight: 'bold' }},
-    { inline: 'span', classes: 'fw-medium', styles: { fontWeight: 'medium' }},
+    { inline: 'span', classes: 'fw-medium', styles: { fontWeight: 'bold' }},
     { inline: 'b', remove: 'all', preserve_attributes: [ 'class', 'style' ] }
   ],
 

@@ -5,13 +5,12 @@ import * as DefaultFormats from './DefaultFormats';
 import * as TableFormats from './TableFormats';
 import FormatUtils from './FormatUtils';
 
-const prepareGroups = (formats, groups) => {
-  lists.each(formats, (format) => {
-    lists.each(format, (fmt) => {
-      if (fmt.group && groups[fmt.group]) {
-        fmt.group = lists.reject(groups[fmt.group], f => f == fmt);
-      }
-    });
+const resolveGroups = (formats, groups) => {
+  lists.each(formats, (format, name) => {
+    const fmt = format[0];
+    if (fmt.group && Type.isString(fmt.group) && groups[fmt.group]) {
+      fmt.group = lists.reject(groups[fmt.group], n => n == name);
+    }
   });
 };
 
@@ -24,7 +23,8 @@ export default class FormatRegistry {
     this.register(TableFormats.get());
     this.register(options.formats);
 
-    prepareGroups(this.formats, this.groups);
+    resolveGroups(this.formats, this.groups);
+    delete this.groups;
   }
 
   get(name) {
@@ -48,24 +48,27 @@ export default class FormatRegistry {
         }
 
         lists.each(format, (format) => {
-          // Set deep to false by default on selector formats this to avoid removing
+          const isSelectorFormat = FormatUtils.isSelectorFormat(format);
+          const isInlineFormat = FormatUtils.isInlineFormat(format);
+
+          // Set deep to false by default on selector formats to avoid removing
           // alignment on images inside paragraphs when alignment is changed on paragraphs
           if (Type.isUndefined(format.deep)) {
-            format.deep = !FormatUtils.isSelectorFormat(format);
+            format.deep = !isSelectorFormat;
           }
 
           // Default to true
           if (Type.isUndefined(format.split)) {
-            format.split = !FormatUtils.isSelectorFormat(format) || FormatUtils.isInlineFormat(format);
+            format.split = !isSelectorFormat || isInlineFormat;
           }
 
           // Default to true
-          if (Type.isUndefined(format.remove) && FormatUtils.isSelectorFormat(format) && !FormatUtils.isInlineFormat(format)) {
+          if (Type.isUndefined(format.remove) && isSelectorFormat && !isInlineFormat) {
             format.remove = 'none';
           }
 
           // Mark format as a mixed format inline + block level
-          if (FormatUtils.isSelectorFormat(format) && FormatUtils.isInlineFormat(format)) {
+          if (isSelectorFormat && isInlineFormat) {
             format.mixed = true;
             format.block_expand = true;
           }
@@ -75,9 +78,14 @@ export default class FormatRegistry {
             format.classes = format.classes.split(/\s+/);
           }
 
-          if (format.group) {
+          if (Type.isNullOrUndefined(format.compound)) {
+            // compound true should be default
+            format.compound = true;
+          }
+
+          if (format.group && Type.isString(format.group)) {
             const groups = this.groups[format.group] || (this.groups[format.group] = []);
-            groups.push(format);
+            groups.push(name);
           }
         });
 

@@ -132,7 +132,7 @@ const removeNode = (ed, node, format) => {
     return;
   }
 
-  dom.remove(node, true);
+  dom.remove(node, false);
 };
 
 // Attributes or styles can be either an array of names or an object containing name/value pairs
@@ -414,7 +414,7 @@ const removeFormatInternal = (ed, name, vars, node, similar) => {
 
   // Merges the styles for each node
   const process = (node) => {
-
+    console.log('process', node);
     // Grab the children first since the nodelist might be changed
     const children = lists.from(node.childNodes);
 
@@ -473,7 +473,7 @@ const removeFormatInternal = (ed, name, vars, node, similar) => {
         out = start ? node.previousSibling || node.nextSibling : node.nextSibling || node.previousSibling;
       }
 
-      dom.remove(node, true);
+      dom.remove(node, false);
 
       return out;
     } else {

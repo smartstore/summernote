@@ -103,24 +103,32 @@ const matchItems = (node, format, itemName = 'attributes' | 'styles', similar = 
 const matchNode = (editor, node, name, vars, similar) => {
   const formatList = editor.formatter.get(name);
 
+  const classesMatch = (fmt) => {
+    const classes = fmt.classes;
+    if (classes) {
+      for (let x = 0; x < classes.length; x++) {
+        if (!dom.hasClass(node, FormatUtils.replaceVars(classes[x], vars))) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
   if (formatList && dom.isElement(node)) {
     // Check each format in list
     for (let i = 0; i < formatList.length; i++) {
       const format = formatList[i];
       
-      // Name name, attributes, styles and classes
-      if (matchName(node, format) && matchItems(node, format, 'attributes', similar, vars) && matchItems(node, format, 'styles', similar, vars)) {
-        // Match classes
-        const classes = format.classes;
-        if (classes) {
-          for (let x = 0; x < classes.length; x++) {
-            if (!dom.hasClass(node, FormatUtils.replaceVars(classes[x], vars))) {
-              return;
-            }
-          }
-        }
+      // Match name, attributes, styles and classes
+      if (matchName(node, format) && matchItems(node, format, 'attributes', similar, vars)) {
+        const stylesMatch = matchItems(node, format, 'styles', false, vars);
+        const isMatch = format.compound ? stylesMatch && classesMatch(format) : stylesMatch || classesMatch(format);
 
-        return format;
+        if (isMatch) {
+          return format;
+        }     
       }
     }
   }

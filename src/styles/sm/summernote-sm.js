@@ -171,7 +171,7 @@ const ui = function(editorOptions) {
     },
 
     button: function($node, options) {
-      return renderer.create('<button type="button" class="note-btn btn btn-light btn-sm" tabindex="-1"></button>', function($node, options) {
+      return renderer.create('<button type="button" class="note-btn btn btn-light btn-sm"></button>', function($node, options) {
         if (options && options.tooltip) {
           $node.attr({
             title: options.tooltip,

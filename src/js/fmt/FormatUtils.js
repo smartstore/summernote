@@ -37,7 +37,7 @@ const isNonWrappingBlockFormat = (format) =>
   isBlockFormat(format) && format.wrapper !== true;
 
 const isSelectorFormat = (format) =>
-  Type.isString(format.selector);
+  Type.isString(format.selector) || Type.isFunction(format.selector);
 
 const isInlineFormat = (format) =>
   Type.isString(format.inline);
@@ -175,9 +175,14 @@ const normalizeStyleValue = (value, name) => {
       strValue = Convert.rgbaToHexString(strValue);
     }
 
-    // Opera will return bold as 700
-    if (name === 'fontWeight' && value === 700) {
-      strValue = 'bold';
+    // Opera/Chrome will return bold as 700
+    if (name === 'fontWeight') {
+      const numValue = parseInt(value);
+      if (!isNaN(numValue)) {
+        if (numValue >= 500) strValue = 'bold';
+        else if (numValue >= 400) strValue = 'normal';
+        else strValue = 'light';
+      }
     }
 
     // Normalize fontFamily so "'Font name', Font" becomes: "Font name,Font"

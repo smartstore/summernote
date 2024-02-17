@@ -75,7 +75,7 @@ export default class Editor {
       justifyLeft: 'alignleft',
       justifyCenter: 'aligncenter',
       justifyRight: 'alignright',
-      justifyFull: 'alignfull',
+      justifyFull: 'alignjustify',
       removeFormat: 'removeformat',
       code: 'code'
     };
@@ -895,47 +895,8 @@ export default class Editor {
     return styleTag?.className;
   }
 
-  onFormatBlock(tagName, $target) {
+  onFormatBlock(tagName) {
     this.formatter.toggle(tagName.toLowerCase());
-    return;
-
-    let rng = this.createRange();
-    let paraNode = dom.findPara(rng.sc);
-    let newNode;
-    
-    if (paraNode) {
-      const currentTagName = paraNode.tagName.toUpperCase();
-
-      if (currentTagName == 'LI') {
-        // TODO: wrap inner HTML with new tag
-      }
-      else if (currentTagName != tagName.toUpperCase()) {
-        const currentStyleClass = this.getTagStyleClass(currentTagName);
-        //console.log(currentStyleClass);
-        // Change tag name of found para
-        newNode = dom.rename(paraNode, tagName);
-        if (newNode && currentStyleClass) {
-          // Remove tag styling class
-          $(newNode).removeClass(currentStyleClass);
-        }
-
-        this.selection.setRange(rng);
-
-        // TODO: Implement custom class support.
-      }
-    }
-    else {
-      // TODO: What now?
-    }
-
-    // Support custom class
-    if (newNode) {
-      const newStyleClass = this.getTagStyleClass(tagName);
-      if (newStyleClass) {
-        $(newNode).addClass(newStyleClass);
-      }
-    }
-
     // TODO: Creating a new block with ENTER should not copy all attributes from prev block
   }
 
