@@ -345,7 +345,7 @@ const wrapAndSplit = (
 ) => {
   let lastClone;
   let firstClone;
-  
+
   // Format root found then clone formats and split it
   if (formatRoot) {
     const formatRootParent = formatRoot.parentNode;
@@ -375,7 +375,7 @@ const wrapAndSplit = (
 
     // Never split block elements if the format is mixed
     if (split && (!format.mixed || !dom.isBlock(formatRoot))) {
-      container = dom.split(formatRoot, container) ?? container;
+      container = FormatUtils.splitNode(formatRoot, container) ?? container;
     }
 
     // Wrap container in cloned formats
@@ -414,7 +414,6 @@ const removeFormatInternal = (ed, name, vars, node, similar) => {
 
   // Merges the styles for each node
   const process = (node) => {
-    console.log('process', node);
     // Grab the children first since the nodelist might be changed
     const children = lists.from(node.childNodes);
 
@@ -526,12 +525,10 @@ const removeFormatInternal = (ed, name, vars, node, similar) => {
         newRng.setStartAfter(startContainer);
         newRng.setEndBefore(endContainer);
         newRng = range.getWrappedRange(newRng);
-        console.log('removeRngStyle before walk nodes', newRng.sc, newRng.ec);
+
         newRng.walk(nodes => {
-          console.log('removeRngStyle walk nodes', nodes);
           each(nodes, (n) => {
             if (!dom.isBookmarkNode(n) && !dom.isBookmarkNode(n.parentNode)) {
-              console.log('removeRngStyle walk', n);
               splitToFormatRoot(n);
             }
           });

@@ -2,10 +2,12 @@ import Type from '../core/Type';
 import Str from '../core/Str';
 import Obj from '../core/Obj';
 import Convert from '../core/Convert';
+import Point from '../core/Point';
 import lists from '../core/lists';
 import dom from '../core/dom';
 import schema from '../core/schema';
 import range from '../core/range';
+import DomTreeWalker from '../util/DomTreeWalker';
 
 const isNode = (node) =>
   dom.isNode(node);
@@ -57,14 +59,86 @@ const isTextBlock = (node) =>
 const isValid = (parent, child) =>
   schema.isValidChild(parent, child);
 
-const isWhiteSpaceNode = (node, allowSpaces = false) => {
-  if (node && dom.isText(node)) {
-    // If spaces are allowed, treat them as a non-breaking space
-    const data = allowSpaces ? node.data.replace(/ /g, '\u00a0') : node.data;
-    return Str.isAllWhitespace(data);
-  } else {
+const isDocument = (node) =>
+  dom.isDocumentFragment(node) || dom.isDocument(node);
+
+const isWhiteSpaceNode = (node, allowSpaces = false) => 
+  dom.isWhiteSpace(node, allowSpaces);
+
+const isNamedAnchor = (node) => {
+  return dom.isElement(node) && node.nodeName === 'A' && !node.hasAttribute('href') && (node.hasAttribute('name') || node.hasAttribute('id'));
+};
+
+const hasWhitespacePreserveParent = (node, rootNode) => {
+  // const rootElement = SugarElement.fromDom(rootNode);
+  // const startNode = SugarElement.fromDom(node);
+  // return SelectorExists.ancestor(startNode, 'pre,code', Fun.curry(Compare.eq, rootElement));
+};
+
+const isWhitespace = (node, rootNode) => {
+  return dom.isText(node) && Str.isAllWhitespace(node.data) && !hasWhitespacePreserveParent(node, rootNode);
+};
+
+const isContent = (node, rootNode) => {
+  return (isCaretCandidate(node) && !isWhitespace(node, rootNode)) || isNamedAnchor(node) || dom.isBookmarkNode(node);
+};
+
+const isInlineContent = (node, root) =>
+  Type.isAssigned(node) && (isContent(node, root) || schema.isInline(node.nodeName.toLowerCase()));
+
+const surroundedByInlineContent = (node, root) => {
+  const prev = new DomTreeWalker(node, root).prev(false);
+  const next = new DomTreeWalker(node, root).next(false);
+  // Check if the next/previous is either inline content or the start/end (eg is undefined)
+  const prevIsInline = Type.isUndefined(prev) || isInlineContent(prev, root);
+  const nextIsInline = Type.isUndefined(next) || isInlineContent(next, root);
+  return prevIsInline && nextIsInline;
+};
+
+// Keep text nodes with only spaces if surrounded by spans.
+// eg. "<p><span>a</span> <span>b</span></p>" should keep space between a and b
+const isKeepTextNode = (node, root) =>
+  dom.isText(node) && node.data.length > 0 && surroundedByInlineContent(node, root);
+
+// Keep elements as long as they have any children
+const isKeepElement = (node) =>
+  dom.isElement(node) ? node.childNodes.length > 0 : false;
+
+const isInvalidTextElement = dom.matchNodeNames([ 'script', 'style', 'textarea' ]);
+const isAtomicInline = dom.matchNodeNames([ 'img', 'input', 'textarea', 'hr', 'iframe', 'video', 'audio', 'object', 'embed' ]);
+
+// UI components on IE is marked with contenteditable=false and unselectable=true so lets not handle those as real content editables
+const isUnselectable = (node) =>
+  dom.isElement(node) && node.getAttribute('unselectable') === 'true';
+
+const isNonUiContentEditableFalse = (node) => {
+  return !isUnselectable(node) && !dom.isContentEditable(node);
+};
+
+const isCaretContainerBlock = (node) => {
+  if (dom.isText(node)) {
+    node = node.parentNode;
+  }
+
+  return dom.isElement(node) && node.hasAttribute('data-note-caret');
+};
+
+const isCaretContainerInline = (node) =>
+  dom.isText(node) && Point.isZwsp(node.data);
+
+const isCaretContainer = (node) =>
+  isCaretContainerBlock(node) || isCaretContainerInline(node);
+
+const isCaretCandidate = (node) => {
+  if (isCaretContainer(node)) {
     return false;
   }
+
+  if (dom.isText(node)) {
+    return !isInvalidTextElement(node.parentNode);
+  }
+
+  return isAtomicInline(node) || dom.isBR(node) || dom.isTable(node) || isNonUiContentEditableFalse(node);
 };
 
 /**
@@ -444,6 +518,80 @@ const expandRng = (rng, formatList) => {
   return range.create(startContainer, startOffset, endContainer, endOffset);
 };
 
+const splitNode = (parentElm, splitElm, replacementElm = null) => {
+  let rng = document.createRange();
+  let beforeFragment;
+  let afterFragment;
+
+  if (parentElm && splitElm && parentElm.parentNode && splitElm.parentNode) {
+    const parentNode = parentElm.parentNode;
+    // Get before chunk
+    rng.setStart(parentNode, dom.position(parentElm));
+    rng.setEnd(splitElm.parentNode, dom.position(splitElm));
+    beforeFragment = rng.extractContents();
+
+    // Get after chunk
+    rng = document.createRange();
+    rng.setStart(splitElm.parentNode, dom.position(splitElm) + 1);
+    rng.setEnd(parentNode, dom.position(parentElm) + 1);
+    afterFragment = rng.extractContents();
+
+    // Insert before chunk
+    parentNode.insertBefore(trimNode(beforeFragment), parentElm);
+
+    // Insert middle chunk
+    if (replacementElm) {
+      parentNode.insertBefore(replacementElm, parentElm);
+      // pa.replaceChild(replacementElm, splitElm);
+    } else {
+      parentNode.insertBefore(splitElm, parentElm);
+    }
+
+    // Insert after chunk
+    parentNode.insertBefore(trimNode(afterFragment), parentElm);
+    dom.remove(parentElm, true);
+
+    return replacementElm || splitElm;
+  } else {
+    return undefined;
+  }
+};
+
+// W3C valid browsers tend to leave empty nodes to the left/right side of the contents - this makes sense
+// but we don't want that in our code since it serves no purpose for the end user
+// For example splitting this html at the bold element:
+//   <p>text 1<span><b>CHOP</b></span>text 2</p>
+// would produce:
+//   <p>text 1<span></span></p><b>CHOP</b><p><span></span>text 2</p>
+// this function will then trim off empty edges and produce:
+//   <p>text 1</p><b>CHOP</b><p>text 2</p>
+const trimNode = (node, root = null) => {
+    const rootNode = root || node;
+    if (dom.isElement(node) && dom.isBookmarkNode(node)) {
+      return node;
+    }
+
+    const children = node.childNodes;
+    for (let i = children.length - 1; i >= 0; i--) {
+      trimNode(children[i], rootNode);
+    }
+
+    // If the only child is a bookmark then move it up
+    if (dom.isElement(node)) {
+      const currentChildren = node.childNodes;
+      if (currentChildren.length === 1 && dom.isBookmarkNode(currentChildren[0])) {
+        node.parentNode?.insertBefore(currentChildren[0], node);
+      }
+    }
+
+    // Remove any empty nodes
+    if (!isDocument(node) && !isContent(node, rootNode) && !isKeepElement(node) && !isKeepTextNode(node, rootNode)) {
+      dom.remove(node, true);
+    }
+
+    return node;
+  };
+
 const afterFormat = (editor) => {
   editor.normalizeContent();
   editor.history.recordUndo();
@@ -475,5 +623,7 @@ export default {
   getStyle,
   preserveSelection,
   expandRng,
+  splitNode,
+  trimNode,
   afterFormat
 }

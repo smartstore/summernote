@@ -233,6 +233,15 @@ const isControlSizing = (node) => node?.classList && node.nodeName === 'DIV' && 
  */
 const isTag = (node, tag) => matchNodeNames(tag)(node);
 
+const isWhiteSpace = (node, allowSpaces = false) => {
+  if (isText(node)) {
+    // If spaces are allowed, treat them as a non-breaking space
+    const data = allowSpaces ? node.data.replace(/ /g, '\u00a0') : node.data;
+    return Str.isAllWhitespace(data);
+  }
+  return false;
+};
+
 // #endregion
 
 
@@ -1111,87 +1120,6 @@ const rename = (node, nodeName) => {
   return replace(newNode, node, true);
 }
 
-const split = (parentElm, splitElm, replacementElm = null) => {
-  // W3C valid browsers tend to leave empty nodes to the left/right side of the contents - this makes sense
-  // but we don't want that in our code since it serves no purpose for the end user
-  // For example splitting this html at the bold element:
-  //   <p>text 1<span><b>CHOP</b></span>text 2</p>
-  // would produce:
-  //   <p>text 1<span></span></p><b>CHOP</b><p><span></span>text 2</p>
-  // this function will then trim off empty edges and produce:
-  //   <p>text 1</p><b>CHOP</b><p>text 2</p>
-  const trimNode = (node, root = null) => {
-    const rootNode = root || node;
-    if (isElement(node) && isBookmarkNode(node)) {
-      return node;
-    }
-
-    const children = node.childNodes;
-    for (let i = children.length - 1; i >= 0; i--) {
-      trimNode(children[i], rootNode);
-    }
-
-    // If the only child is a bookmark then move it up
-    if (isElement(node)) {
-      const currentChildren = node.childNodes;
-      if (currentChildren.length === 1 && isBookmarkNode(currentChildren[0])) {
-        node.parentNode?.insertBefore(currentChildren[0], node);
-      }
-    }
-
-    // TODO: implement TrimNode
-    const isDoc = isDocumentFragment(node) || isDocument(node);
-    const isContent = false; // isContent(node, rootNode)
-    const isKeepElement = isElement(node) ? node.childNodes.length > 0 : false;
-    // Keep text nodes with only spaces if surrounded by spans.
-    // eg. "<p><span>a</span> <span>b</span></p>" should keep space between a and b
-    const isKeepTextNode = isText(node) && node.data.length > 0 && false /* surroundedByInlineContent(node, root)*/;
-    // Remove any empty nodes
-    if (!isDoc && !isContent && !isKeepElement && !isKeepTextNode) {
-      remove(node);
-    }
-
-    return node;
-  };
-
-  let range = document.createRange();
-  let beforeFragment;
-  let afterFragment;
-
-  if (parentElm && splitElm && parentElm.parentNode && splitElm.parentNode) {
-    const parentNode = parentElm.parentNode;
-    // Get before chunk
-    range.setStart(parentNode, position(parentElm));
-    range.setEnd(splitElm.parentNode, position(splitElm));
-    beforeFragment = range.extractContents();
-
-    // Get after chunk
-    range = document.createRange();
-    range.setStart(splitElm.parentNode, position(splitElm) + 1);
-    range.setEnd(parentNode, position(parentElm) + 1);
-    afterFragment = range.extractContents();
-
-    // Insert before chunk
-    parentNode.insertBefore(trimNode(beforeFragment), parentElm);
-
-    // Insert middle chunk
-    if (replacementElm) {
-      parentNode.insertBefore(replacementElm, parentElm);
-      // pa.replaceChild(replacementElm, splitElm);
-    } else {
-      parentNode.insertBefore(splitElm, parentElm);
-    }
-
-    // Insert after chunk
-    parentNode.insertBefore(trimNode(afterFragment), parentElm);
-    remove(parentElm);
-
-    return replacementElm || splitElm;
-  } else {
-    return undefined;
-  }
-};
-
 // #endregion
 
 
@@ -1228,6 +1156,7 @@ export default {
   isVoid,
   isTag,
   isPara,
+  isWhiteSpace,
   findPara,
   isPurePara,
   isHeading,
@@ -1305,7 +1234,6 @@ export default {
   clone,
   rename,
   replace,
-  split,
   value,
   outerHtml,
   posFromPlaceholder,

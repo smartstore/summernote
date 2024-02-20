@@ -636,17 +636,11 @@ class WrappedRange {
         nodes.splice(nodes.length - 1, 1);
       }
 
-      nodes = lists.reject(nodes, n => isWhiteSpaceNode(n));
+      // TODO: reject empty nodes: muss das sein?
+      // Reject all editor specific empty edge node
+      nodes = lists.reject(nodes, n => dom.isWhiteSpace(n) && (dom.isElement(n.previousSibling) || dom.isElement(n.nextSibling)));
 
       return nodes;
-    };
-
-    const isWhiteSpaceNode = (node) => {
-      if (dom.isText(node) && node.nodeValue.trim().length === 0) {
-        return dom.isElement(node.previousSibling) || dom.isElement(node.nextSibling);
-      }
-
-      return false;
     };
 
     const collectSiblings = (node, name = 'nextSibling' | 'previousSibling', endNode) => {
