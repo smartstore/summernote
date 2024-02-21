@@ -3,7 +3,7 @@ import lists from './lists';
 import dom from './dom';
 
 const NBSP_CHAR = String.fromCharCode(160);
-const ZERO_WIDTH_NBSP_CHAR = '\ufeff';
+const ZERO_WIDTH_NBSP_CHAR = '\uFEFF';
 const SOFT_HYPHEN = '\u00AD';
 
 const CharTypes = {

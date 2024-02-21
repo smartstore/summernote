@@ -2,11 +2,14 @@ import FormatRegistry from './FormatRegistry';
 import MatchFormat from './MatchFormat';
 import ApplyFormat from './ApplyFormat';
 import RemoveFormat from './RemoveFormat';
+import CaretFormat from './CaretFormat';
 
 export default class Formatter {
   constructor(context) {
     this.context = context;
     this.formats = new FormatRegistry(context.options);
+
+    CaretFormat.setup(context);
   }
 
   get editor() {
@@ -63,7 +66,7 @@ export default class Formatter {
    * @method apply
    * @param {String} name Name of format to apply.
    * @param {Object} vars Optional list of variables to replace within format before applying it.
-   * @param {Node} node Optional node to apply the format to defaults to current selection.
+   * @param {Node} node Optional node to apply the format to. Defaults to current selection.
    */
   apply(name, vars, node) {
     ApplyFormat.applyFormat(this.editor, name, vars, node);

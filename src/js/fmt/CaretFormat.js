@@ -16,6 +16,7 @@ import Str from '../core/Str';
 
 const CARET_ID = '_note_caret';
 const ZWSP = Point.ZERO_WIDTH_NBSP_CHAR;
+const NBSP = '\u00A0';
 
 const importNode = (ownerDocument, node) => {
   return ownerDocument.importNode(node, true);
@@ -59,68 +60,69 @@ const trimZwspFromCaretContainer = (caretContainerNode) => {
   return textNode;
 };
 const removeCaretContainerNode = (editor, node, moveCaret) => {
-  // // Implement CaretFormat.removeCaretContainerNode
-  // const selection = editor.selection;
+  const selection = editor.selection;
 
-  // if (FormatUtils.isCaretContainerEmpty(node)) {
-  //   DeleteElement.deleteElement(editor, false, node, moveCaret, true);
-  // } else {
-  //   const rng = selection.getRng();
-  //   const block = dom.closest(node, dom.isBlock);
+  if (FormatUtils.isCaretContainerEmpty(node)) {
+    // TODO: Impl DeleteElement.deleteElement
+    //DeleteElement.deleteElement(editor, false, node, moveCaret, true);
+  } else {
+    const rng = selection.getRange();
+    const block = dom.closest(node, dom.isBlock);
 
-  //   // Store the current selection offsets
-  //   const startContainer = rng.startContainer;
-  //   const startOffset = rng.startOffset;
-  //   const endContainer = rng.endContainer;
-  //   const endOffset = rng.endOffset;
+    // Store the current selection offsets
+    const startContainer = rng.startContainer;
+    const startOffset = rng.startOffset;
+    const endContainer = rng.endContainer;
+    const endOffset = rng.endOffset;
 
-  //   const textNode = trimZwspFromCaretContainer(node);
-  //   dom.remove(node, true);
+    const textNode = trimZwspFromCaretContainer(node);
+    dom.remove(node, false);
 
-  //   // Restore the selection after unwrapping the node and removing the zwsp
-  //   if (startContainer === textNode && startOffset > 0) {
-  //     rng.setStart(textNode, startOffset - 1);
-  //   }
+    // Restore the selection after unwrapping the node and removing the zwsp
+    if (startContainer === textNode && startOffset > 0) {
+      rng.setStart(textNode, startOffset - 1);
+    }
 
-  //   if (endContainer === textNode && endOffset > 0) {
-  //     rng.setEnd(textNode, endOffset - 1);
-  //   }
+    if (endContainer === textNode && endOffset > 0) {
+      rng.setEnd(textNode, endOffset - 1);
+    }
 
-  //   if (block && dom.isEmpty(block)) {
-  //     PaddingBr.fillWithPaddingBr(SugarElement.fromDom(block));
-  //   }
+    if (block && dom.isEmpty(block)) {
+      // TODO: Impl PaddingBr.fillWithPaddingBr
+      //PaddingBr.fillWithPaddingBr(block);
+    }
 
-  //   selection.setRng(rng);
-  // }
+    selection.setRange(rng);
+  }
 };
 
 // Removes the caret container for the specified node or all on the current document
 const removeCaretContainer = (editor, node, moveCaret) => {
-  // // Implement CaretFormat.removeCaretContainer
-  // const selection = editor.selection;
-  // if (!node) {
-  //   node = getParentCaretContainer(editor.getBody(), selection.getStart());
+  const selection = editor.selection;
+  if (!node) {
+    node = FormatUtils.getParentCaretContainer(editor.editable, selection.getStart());
 
-  //   if (!node) {
-  //     while ((node = dom.get(CARET_ID))) {
-  //       removeCaretContainerNode(editor, node, moveCaret);
-  //     }
-  //   }
-  // } else {
-  //   removeCaretContainerNode(editor, node, moveCaret);
-  // }
+    if (!node) {
+      while ((node = document.getElementById(CARET_ID))) {
+        removeCaretContainerNode(editor, node, moveCaret);
+      }
+    }
+  } else {
+    removeCaretContainerNode(editor, node, moveCaret);
+  }
 };
 
-const insertCaretContainerNode = (editor, caretContainer, formatNode) => {
+const insertCaretContainerNode = (caretContainer, formatNode) => {
   const block = dom.closest(formatNode, FormatUtils.isTextBlock);
 
   if (block && dom.isEmpty(block)) {
     // Replace formatNode with caretContainer when removing format from empty block like <p><b>|</b></p>
     formatNode.parentNode?.replaceChild(caretContainer, formatNode);
   } else {
-    // Implement PaddingBr.removeTrailingBr()
+    // TODO: Impl PaddingBr.removeTrailingBr()
     //PaddingBr.removeTrailingBr(formatNode);
     if (dom.isEmpty(formatNode)) {
+      // TODO: Reimpl dom.isEmpty
       formatNode.parentNode?.replaceChild(caretContainer, formatNode);
     } else {
       dom.insertAfter(formatNode, caretContainer);
@@ -157,34 +159,43 @@ const cleanFormatNode = (editor, caretContainer, formatNode, name, vars, similar
     const clonedFormatNode = formatNode.cloneNode(false);
     caretContainer.appendChild(clonedFormatNode);
     formatter.remove(name, vars, clonedFormatNode, similar);
-    dom.remove(clonedFormatNode);
+    dom.remove(clonedFormatNode, true);
     return clonedFormatNode;
   } else {
     return null;
   }
 };
 
-const setup = (editor) => {
-  // ...
-};
-
 const applyCaretFormat = (editor, name, vars) => {
-  // // TODO: Implement CaretFormat.applyCaretFormat()
-  // let caretContainer;
-  // const selection = editor.selection;
+  let caretContainer;
+  const selection = editor.selection;
 
-  // const formatList = editor.formatter.get(name);
-  // if (!formatList) {
-  //   return;
-  // }
+  const formatList = editor.formatter.get(name);
+  if (!formatList) {
+    return;
+  }
 
-  // const selectionRng = selection.getRange();
+  const collapsedRng = selection.getRange();
   // let offset = selectionRng.startOffset;
   // const container = selectionRng.startContainer;
   // const text = container.nodeValue;
 
-  // // TODO: Implement getParentCaretContainer()
-  // caretContainer = getParentCaretContainer(editor.editable, selection.getStart());
+  // Get bookmark of caret position
+  // TODO: Bookmarking geht nicht
+  const bookmark = selection.createBookmark();
+
+  // Expand the range to the closest word and split it at those points
+  const wordRange = collapsedRng
+    .getWordRange({ forward: true, stopAtPunc: true, trim: true })
+    .splitText();
+
+  // Apply the format to the range
+  editor.formatter.apply(name, vars, wordRange);
+
+  // Move selection back to caret position
+  selection.moveToBookmark(bookmark);
+
+  //caretContainer = FormatUtils.getParentCaretContainer(editor.editable, selection.getStart());
 
   // // Expand to word if caret is in the middle of a text node and the char before/after is a alpha numeric character
   // const wordcharRegex = /[^\s\u00a0\u00ad\u200b\ufeff]/;
@@ -194,10 +205,10 @@ const applyCaretFormat = (editor, name, vars) => {
   //   const bookmark = selection.getBookmark();
 
   //   // Collapse bookmark range (WebKit)
-  //   selectionRng.collapse(true);
+  //   collapsedRng.collapse(true);
 
   //   // Expand the range to the closest word and split it at those points
-  //   let rng = ExpandRange.expandRng(editor.dom, selectionRng, formatList);
+  //   let rng = ExpandRange.expandRng(editor.dom, collapsedRng, formatList);
   //   rng = SplitRange.split(rng);
 
   //   // Apply the format to the range
@@ -213,7 +224,7 @@ const applyCaretFormat = (editor, name, vars) => {
   //     caretContainer = importNode(editor.getDoc(), createCaretContainer(true).dom);
   //     textNode = caretContainer.firstChild as Text;
 
-  //     selectionRng.insertNode(caretContainer);
+  //     collapsedRng.insertNode(caretContainer);
   //     offset = 1;
 
   //     editor.formatter.apply(name, vars, caretContainer);
@@ -223,37 +234,100 @@ const applyCaretFormat = (editor, name, vars) => {
 
   //   // Move selection to text node
   //   selection.setCursorLocation(textNode, offset);
-  // }
+  //}
 };
 
 const removeCaretFormat = (editor, name, vars, similar) => {
-  // TODO: Implement CaretFormat.removeCaretFormat()
+  const selection = editor.selection;
+  let hasContentAfter = false;
+
+  const formatList = editor.formatter.get(name);
+  if (!formatList) {
+    return;
+  }
+
+  const rng = selection.getRange();
+  const container = rng.startContainer;
+  const offset = rng.startOffset;
+  let node = container;
+
+  if (dom.isText(container)) {
+    if (offset !== container.data.length) {
+      hasContentAfter = true;
+    }
+
+    node = node.parentNode;
+  }
+
+  const parents = [];
+  let formatNode;
+  while (node) {
+    if (MatchFormat.matchNode(editor, node, name, vars, similar)) {
+      formatNode = node;
+      break;
+    }
+
+    if (node.nextSibling) {
+      hasContentAfter = true;
+    }
+
+    parents.push(node);
+    node = node.parentNode;
+  }
+
+  // Node doesn't have the specified format
+  if (!formatNode) {
+    return;
+  }
+
+  if (hasContentAfter) {
+    // Get bookmark of caret position
+    // TODO: Bookmarking geht nicht
+    const bookmark = selection.createBookmark();
+
+    // Expand the range to the closest word and split it at those points
+    const wordRange = rng
+      .getWordRange({ forward: true, stopAtPunc: true, trim: true })
+      .splitText();
+
+    // Remove the format from the range
+    editor.formatter.remove(name, vars, wordRange, similar);
+
+    // Move selection back to caret position
+    selection.moveToBookmark(bookmark);
+  }
+  else { // !hasContentAfter
+    // TODO: Impl !hasContentAfter
+  }
 };
 
-// TODO: mach weiter ab CaretFormat.disableCaretContainer
+const disableCaretContainer = (editor, keyCode, moveCaret) => {
+  const selection = editor.selection, root = editor.editable;
 
-const replaceWithCaretFormat = (targetNode, formatNodes) => {
-  // ...
+  removeCaretContainer(editor, null, moveCaret);
+
+  // Remove caret container if it's empty
+  if ((keyCode === 8 || keyCode === 46) && selection.isCollapsed() && selection.getStart().innerHTML === ZWSP) {
+    removeCaretContainer(editor, FormatUtils.getParentCaretContainer(root, selection.getStart()), true);
+  }
+
+  // Remove caret container on keydown and it's left/right arrow keys
+  if (keyCode === 37 || keyCode === 39) {
+    removeCaretContainer(editor, FormatUtils.getParentCaretContainer(root, selection.getStart()), true);
+  }
 };
 
-const createCaretFormatAtStart = (rng, formatNodes) => {
-  // ...
-};
+const endsWithNbsp = (element) => dom.isText(element) && Str.endsWith(element.data, NBSP);
 
-const isFormatElement = (editor, element) => {
-  // ...
-};
-
-const isFormatCaret = (editor, element) => {
-  // ...
+const setup = (context) => {
+  $(context.layoutInfo.editable).on('mouseup keydown', (e) => {
+    const editor = context.modules.editor;
+    disableCaretContainer(editor, e.keyCode, endsWithNbsp(editor.selection.getRange().endContainer));
+  });
 };
 
 export default {
   setup,
   applyCaretFormat,
-  removeCaretFormat,
-  replaceWithCaretFormat,
-  createCaretFormatAtStart,
-  isFormatElement,
-  isFormatCaret
+  removeCaretFormat
 };

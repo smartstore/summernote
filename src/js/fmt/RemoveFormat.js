@@ -236,6 +236,7 @@ const removeNodeFormatInternal = (ed, format, vars, node, compareNode) => {
         // Keep internal classes
         if (attrName === 'class') {
           const currentValue = dom.getAttr(elm, attrName);
+
           if (currentValue) {
             // Build new class value where everything is removed except the internal prefixed classes
             let valueOut = '';
@@ -253,9 +254,9 @@ const removeNodeFormatInternal = (ed, format, vars, node, compareNode) => {
           }
         }
 
-        // Remove mce prefixed attributes (must clean before short circuit operations)
+        // Remove note prefixed attributes (must clean before short circuit operations)
         if (NOTE_ATTR_RE.test(attrName)) {
-          elm.removeAttribute('data-mce-' + attrName);
+          elm.removeAttribute('data-note-' + attrName);
         }
 
         // keep style="list-style-type: none" on <li>s
@@ -569,8 +570,8 @@ const removeFormatInternal = (ed, name, vars, node, similar) => {
     return;
   }
 
+  let rng = selection.getRange();
   if (!selection.isCollapsed() || !FormatUtils.isInlineFormat(format) || rng.isOnCell()) {
-    let rng = selection.getRange();
     //rng = rng.splitText();
 
     // Remove formatting while preserving visible selection

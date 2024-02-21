@@ -428,15 +428,23 @@ const hasClass = (node, name) => {
 };
 
 const addClass = (node, name) => {
-  return $(node).addClass(name);
+  $(node).addClass(name);
 };
 
 const removeClass = (node, name) => {
-  return $(node).removeClass(name);
+  $(node).removeClass(name);
+  cleanClass(node);
 };
 
 const toggleClass = (node, name, state) => {
-  return $(node).toggleClass(name, state);
+  $(node).toggleClass(name, state);
+  cleanClass(node);
+};
+
+const cleanClass = (node) => {
+  if (node.classList && node.classList.length === 0) {
+    node.removeAttribute('class');
+  }
 };
 
 const parseStyle = (node) => {
@@ -675,6 +683,7 @@ const select = (node, selector) => {
  * Finds closest parent that matches the given selector.
  *
  * @param {Function|String} selector - Selector function, string or node.
+ * @param {boolean} [includeSelf] - Whether to start bubbling with given `node`. Default is true.
  */
 const closest = (node, selector, includeSelf = true, parentSelector = null) => {
   node = getNode(includeSelf ? node : node.parentNode);

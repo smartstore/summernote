@@ -6,15 +6,15 @@ const alignSelector = 'figure,p,h1,h2,h3,h4,h5,h6,td,th,tr,div,ul,ol,li,pre';
 
 const formats = {
   valigntop: [
-    { selector: 'td,th', classes: 'align-top', styles: { verticalAlign: 'top' }, group: 'valign'}
+    { selector: 'td,th', classes: 'align-top', styles: { verticalAlign: 'top' }, compound: false, group: 'valign'}
   ],
 
   valignmiddle: [
-    { selector: 'td,th', classes: 'align-middle', styles: { verticalAlign: 'middle' }, group: 'valign'}
+    { selector: 'td,th', classes: 'align-middle', styles: { verticalAlign: 'middle' }, compound: false, group: 'valign'}
   ],
 
   valignbottom: [
-    { selector: 'td,th', classes: 'align-bottom', styles: { verticalAlign: 'bottom' }, group: 'valign'}
+    { selector: 'td,th', classes: 'align-bottom', styles: { verticalAlign: 'bottom' }, compound: false, group: 'valign'}
   ],
 
   alignleft: [
@@ -126,8 +126,8 @@ const formats = {
 
   bold: [
     { inline: 'strong', remove: 'all', preserve_attributes: [ 'class', 'style' ] },
-    { inline: 'span', classes: 'fw-bold', styles: { fontWeight: 'bold' }},
-    { inline: 'span', classes: 'fw-medium', styles: { fontWeight: 'bold' }},
+    { inline: 'span', classes: 'fw-bold', styles: { fontWeight: 'bold' }, compound: false},
+    { inline: 'span', classes: 'fw-medium', styles: { fontWeight: 'bold' }, compound: false},
     { inline: 'b', remove: 'all', preserve_attributes: [ 'class', 'style' ] }
   ],
 

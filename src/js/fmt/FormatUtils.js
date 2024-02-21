@@ -15,7 +15,8 @@ const isNode = (node) =>
 const isElementNode = (node) =>
   dom.isElement(node) && !dom.isBookmarkNode(node);
 
-const isCaretNode = (node) => false;
+const isCaretNode = (node) =>
+  dom.isElement(node) && node.id === '_note_caret';
 
 const isElementDirectlySelected = (node) => {
   // Table cells are a special case and are separately handled from native editor selection
@@ -566,31 +567,72 @@ const splitNode = (parentElm, splitElm, replacementElm = null) => {
 // this function will then trim off empty edges and produce:
 //   <p>text 1</p><b>CHOP</b><p>text 2</p>
 const trimNode = (node, root = null) => {
-    const rootNode = root || node;
-    if (dom.isElement(node) && dom.isBookmarkNode(node)) {
-      return node;
-    }
-
-    const children = node.childNodes;
-    for (let i = children.length - 1; i >= 0; i--) {
-      trimNode(children[i], rootNode);
-    }
-
-    // If the only child is a bookmark then move it up
-    if (dom.isElement(node)) {
-      const currentChildren = node.childNodes;
-      if (currentChildren.length === 1 && dom.isBookmarkNode(currentChildren[0])) {
-        node.parentNode?.insertBefore(currentChildren[0], node);
-      }
-    }
-
-    // Remove any empty nodes
-    if (!isDocument(node) && !isContent(node, rootNode) && !isKeepElement(node) && !isKeepTextNode(node, rootNode)) {
-      dom.remove(node, true);
-    }
-
+  const rootNode = root || node;
+  if (dom.isElement(node) && dom.isBookmarkNode(node)) {
     return node;
-  };
+  }
+
+  const children = node.childNodes;
+  for (let i = children.length - 1; i >= 0; i--) {
+    trimNode(children[i], rootNode);
+  }
+
+  // If the only child is a bookmark then move it up
+  if (dom.isElement(node)) {
+    const currentChildren = node.childNodes;
+    if (currentChildren.length === 1 && dom.isBookmarkNode(currentChildren[0])) {
+      node.parentNode?.insertBefore(currentChildren[0], node);
+    }
+  }
+
+  // Remove any empty nodes
+  if (!isDocument(node) && !isContent(node, rootNode) && !isKeepElement(node) && !isKeepTextNode(node, rootNode)) {
+    dom.remove(node, true);
+  }
+
+  return node;
+};
+
+const getEmptyCaretContainers = (node) => {
+  const nodes = [];
+
+  let tempNode = node;
+  while (tempNode) {
+    if ((dom.isText(tempNode) && tempNode.data !== Point.ZERO_WIDTH_NBSP_CHAR) || tempNode.childNodes.length > 1) {
+      return [];
+    }
+
+    // Collect nodes
+    if (dom.isElement(tempNode)) {
+      nodes.push(tempNode);
+    }
+
+    tempNode = tempNode.firstChild;
+  }
+
+  return nodes;
+};
+
+const isCaretContainerEmpty = (node) => {
+  return getEmptyCaretContainers(node).length > 0;
+};
+
+const isEmptyCaretFormatElement = (element) => {
+  return isCaretNode(element.dom) && isCaretContainerEmpty(element.dom);
+};
+
+const getParentCaretContainer = (root, node) => {
+  let currentNode = node;
+  while (currentNode && currentNode !== root) {
+    if (isCaretNode(currentNode)) {
+      return currentNode;
+    }
+
+    currentNode = currentNode.parentNode;
+  }
+
+  return null;
+};
 
 const afterFormat = (editor) => {
   editor.normalizeContent();
@@ -625,5 +667,7 @@ export default {
   expandRng,
   splitNode,
   trimNode,
+  isCaretContainerEmpty,
+  getParentCaretContainer,
   afterFormat
 }
