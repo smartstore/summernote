@@ -182,7 +182,7 @@ const applyCaretFormat = (editor, name, vars) => {
 
   // Get bookmark of caret position
   // TODO: Bookmarking geht nicht
-  const bookmark = selection.createBookmark();
+  const bookmark = selection.createBookmark(true);
 
   // Expand the range to the closest word and split it at those points
   const wordRange = collapsedRng
@@ -283,7 +283,7 @@ const removeCaretFormat = (editor, name, vars, similar) => {
   if (hasContentAfter) {
     // Get bookmark of caret position
     // TODO: Bookmarking geht nicht
-    const bookmark = selection.createBookmark();
+    const bookmark = selection.createBookmark(true);
 
     // Expand the range to the closest word and split it at those points
     const wordRange = rng

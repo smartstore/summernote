@@ -3,6 +3,7 @@ import func from '../core/func';
 import lists from '../core/lists';
 import dom from '../core/dom';
 import range from '../core/range';
+import Bookmark from './Bookmark';
 import DomTreeWalker from '../util/DomTreeWalker';
 
 let win = window;
@@ -458,8 +459,12 @@ export default class Selection {
    * @method createBookmark
    * @return {Object} Bookmark object, use moveToBookmark with this object to restore the selection.
    */
-  createBookmark() {
-    return this.getRange().createBookmark(this.editor.editable);
+  createBookmark(persistent) {
+    if (persistent) {
+      return Bookmark.getPersistentBookmark(this);
+    } else {
+      return this.getRange().createBookmark(this.editor.editable);
+    }  
   }
 
   /**
@@ -481,18 +486,27 @@ export default class Selection {
    * @param {Object} bookmark Bookmark to restore selection from.
    */
   moveToBookmark(bookmark) {
-    let rng;
+    let rng, forward = true;
     if (this.isValidRange(bookmark)) {
+      // Is a range bookmark
       rng = bookmark;
-    } else if (bookmark.s && bookmark.e) {
+    } 
+    else if (bookmark.s && bookmark.e) {
+      // Is an offset bookmark
       rng = range.createFromBookmark(this.editor.editable, bookmark);
       if (!this.isValidRange(rng)) {
         rng = null;
       }
     }
+    else if (bookmark.id) {
+      // Is a persistent bookmark
+      const resolved = Bookmark.resolvePersistentBookmark(bookmark);
+      rng = resolved?.range;
+      forward = resolved?.forward;
+    }
 
     if (rng) {
-      this.setRange(rng);
+      this.setRange(rng, forward);
       rng.scrollIntoView(this.editor.editable);
     }   
   }
@@ -601,7 +615,7 @@ export default class Selection {
       this.setRange(rng);
       this.collapse(false);
     } else {
-      this.moveEndPoint(rng, this.editor.editable, true);
+      Bookmark.moveEndPoint(rng, true);
       this.setRange(rng);
     }
   }
