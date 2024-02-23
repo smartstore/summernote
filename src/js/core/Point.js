@@ -119,7 +119,6 @@ const prevPoint = (point, skipInnerOffset) => {
  */
 const nextPoint = (point, skipInnerOffset) => {
   let node, offset;
-
   if (point.offset === dom.nodeLength(point.node)) {
     if (dom.isEditableRoot(point.node)) {
       return null;
@@ -461,7 +460,7 @@ const getCharType = (point) => {
   const ch = point.node.nodeValue.charAt(point.offset - 1);
   if (!ch) {
     return CharTypes.UNKNOWN;
-  } else if (ch === ' ' || ch === NBSP_CHAR) {
+  } else if (ch === NBSP_CHAR || ' \f\n\r\t\v'.indexOf(ch) !== -1) {
     return CharTypes.SPACE;
   } else if (ch === '_') {
     return CharTypes.CHAR;

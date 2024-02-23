@@ -175,66 +175,69 @@ const applyCaretFormat = (editor, name, vars) => {
     return;
   }
 
-  const collapsedRng = selection.getRange();
-  // let offset = selectionRng.startOffset;
-  // const container = selectionRng.startContainer;
-  // const text = container.nodeValue;
+  const selectionRng = selection.getRange();
+  let offset = selectionRng.startOffset;
+  const container = selectionRng.startContainer;
+  const text = container.nodeValue;
 
-  // Get bookmark of caret position
-  // TODO: Bookmarking geht nicht
-  const bookmark = selection.createBookmark(true);
+  // // Get bookmark of caret position
+  // // TODO: Bookmarking geht nicht
+  // const bookmark = selection.createBookmark(true);
 
-  // Expand the range to the closest word and split it at those points
-  const wordRange = collapsedRng
-    .getWordRange({ forward: true, stopAtPunc: true, trim: true })
-    .splitText();
+  // // // Expand the range to the closest word and split it at those points
+  // // const wordRange = collapsedRng
+  // //   .getWordRange({ forward: true, stopAtPunc: true, trim: true })
+  // //   .splitText();
 
-  // Apply the format to the range
-  editor.formatter.apply(name, vars, wordRange);
+  // // Expand the range to the closest word and split it at those points
+  // const wordRange = FormatUtils.expandRng(collapsedRng, formatList).splitText();
 
-  // Move selection back to caret position
-  selection.moveToBookmark(bookmark);
+  // // Apply the format to the range
+  // editor.formatter.apply(name, vars, wordRange);
 
-  //caretContainer = FormatUtils.getParentCaretContainer(editor.editable, selection.getStart());
+  // // Move selection back to caret position
+  // selection.moveToBookmark(bookmark);
 
-  // // Expand to word if caret is in the middle of a text node and the char before/after is a alpha numeric character
-  // const wordcharRegex = /[^\s\u00a0\u00ad\u200b\ufeff]/;
-  // if (text && offset > 0 && offset < text.length &&
-  //   wordcharRegex.test(text.charAt(offset)) && wordcharRegex.test(text.charAt(offset - 1))) {
-  //   // Get bookmark of caret position
-  //   const bookmark = selection.getBookmark();
+  caretContainer = FormatUtils.getParentCaretContainer(editor.editable, selection.getStart());
 
-  //   // Collapse bookmark range (WebKit)
-  //   collapsedRng.collapse(true);
+  // Expand to word if caret is in the middle of a text node and the char before/after is a alpha numeric character
+  const wordcharRegex = /[^\s\u00a0\u00ad\u200b\ufeff]/;
+  if (text && offset > 0 && offset < text.length &&
+    wordcharRegex.test(text.charAt(offset)) && wordcharRegex.test(text.charAt(offset - 1))) {
+    // Get bookmark of caret position
+    const bookmark = selection.createBookmark(true);
 
-  //   // Expand the range to the closest word and split it at those points
-  //   let rng = ExpandRange.expandRng(editor.dom, collapsedRng, formatList);
-  //   rng = SplitRange.split(rng);
+    // Collapse bookmark range (WebKit)
+    selectionRng.collapse(true);
 
-  //   // Apply the format to the range
-  //   editor.formatter.apply(name, vars, rng);
+    // Expand the range to the closest word and split it at those points
+    let rng = FormatUtils.expandRng(selectionRng, formatList);
+    rng = rng.splitText();
 
-  //   // Move selection back to caret position
-  //   selection.moveToBookmark(bookmark);
-  // } else {
-  //   let textNode = caretContainer ? findFirstTextNode(caretContainer) : null;
+    // Apply the format to the range
+    editor.formatter.apply(name, vars, rng);
 
-  //   if (!caretContainer || textNode?.data !== ZWSP) {
-  //     // Need to import the node into the document on IE or we get a lovely WrongDocument exception
-  //     caretContainer = importNode(editor.getDoc(), createCaretContainer(true).dom);
-  //     textNode = caretContainer.firstChild as Text;
+    // Move selection back to caret position
+    selection.moveToBookmark(bookmark);
+  } else {
+    // let textNode = caretContainer ? findFirstTextNode(caretContainer) : null;
 
-  //     collapsedRng.insertNode(caretContainer);
-  //     offset = 1;
+    // if (!caretContainer || textNode?.data !== ZWSP) {
+    //   // Need to import the node into the document on IE or we get a lovely WrongDocument exception
+    //   caretContainer = importNode(editor.getDoc(), createCaretContainer(true).dom);
+    //   textNode = caretContainer.firstChild;
 
-  //     editor.formatter.apply(name, vars, caretContainer);
-  //   } else {
-  //     editor.formatter.apply(name, vars, caretContainer);
-  //   }
+    //   collapsedRng.insertNode(caretContainer);
+    //   offset = 1;
 
-  //   // Move selection to text node
-  //   selection.setCursorLocation(textNode, offset);
-  //}
+    //   editor.formatter.apply(name, vars, caretContainer);
+    // } else {
+    //   editor.formatter.apply(name, vars, caretContainer);
+    // }
+
+    // // Move selection to text node
+    // selection.setCursorLocation(textNode, offset);
+  }
 };
 
 const removeCaretFormat = (editor, name, vars, similar) => {

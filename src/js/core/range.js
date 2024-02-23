@@ -15,13 +15,12 @@ const makeIsOn = (selector, root) => {
   };
 };
 
-const makeCharPredicate = (opts) => {
+const makeCharPredicate = (stopAtPunc) => {
   // -1 = UNKNOWN, 0 = SPACE, 1 = PUNC, 2 = CHAR
-  const stopAtPunc = opts?.stopAtPunc === true;
-  if (stopAtPunc) {
-    return func.not(Point.isCharPoint); // Stop at any non-char
+  if (stopAtPunc === true) {
+    return (pt) => [0, 1].indexOf(Point.getCharType(pt)) > -1; // Stop at space and punc
   } else {
-    return (pt) => Point.getCharType(pt) < 1; // Stop at space/unknown only
+    return (pt) => Point.getCharType(pt) === 0; // Stop at space only
   }
 };
 
@@ -613,9 +612,6 @@ class WrappedRange {
     const endOffset = this.endOffset;
     const endContainer = inline ? dom.getRangeNode(this.endContainer, endOffset - 1) : this.endContainer;
 
-    // console.log('walk startContainer', startContainer);
-    // console.log('walk endContainer', endContainer);
-
     /**
      * Excludes start/end text node if they are out side the range
      *
@@ -1059,9 +1055,41 @@ class WrappedRange {
   }
 
   /**
+   * Finds word endpoint before or after cursor
+   *
+   * @param {Boolean} [start] - Find word start.
+   * @param {Boolean} [stopAtPunc] - Stop at punctuation char.
+   * @param {Boolean} [trim] - Skip trailing space char.
+   * @return {Object} - A point object.
+   */
+  findWordEndpoint(start, stopAtPunc, trim) {
+    const startPoint = start ? this.getStartPoint() : this.getEndPoint();
+    const pred = makeCharPredicate(stopAtPunc);
+
+    if (pred(startPoint)) {
+      return startPoint;
+    }
+
+    let point = start 
+      ? Point.prevPointUntil(startPoint, pred) 
+      : Point.nextPointUntil(startPoint, pred);
+
+    if (!start && trim && !Point.equals(startPoint, point)) {
+      // Trim last space or punc
+      //const stopAtPunc = options?.stopAtPunc === true;
+      const charType = Point.getCharType(point);
+      if (charType < 1 || (!stopAtPunc || charType === 1)) {
+        // Walk back one point
+        point = Point.prevPoint(point);
+      }
+    }
+
+    return point;
+  }
+
+  /**
    * Returns range for word before and (optionally) after cursor
    *
-   * @param {Boolean} [forward] - Find after cursor also, default: false
    * @param {Object|boolean|null} [options] - Optional find word options.
    * @param {Boolean} [options.forward] - Find after cursor also, default: false.
    * @param {Boolean} [options.stopAtPunc] - Stop at punctuation char, default: false.
@@ -1069,31 +1097,12 @@ class WrappedRange {
    * @return {WrappedRange} - A new `WrappedRange` instance.
    */
   getWordRange(options) {
-    let endPoint = this.getEndPoint();
-    //const endOffset = endPoint.offset;
-    const pred = makeCharPredicate(options);
     const forward = Type.isBoolean(options) ? options : (options?.forward === true);
     const trim = options?.trim === true;
+    const stopAtPunc = options?.stopAtPunc === true;
 
-    if (pred(endPoint)) {
-      return this;
-    }
-
-    const startPoint = Point.prevPointUntil(endPoint, pred);
-
-    if (forward) {
-      endPoint = Point.nextPointUntil(endPoint, pred);
-    }
-
-    if (forward && trim && !Point.equals(this.getEndPoint(), endPoint)) {
-      // Trim last space or punc
-      const stopAtPunc = options?.stopAtPunc === true;
-      const charType = Point.getCharType(endPoint);
-      if (charType < 1 || (!stopAtPunc || charType === 1)) {
-        // Walk back one point
-        endPoint = Point.prevPoint(endPoint);
-      }
-    }
+    const startPoint = this.findWordEndpoint(true, stopAtPunc, trim);
+    const endPoint = forward ? this.findWordEndpoint(false, stopAtPunc, trim) : startPoint;
 
     return new WrappedRange(
       startPoint.node,

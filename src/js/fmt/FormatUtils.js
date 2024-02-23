@@ -431,6 +431,8 @@ const isAtBlockBoundary = (root, container, siblingName) => {
   }
 };
 
+const isSelfOrParentBookmark = (container) => dom.isBookmarkNode(container.parentNode) || dom.isBookmarkNode(container);
+
 const expandRng = (rng, formatList) => {
   let { startContainer, startOffset, endContainer, endOffset } = rng;
   const format = formatList[0];
@@ -455,14 +457,41 @@ const expandRng = (rng, formatList) => {
   startContainer = findParentContentEditable(startContainer);
   endContainer = findParentContentEditable(endContainer);
 
-  // TODO: Implement ExpandRange.isSelfOrParentBookmark() (?)
+  // Exclude bookmark nodes if possible
+  if (isSelfOrParentBookmark(startContainer)) {
+    startContainer = dom.isBookmarkNode(startContainer) ? startContainer : startContainer.parentNode;
+    if (rng.collapsed) {
+      startContainer = startContainer.previousSibling || startContainer;
+    } else {
+      startContainer = startContainer.nextSibling || startContainer;
+    }
+
+    if (dom.isText(startContainer)) {
+      startOffset = rng.collapsed ? startContainer.length : 0;
+    }
+  }
+
+  if (isSelfOrParentBookmark(endContainer)) {
+    endContainer = dom.isBookmarkNode(endContainer) ? endContainer : endContainer.parentNode;
+    if (rng.collapsed) {
+      endContainer = endContainer.nextSibling || endContainer;
+    } else {
+      endContainer = endContainer.previousSibling || endContainer;
+    }
+
+    if (dom.isText(endContainer)) {
+      endOffset = rng.collapsed ? 0 : endContainer.length;
+    }
+  }
 
   if (rng.collapsed) {
-    rng = rng.getWordRange({ forward: true });
-    startContainer = rng.sc;
-    startOffset = rng.so;
-    endContainer = rng.ec;
-    endOffset = rng.eo;
+    const startPoint = rng.findWordEndpoint(true, true, true);
+    startContainer = startPoint.node;
+    startOffset = startPoint.offset;
+
+    const endPoint = rng.findWordEndpoint(false, true, true);
+    endContainer = endPoint.node;
+    endOffset = endPoint.offset;
   }
 
   // Move start/end point up the tree if the leaves are sharp and if we are in different containers

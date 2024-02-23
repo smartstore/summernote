@@ -882,12 +882,17 @@ const children = (node, selector, deep = true) => {
 }
 
 /*
-* Gets the next text node index or 0 if not found.
+* Gets the next text node index or null if not found.
 */
 const getNextTextNode = (actual) => {
   actual = getNode(actual);
-  if(!actual.nextSibling) return undefined;
+  if(!actual?.nextSibling) return undefined;
   if(actual.parent !== actual.nextSibling.parent) return undefined;
+
+  if (isBookmarkNode(actual)) {
+    actual = actual.nextSibling;
+    if (!actual) return undefined;
+  }
 
   return isText(actual.nextSibling) 
     ? actual.nextSibling 
