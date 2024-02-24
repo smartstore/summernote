@@ -18,10 +18,6 @@ const CARET_ID = '_note_caret';
 const ZWSP = Point.ZERO_WIDTH_NBSP_CHAR;
 const NBSP = '\u00A0';
 
-const importNode = (ownerDocument, node) => {
-  return ownerDocument.importNode(node, true);
-};
-
 const findFirstTextNode = (node) => {
   if (node) {
     const walker = new DomTreeWalker(node, node);
@@ -103,9 +99,10 @@ const removeCaretContainer = (editor, node, moveCaret) => {
     node = FormatUtils.getParentCaretContainer(editor.editable, selection.getStart());
 
     if (!node) {
-      while ((node = document.getElementById(CARET_ID))) {
-        removeCaretContainerNode(editor, node, moveCaret);
-      }
+      // TODO: Uncomment this
+      // while ((node = document.getElementById(CARET_ID))) {
+      //   removeCaretContainerNode(editor, node, moveCaret);
+      // }
     }
   } else {
     removeCaretContainerNode(editor, node, moveCaret);
@@ -180,24 +177,6 @@ const applyCaretFormat = (editor, name, vars) => {
   const container = selectionRng.startContainer;
   const text = container.nodeValue;
 
-  // // Get bookmark of caret position
-  // // TODO: Bookmarking geht nicht
-  // const bookmark = selection.createBookmark(true);
-
-  // // // Expand the range to the closest word and split it at those points
-  // // const wordRange = collapsedRng
-  // //   .getWordRange({ forward: true, stopAtPunc: true, trim: true })
-  // //   .splitText();
-
-  // // Expand the range to the closest word and split it at those points
-  // const wordRange = FormatUtils.expandRng(collapsedRng, formatList).splitText();
-
-  // // Apply the format to the range
-  // editor.formatter.apply(name, vars, wordRange);
-
-  // // Move selection back to caret position
-  // selection.moveToBookmark(bookmark);
-
   caretContainer = FormatUtils.getParentCaretContainer(editor.editable, selection.getStart());
 
   // Expand to word if caret is in the middle of a text node and the char before/after is a alpha numeric character
@@ -220,23 +199,23 @@ const applyCaretFormat = (editor, name, vars) => {
     // Move selection back to caret position
     selection.moveToBookmark(bookmark);
   } else {
-    // let textNode = caretContainer ? findFirstTextNode(caretContainer) : null;
+    let textNode = caretContainer ? findFirstTextNode(caretContainer) : null;
 
-    // if (!caretContainer || textNode?.data !== ZWSP) {
-    //   // Need to import the node into the document on IE or we get a lovely WrongDocument exception
-    //   caretContainer = importNode(editor.getDoc(), createCaretContainer(true).dom);
-    //   textNode = caretContainer.firstChild;
+    if (!caretContainer || textNode?.data !== ZWSP) {
+      // Need to import the node into the document on IE or we get a lovely WrongDocument exception
+      caretContainer = createCaretContainer(true);
+      textNode = caretContainer.firstChild;
 
-    //   collapsedRng.insertNode(caretContainer);
-    //   offset = 1;
+      range.getNativeRange(selectionRng).insertNode(caretContainer);
+      offset = 1;
 
-    //   editor.formatter.apply(name, vars, caretContainer);
-    // } else {
-    //   editor.formatter.apply(name, vars, caretContainer);
-    // }
+      editor.formatter.apply(name, vars, caretContainer);
+    } else {
+      editor.formatter.apply(name, vars, caretContainer);
+    }
 
-    // // Move selection to text node
-    // selection.setCursorLocation(textNode, offset);
+    // Move selection to text node
+    selection.setCursorLocation(textNode, offset);
   }
 };
 
@@ -285,22 +264,39 @@ const removeCaretFormat = (editor, name, vars, similar) => {
 
   if (hasContentAfter) {
     // Get bookmark of caret position
-    // TODO: Bookmarking geht nicht
     const bookmark = selection.createBookmark(true);
 
     // Expand the range to the closest word and split it at those points
-    const wordRange = rng
-      .getWordRange({ forward: true, stopAtPunc: true, trim: true })
-      .splitText();
+    let expandedRng = FormatUtils.expandRng(rng, formatList);
+    expandedRng = expandedRng.splitText(expandedRng);
 
     // Remove the format from the range
-    editor.formatter.remove(name, vars, wordRange, similar);
+    editor.formatter.remove(name, vars, expandedRng, similar);
 
     // Move selection back to caret position
     selection.moveToBookmark(bookmark);
   }
   else { // !hasContentAfter
-    // TODO: Impl !hasContentAfter
+    console.log('!hasContentAfter');
+    const caretContainer = FormatUtils.getParentCaretContainer(editor.editable, formatNode);
+    const parentsAfter = Type.isAssigned(caretContainer) ? dom.parentsWhile(formatNode.parentNode, func.ok, caretContainer) : [];
+    const newCaretContainer = createCaretContainer(false);
+
+    insertCaretContainerNode(newCaretContainer, caretContainer ?? formatNode);
+
+    const cleanedFormatNode = cleanFormatNode(editor, newCaretContainer, formatNode, name, vars, similar);
+    const caretTextNode = insertFormatNodesIntoCaretContainer([
+      ...parents,
+      ...cleanedFormatNode.toArray(),
+      ...parentsAfter ], newCaretContainer);
+    if (caretContainer) {
+      removeCaretContainerNode(editor, caretContainer, Type.isNonNullable(caretContainer));
+    }
+    selection.setCursorLocation(caretTextNode, 1);
+
+    if (dom.isEmpty(formatNode)) {
+      dom.remove(formatNode, true);
+    }
   }
 };
 
@@ -323,11 +319,14 @@ const disableCaretContainer = (editor, keyCode, moveCaret) => {
 const endsWithNbsp = (element) => dom.isText(element) && Str.endsWith(element.data, NBSP);
 
 const setup = (context) => {
-  $(context.layoutInfo.editable).on('mouseup keydown', (e) => {
-    const editor = context.modules.editor;
-    disableCaretContainer(editor, e.keyCode, endsWithNbsp(editor.selection.getRange().endContainer));
-  });
+  context.layoutInfo.editable.on('mouseup keydown', context, onDisableCaretContainer);
 };
+
+const onDisableCaretContainer = (e) => {
+  const editor = e.data.modules.editor; // e.data is Context
+  //console.log('onDisableCaretContainer', e.type, editor);
+  disableCaretContainer(editor, e.keyCode, endsWithNbsp(editor.selection.getRange().endContainer)); 
+}
 
 export default {
   setup,
