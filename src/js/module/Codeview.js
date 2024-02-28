@@ -1,4 +1,5 @@
 import dom from '../core/dom';
+import func from '../core/func';
 import key from '../core/key';
 import range from '../core/range';
 import Str from '../core/Str';
@@ -61,6 +62,7 @@ export default class CodeView {
    * toggle codeview
    */
   toggle() {
+    const self = this;
     if (this.isActivated()) {
       this.deactivate();
     } else {
@@ -118,6 +120,8 @@ export default class CodeView {
    * Activate code view
    */
   activate() {
+    this.context.triggerEvent('codeview.activating');
+
     const CodeMirror = this.CodeMirrorConstructor;
     const editor = this.context.modules.editor;
     
@@ -190,6 +194,8 @@ export default class CodeView {
    * deactivate code view
    */
   deactivate() {
+    this.context.triggerEvent('codeview.leaving');
+
     const CodeMirror = this.CodeMirrorConstructor;
     // deactivate CodeMirror as codable
     if (CodeMirror) {

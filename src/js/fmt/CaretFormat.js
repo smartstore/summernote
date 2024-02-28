@@ -2,16 +2,13 @@
 import Type from '../core/Type';
 import lists from '../core/lists';
 import dom from '../core/dom';
-import Point from '../core/Point';
 import schema from '../core/schema';
+import Point from '../core/Point';
 import range from '../core/range';
-import NodeComparer from '../util/NodeComparer';
 import DomTreeWalker from '../util/DomTreeWalker';
 import FormatUtils from './FormatUtils';
 import MatchFormat from './MatchFormat';
-import CaretFormat from './CaretFormat';
-import MergeFormats from './MergeFormats';
-import ListItemFormat from './ListItemFormat';
+import DeleteElement from './DeleteElement';
 import Str from '../core/Str';
 
 const CARET_ID = '_note_caret';
@@ -55,13 +52,38 @@ const trimZwspFromCaretContainer = (caretContainerNode) => {
 
   return textNode;
 };
+
+const createPaddingBr = () => {
+  const br = document.createElement('br');
+  dom.setAttr(br, 'data-mce-bogus', '1')
+  return br;
+};
+
+const fillWithPaddingBr = (elm) => {
+  elm.textContent = '';
+  lists.each(elm.childNodes, x => dom.remove(x));
+
+  dom.append(el, createPaddingBr());
+};
+
+const removeTrailingBr = (elm) => {
+  const allBrs = lists.from(elm.querySelectorAll('br'));
+  const brs = lists.filter(getLastChildren(elm).slice(-1), dom.isBR);
+  if (allBrs.length === brs.length) {
+    lists.each(brs, br => {
+      dom.remove(br);
+    });
+  }
+};
+
 const removeCaretContainerNode = (editor, node, moveCaret) => {
   const selection = editor.selection;
 
   if (FormatUtils.isCaretContainerEmpty(node)) {
-    // TODO: Impl DeleteElement.deleteElement
-    //DeleteElement.deleteElement(editor, false, node, moveCaret, true);
+    console.log('YES isCaretContainerEmpty');
+    DeleteElement.deleteElement(editor, false, node, moveCaret, true);
   } else {
+    console.log('NO isCaretContainerEmpty');
     const rng = selection.getRange();
     const block = dom.closest(node, dom.isBlock);
 
@@ -84,8 +106,7 @@ const removeCaretContainerNode = (editor, node, moveCaret) => {
     }
 
     if (block && dom.isEmpty(block)) {
-      // TODO: Impl PaddingBr.fillWithPaddingBr
-      //PaddingBr.fillWithPaddingBr(block);
+      fillWithPaddingBr(block);
     }
 
     selection.setRange(rng);
@@ -99,10 +120,9 @@ const removeCaretContainer = (editor, node, moveCaret) => {
     node = FormatUtils.getParentCaretContainer(editor.editable, selection.getStart());
 
     if (!node) {
-      // TODO: Uncomment this
-      // while ((node = document.getElementById(CARET_ID))) {
-      //   removeCaretContainerNode(editor, node, moveCaret);
-      // }
+      while ((node = document.getElementById(CARET_ID))) {
+        removeCaretContainerNode(editor, node, moveCaret);
+      }
     }
   } else {
     removeCaretContainerNode(editor, node, moveCaret);
@@ -116,8 +136,7 @@ const insertCaretContainerNode = (caretContainer, formatNode) => {
     // Replace formatNode with caretContainer when removing format from empty block like <p><b>|</b></p>
     formatNode.parentNode?.replaceChild(caretContainer, formatNode);
   } else {
-    // TODO: Impl PaddingBr.removeTrailingBr()
-    //PaddingBr.removeTrailingBr(formatNode);
+    removeTrailingBr(formatNode);
     if (dom.isEmpty(formatNode)) {
       // TODO: Reimpl dom.isEmpty
       formatNode.parentNode?.replaceChild(caretContainer, formatNode);
@@ -303,9 +322,9 @@ const removeCaretFormat = (editor, name, vars, similar) => {
 const disableCaretContainer = (editor, keyCode, moveCaret) => {
   const selection = editor.selection, root = editor.editable;
 
-  removeCaretContainer(editor, null, moveCaret);
+  removeCaretContainer(editor, FormatUtils.getParentCaretContainer(root, selection.getStart()), moveCaret);
 
-  // Remove caret container if it's empty
+  // Remove caret container if it's empty on Backspace or DEL
   if ((keyCode === 8 || keyCode === 46) && selection.isCollapsed() && selection.getStart().innerHTML === ZWSP) {
     removeCaretContainer(editor, FormatUtils.getParentCaretContainer(root, selection.getStart()), true);
   }
@@ -319,13 +338,12 @@ const disableCaretContainer = (editor, keyCode, moveCaret) => {
 const endsWithNbsp = (element) => dom.isText(element) && Str.endsWith(element.data, NBSP);
 
 const setup = (context) => {
-  context.layoutInfo.editable.on('mouseup keydown', context, onDisableCaretContainer);
+  context.layoutInfo.editable.on('mouseup keydown blur', context, onDisableCaretContainer);
 };
 
 const onDisableCaretContainer = (e) => {
   const editor = e.data.modules.editor; // e.data is Context
-  //console.log('onDisableCaretContainer', e.type, editor);
-  disableCaretContainer(editor, e.keyCode, endsWithNbsp(editor.selection.getRange().endContainer)); 
+  disableCaretContainer(editor, e.keyCode, endsWithNbsp(editor.selection.getRange().endContainer));
 }
 
 export default {
