@@ -23,33 +23,36 @@ const isRngStartAtStartOfElement = (rng, elm) => {
 
 const isRngEndAtEndOfElement = (rng, elm) => {
   // TODO: Is this correct? isRngEndAtEndOfElement()
-  return Point.isRightEdgePoint(rng.getEndPoint(), elm);
+  return Point.isRightEdgePointOf(rng.getEndPoint(), elm);
 };
 
 const isEditableListItem = () => (elm) => dom.isListItem(elm) && dom.isContentEditable(elm);
 
 const getFullySelectedBlocks = (selection) => {
-  return [];
-  // // TODO: Implement selection.getSelectedBlocks()
-  // const blocks = selection.getSelectedBlocks();
-  // const rng = selection.getRange();
+  const blocks = selection.getSelectedBlocks();
+  const rng = selection.getRange();
 
-  // if (selection.isCollapsed()) {
-  //   return [];
-  // } if (blocks.length === 1) {
-  //   return isRngStartAtStartOfElement(rng, blocks[0]) && isRngEndAtEndOfElement(rng, blocks[0]) ? blocks : [];
-  // } else {
-  //   const first = lists.head(blocks).filter(elm => isRngStartAtStartOfElement(rng, elm)).toArray();
-  //   const last = lists.last(blocks).filter(elm => isRngEndAtEndOfElement(rng, elm)).toArray();
-  //   const middle = blocks.slice(1, -1);
+  if (rng.collapsed) {
+    return [];
+  } if (blocks.length === 1) {
+    return isRngStartAtStartOfElement(rng, blocks[0]) && isRngEndAtEndOfElement(rng, blocks[0]) ? blocks : [];
+  } else {
+    let result = [];
+    const first = isRngStartAtStartOfElement(rng, lists.head(blocks)) ? lists.head(blocks) : null;
+    const last = isRngEndAtEndOfElement(rng, lists.last(blocks)) ? lists.last(blocks) : null;
+    const middle = blocks.slice(1, -1);
 
-  //   return first.concat(middle).concat(last);
-  // }
+    if (first) result.push(first);
+    result = result.concat(middle);
+    if (last) result.push(last);
+
+    return result;
+  }
 }
 
 export default {
   listItemStyles,
   getExpandedListItemFormat,
   getFullySelectedListItems: (selection) => lists.filter(getFullySelectedBlocks(selection), isEditableListItem),
-  getPartiallySelectedListItems: (selection) => lists.filter([] /*selection.getSelectedBlocks()*/, isEditableListItem)
+  getPartiallySelectedListItems: (selection) => lists.filter(selection.getSelectedBlocks(), isEditableListItem)
 }
