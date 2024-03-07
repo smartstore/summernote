@@ -7,7 +7,7 @@ import FormatUtils from './FormatUtils';
 import MatchFormat from './MatchFormat';
 import CaretFormat from './CaretFormat';
 import MergeFormats from './MergeFormats';
-import ListItemFormat from './ListItemFormat';
+//import ListItemFormat from './ListItemFormat';
 import RemoveFormat from './RemoveFormat';
 import Str from '../core/Str';
 
@@ -157,6 +157,8 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
         // if (dom.isText(node) && Str.startsWith(node.nodeValue, '\n  ')) {
         //   console.log('rng.walk', node, 'prev', node.previousSibling, 'next', node.nextSibling);
         // }
+
+        //console.log('process', node);
 
         // Node has a contentEditable value
         const contentEditableValue = dom.getContentEditable(node);
@@ -330,11 +332,13 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
         // Apply formatting to selection
         if (!isCollapsed) {
           rng = rng.splitText().normalize();
+          //console.log('normalized', rng.startContainer.parentNode.childNodes[0], rng.startContainer.parentNode.childNodes[1]);
         }
 
         // Apply while preserving visible selection
         FormatUtils.preserveSelection(editor, rng, () => {
           const expandedRng = FormatUtils.expandRng(rng, formatList);
+          //console.log('expandedRng', expandedRng);
           applyRngStyle(expandedRng, false);
         });
 
@@ -344,10 +348,10 @@ const applyFormatAction = (editor, name, vars = null, node = null) => {
         CaretFormat.applyCaretFormat(editor, name, vars);
       }
 
-      const liFmt = ListItemFormat.getExpandedListItemFormat(editor.formatter, name);
-      if (liFmt) {
-        each(ListItemFormat.getFullySelectedListItems(editor.selection), (li) => applyStyles(li, liFmt, vars));
-      }
+      // const liFmt = ListItemFormat.getExpandedListItemFormat(editor.formatter, name);
+      // if (liFmt) {
+      //   each(ListItemFormat.getFullySelectedListItems(editor.selection), (li) => applyStyles(li, liFmt, vars));
+      // }
     }
   }
 };

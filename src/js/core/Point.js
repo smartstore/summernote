@@ -35,7 +35,10 @@ const isLeftEdgePoint = (point) => point.offset === 0;
  *
  * @param {BoundaryPoint} point
  */
-const isRightEdgePoint = (point) => point.offset === dom.nodeLength(point.node);
+//const isRightEdgePoint = (point) => point.offset === dom.nodeLength(point.node);
+const isRightEdgePoint = (point) => { 
+  return point.offset === dom.nodeLength(point.node); 
+};
 
 /**
  * Checks whether boundary point is edge or not.
@@ -60,7 +63,7 @@ const isLeftEdgePointOf = (point, parent) =>
  * @return {Boolean}
  */
 const isRightEdgePointOf = (point, parent) => {
-  isRightEdgePoint(point) && dom.isRightEdgeOf(point.node, parent);
+  return isRightEdgePoint(point) && dom.isRightEdgeOf(point.node, parent);
 }
 
 /**

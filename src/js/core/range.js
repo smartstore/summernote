@@ -894,7 +894,7 @@ class WrappedRange {
   /**
    * Splits text on range and returns a new range.
    */
-  splitText() {
+  splitText_yo() {
     const pts = this.getPoints();
 
     // Handle single text node
@@ -931,7 +931,7 @@ class WrappedRange {
     return create(pts.sc, pts.so, pts.ec, pts.eo);
   }
 
-  splitText_old() {
+  splitText() {
     // TODO: Remove range.splitText_old()
     const isSameContainer = this.sc === this.ec;
     const pts = this.getPoints();

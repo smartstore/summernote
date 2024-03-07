@@ -34,17 +34,26 @@ const getFullySelectedBlocks = (selection) => {
 
   if (rng.collapsed) {
     return [];
-  } if (blocks.length === 1) {
+  } 
+  
+  if (blocks.length === 1) {
     return isRngStartAtStartOfElement(rng, blocks[0]) && isRngEndAtEndOfElement(rng, blocks[0]) ? blocks : [];
-  } else {
+  } 
+  else {
     let result = [];
-    const first = isRngStartAtStartOfElement(rng, lists.head(blocks)) ? lists.head(blocks) : null;
-    const last = isRngEndAtEndOfElement(rng, lists.last(blocks)) ? lists.last(blocks) : null;
-    const middle = blocks.slice(1, -1);
 
-    if (first) result.push(first);
-    result = result.concat(middle);
-    if (last) result.push(last);
+    // Left edge part
+    if (isRngStartAtStartOfElement(rng, lists.head(blocks))) {
+      result.push(lists.head(blocks));
+    }
+
+    // Middle part
+    result = result.concat(blocks.slice(1, -1));
+
+    // Right edge part
+    if (isRngEndAtEndOfElement(rng, lists.last(blocks))) {
+      result.push(lists.last(blocks));
+    }
 
     return result;
   }

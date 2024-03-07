@@ -9,7 +9,7 @@ import FormatUtils from './FormatUtils';
 import MatchFormat from './MatchFormat';
 import CaretFormat from './CaretFormat';
 import MergeFormats from './MergeFormats';
-import ListItemFormat from './ListItemFormat';
+//import ListItemFormat from './ListItemFormat';
 
 const NOTE_ATTR_RE = /^(src|href|style)$/;
 const each = lists.each;
