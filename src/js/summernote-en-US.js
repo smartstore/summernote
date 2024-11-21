@@ -193,6 +193,6 @@ $.extend(true, $.summernote.lang, {
       tooltip: "Table style",
       stylesExclusive: ["Basic", "Bordered"],
       stylesInclusive: ["Striped", "Condensed", "Hoverable"]
-    } 
+    }
   }
 });

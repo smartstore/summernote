@@ -895,13 +895,12 @@ export default class Editor {
     return styleTag?.className;
   }
 
-  onFormatBlock(tagName) {
-    this.formatter.toggle(tagName.toLowerCase());
-    // TODO: Creating a new block with ENTER should not copy all attributes from prev block
-  }
+  // onFormatBlock_New(tagName) {
+  //   this.formatter.toggle(tagName.toLowerCase());
+  //   // TODO: Creating a new block with ENTER should not copy all attributes from prev block
+  // }
 
-  onFormatBlock_Old(tagName, $target) {
-    // Remove onFormatBlock_Old method
+  onFormatBlock(tagName, $target) {
     let currentRange = this.createRange();
     let $block = $([currentRange.sc, currentRange.ec]).closest(tagName);
 
@@ -944,7 +943,7 @@ export default class Editor {
       }
     }
 
-    // Cleam empty class or style
+    // Clean empty class or style
     this.cleanEmptyStyling($block);
   }
 

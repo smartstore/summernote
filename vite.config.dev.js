@@ -19,7 +19,7 @@ const config = defineConfig({
 
   plugins: [
       externalGlobals({
-        jquery: '$',
+        jquery: '$'
       }),
   ],
 
@@ -41,7 +41,7 @@ const config = defineConfig({
         entryFileNames: `[name].js`,
         assetFileNames: `[name].[ext]`,
         chunkFileNames: `[name].js`,
-        external: ['jquery'],
+        external: ['jquery', 'underscore'],
       },
 
     },

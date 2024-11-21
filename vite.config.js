@@ -22,13 +22,14 @@ Date: ${date}
 };
 
 const styles = [
+  'sm',
   'lite',
   'bs3', 'bs4', 'bs5',
 ];
-const defaultStyle = 'lite';
+const defaultStyle = 'sm';
 
 let configs = {};
-for (const style of styles) {
+for (const style of styles.slice(0, 1)) {
   configs[style] = defineConfig({
     // prevent to build twice while calling `build` function manually
     configFile: false,
@@ -42,6 +43,7 @@ for (const style of styles) {
     plugins: [
       externalGlobals({
         jquery: '$',
+        underscore: '_'
       }),
       banner((fileName) => {
         if (fileName.endsWith('.min.js')) return banners['minimal'];
@@ -62,7 +64,7 @@ for (const style of styles) {
       sourcemap: true,
 
       lib: {
-        entry: `/src/styles/${style}/summernote-${style}.js`,
+        entry: `./src/styles/${style}/summernote-${style}.js`,
         name: 'summernote',
         formats: ['iife'],
         fileName: (format, entryName) => `${entryName}.js`,
@@ -71,6 +73,7 @@ for (const style of styles) {
       rollupOptions: {
         external: (id) => {
           if (id === 'jquery') return true; // do not bundle jQuery
+          if (id === 'underscore') return true; // do not bundle underscore
           if (id.startsWith('./font/')) return true; // do not bundle font files
           return false;
         },

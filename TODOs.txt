@@ -1,4 +1,4 @@
-const defaultStyle = 'bs3';
+*const defaultStyle = 'bs3';
 in config/common.js
 ------------
 ...
@@ -7,9 +7,10 @@ in config/webpack.production.js
 lang changes
 -------------
 Check and apply summernote-bs4.js changes in history to sm.js
-
-
-Mach weiter mit Editor.js
+-------------
+Put underscore and popper in vite.config.dev
+-------------
+*Restore Editor.onFormatBlock
 
 
 
