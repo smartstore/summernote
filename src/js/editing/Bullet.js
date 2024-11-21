@@ -212,7 +212,7 @@ export default class Bullet {
                   offset: dom.position(last) + 1,
                 },
                 {
-                  isSkipPaddingBlankHTML: true,
+                  skipPaddingBlankHTML: true,
                 },
               )
             : null;
@@ -224,7 +224,7 @@ export default class Bullet {
             offset: dom.position(head),
           },
           {
-            isSkipPaddingBlankHTML: true,
+            skipPaddingBlankHTML: true,
           },
         );
 

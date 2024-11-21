@@ -274,22 +274,22 @@ const comparePoints = (point1, point2) => {
  *
  * @param {BoundaryPoint} point
  * @param {Object} [options]
- * @param {Boolean} [options.isSkipPaddingBlankHTML] - default: false
- * @param {Boolean} [options.isNotSplitEdgePoint] - default: false
- * @param {Boolean} [options.isDiscardEmptySplits] - default: false
+ * @param {Boolean} [options.skipPaddingBlankHTML] - default: false
+ * @param {Boolean} [options.skipEdgePoint] - default: false
+ * @param {Boolean} [options.discardEmptySplits] - default: false
  * @return {Node} Right node of boundary point
  */
 const splitNode = (point, options) => {
-  let isSkipPaddingBlankHTML = options && options.isSkipPaddingBlankHTML;
-  const isNotSplitEdgePoint = options && options.isNotSplitEdgePoint;
-  const isDiscardEmptySplits = options && options.isDiscardEmptySplits;
+  let skipPaddingBlankHTML = options && options.skipPaddingBlankHTML;
+  const skipEdgePoint = options && options.skipEdgePoint;
+  const discardEmptySplits = options && options.discardEmptySplits;
 
-  if (isDiscardEmptySplits) {
-    isSkipPaddingBlankHTML = true;
+  if (discardEmptySplits) {
+    skipPaddingBlankHTML = true;
   }
 
   // Edge case
-  if (isEdgePoint(point) && (dom.isText(point.node) || isNotSplitEdgePoint)) {
+  if (isEdgePoint(point) && (dom.isText(point.node) || skipEdgePoint)) {
     if (isLeftEdgePoint(point)) {
       return point.node;
     } else if (isRightEdgePoint(point)) {
@@ -311,12 +311,12 @@ const splitNode = (point, options) => {
     const clone = dom.insertAfter(point.node, point.node.cloneNode(false));
     dom.appendChildNodes(clone, childNodes);
 
-    if (!isSkipPaddingBlankHTML) {
+    if (!skipPaddingBlankHTML) {
       paddingBlankHTML(point.node);
       paddingBlankHTML(clone);
     }
 
-    if (isDiscardEmptySplits) {
+    if (discardEmptySplits) {
       if (dom.isEmpty(point.node)) {
         dom.remove(point.node);
       }
@@ -336,8 +336,8 @@ const splitNode = (point, options) => {
  * @param {Node} root - split root
  * @param {BoundaryPoint} point
  * @param {Object} [options]
- * @param {Boolean} [options.isSkipPaddingBlankHTML] - default: false
- * @param {Boolean} [options.isNotSplitEdgePoint] - default: false
+ * @param {Boolean} [options.skipPaddingBlankHTML] - default: false
+ * @param {Boolean} [options.skipEdgePoint] - default: false
  * @return {Node} Right node of boundary point
  */
 const splitTree = (root, point, options) => {
@@ -407,8 +407,8 @@ const splitPoint = (point, isInline) => {
 
   // if splitRoot exists, split with splitTree
   let pivot = splitRoot && splitTree(splitRoot, point, {
-    isSkipPaddingBlankHTML: isInline,
-    isNotSplitEdgePoint: isInline,
+    skipPaddingBlankHTML: isInline,
+    skipEdgePoint: isInline,
   });
 
   // if container is point.node, find pivot with point.offset

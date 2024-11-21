@@ -448,7 +448,7 @@ export default class Editor {
           this.history.recordUndo();
         }
       }
-    }).on('keyup mousedown mouseup copy paste focus blur scroll', (e) => {
+    }).on('keyup mousedown mouseup copy paste copy focus blur scroll', (e) => {
       // Pass all events
       this.context.triggerEvent(e.type, e);
     }).on('input', () => {
@@ -1017,6 +1017,10 @@ export default class Editor {
    * @return {String} [return.url=""]
    */
   getLinkInfo() {
+    if (!this.hasFocus()) {
+      this.focus();
+    }
+
     let img, a, rng;
 
     img = this.selection.selectedControl;
