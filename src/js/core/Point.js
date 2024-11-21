@@ -215,7 +215,7 @@ const nextPointWhile = (point, pred) => pointWhile(point, pred, true);
 const walkPoint = (startPoint, endPoint, handler, skipInnerOffset) => {
   let point = startPoint;
 
-  while (point) {
+  while (point && point.node) {
     handler(point);
 
     if (equals(point, endPoint)) {

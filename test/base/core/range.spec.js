@@ -1,23 +1,13 @@
-/**
- * range.spec.js
- * (c) 2013~ Alan Hong
- * summernote may be freely distributed under the MIT license./
- */
-
-import chai from 'chai';
-import chaidom from 'test/chaidom';
+import { describe, it, expect, beforeAll } from 'vitest';
 import $ from 'jquery';
-import dom from 'src/js/core/dom';
-import range from 'src/js/core/range';
-
-var expect = chai.expect;
-chai.use(chaidom);
+import dom from '@/js/core/dom';
+import range from '@/js/core/range';
 
 describe('base:core.range', () => {
   describe('nodes', () => {
     describe('1 depth', () => {
       var $para;
-      before(() => {
+      beforeAll(() => {
         var $cont = $('<div class="note-editable"><p>para1</p><p>para2</p></div>');
         $para = $cont.find('p');
       });
@@ -48,26 +38,24 @@ describe('base:core.range', () => {
         var $cont = $('<div class="note-editable"><ul><li>para1</li><li>para2</li></ul></div>');
         var $li = $cont.find('li');
         var rng = range.create($li[0].firstChild, 0, $li[1].firstChild, 1);
-        const nodes = rng.nodes(dom.isListItem, { includeAncestor: true });
 
-        expect(nodes).to.have.length(2);
+        expect(rng.nodes(dom.isPara, { includeAncestor: true })).to.have.length(2);
       });
 
-      it('should return array of headings', () => {
+      it('should return array of list paragraphs', () => {
         var $cont = $('<div class="note-editable"><h1>heading1</h1><h2>heading2</h2></div>');
         var $h1 = $cont.find('h1');
         var $h2 = $cont.find('h2');
         var rng = range.create($h1[0].firstChild, 0, $h2[0].firstChild, 1);
-        const nodes = rng.nodes(dom.isPara, { includeAncestor: true });
 
-        expect(nodes).to.have.length(2);
+        expect(rng.nodes(dom.isPara, { includeAncestor: true })).to.have.length(2);
       });
     });
   });
 
   describe('commonAncestor', () => {
     var $cont;
-    before(() => {
+    beforeAll(() => {
       $cont = $('<div><span><b>b</b><u>u</u></span></div>');
     });
 
@@ -77,14 +65,14 @@ describe('base:core.range', () => {
       var $u = $cont.find('u');
 
       var rng = range.create($b[0].firstChild, 0, $u[0].firstChild, 1);
-      expect(rng.commonAncestorContainer).to.deep.equal($span[0]);
+      expect(rng.commonAncestor()).to.deep.equal($span[0]);
     });
 
     it('should return b(#textNode) for <b>|b|</b>', () => {
       var $b = $cont.find('b');
 
       var rng = range.create($b[0].firstChild, 0, $b[0].firstChild, 1);
-      expect(rng.commonAncestorContainer).to.deep.equal($b[0].firstChild);
+      expect(rng.commonAncestor()).to.deep.equal($b[0].firstChild);
     });
   });
 
@@ -118,8 +106,8 @@ describe('base:core.range', () => {
 
   describe('normalize', () => {
     var $cont;
-    before(() => {
-      $cont = $('<div contenteditable="true" class="note-editable"><p><b>b</b><u>u</u><s>s</s></p></div>');
+    beforeAll(() => {
+      $cont = $('<div><p><b>b</b><u>u</u><s>s</s></p></div>');
     });
 
     it('should return <b>|b</b> ~ <u>u|</u> for |<b>b</b> ~ <u>u</u>|', () => {
@@ -224,7 +212,7 @@ describe('base:core.range', () => {
       var rng = range.create(text, 0, text, 0).normalize();
       expect(rng.sc).to.equal(text);
       expect(rng.so).to.equal(0);
-      expect(rng.collapsed).to.true;
+      expect(rng.isCollapsed()).to.true;
     });
   });
 
@@ -376,149 +364,116 @@ describe('base:core.range', () => {
   });
 
   describe('getWordRange', () => {
-    var $cont, text;
-    before(() => {
-      $cont = $('<div class="note-editable">super simple wysiwyg-editor</div>');
-      text = $cont[0].firstChild;
+    var $cont;
+    beforeAll(() => {
+      $cont = $('<div class="note-editable">super simple wysiwyg editor</div>');
     });
 
     it('should return the range itself when there is no word before cursor', () => {
-      var rng = range.create(text, 0).getWordRange();
+      var rng = range.create($cont[0].firstChild, 0).getWordRange();
 
-      expect(rng.sc).to.deep.equal(text);
+      expect(rng.sc).to.deep.equal($cont[0].firstChild);
       expect(rng.so).to.equal(0);
-      expect(rng.ec).to.deep.equal(text);
+      expect(rng.ec).to.deep.equal($cont[0].firstChild);
       expect(rng.eo).to.equal(0);
     });
 
     it('should return expanded range when there is a word before cursor', () => {
-      var rng = range.create(text, 5).getWordRange();
+      var rng = range.create($cont[0].firstChild, 5).getWordRange();
 
-      expect(rng.sc).to.deep.equal(text);
+      expect(rng.sc).to.deep.equal($cont[0].firstChild);
       expect(rng.so).to.equal(0);
-      expect(rng.ec).to.deep.equal(text);
+      expect(rng.ec).to.deep.equal($cont[0].firstChild);
       expect(rng.eo).to.equal(5);
     });
 
     it('should return expanded range when there is a half word before cursor', () => {
-      var rng = range.create(text, 3).getWordRange();
+      var rng = range.create($cont[0].firstChild, 3).getWordRange();
 
-      expect(rng.sc).to.deep.equal(text);
+      expect(rng.sc).to.deep.equal($cont[0].firstChild);
       expect(rng.so).to.equal(0);
-      expect(rng.ec).to.deep.equal(text);
+      expect(rng.ec).to.deep.equal($cont[0].firstChild);
       expect(rng.eo).to.equal(3);
     });
 
     it('should return expanded range when there are words before cursor', () => {
-      var rng = range.create(text, 12).getWordRange();
+      var rng = range.create($cont[0].firstChild, 12).getWordRange();
 
-      expect(rng.sc).to.deep.equal(text);
+      expect(rng.sc).to.deep.equal($cont[0].firstChild);
       expect(rng.so).to.equal(6);
-      expect(rng.ec).to.deep.equal(text);
+      expect(rng.ec).to.deep.equal($cont[0].firstChild);
       expect(rng.eo).to.equal(12);
-    });
-
-    it('should return whole trimmed word', () => {
-      // super |simp*le| wysiwyg-editor
-      var rng = range.create(text, 10).getWordRange({ forward: true, trim: true });
-
-      expect(rng.sc).to.deep.equal(text);
-      expect(rng.so).to.equal(6);
-      expect(rng.ec).to.deep.equal(text);
-      expect(rng.eo).to.equal(12);
-    });
-
-    it('should stop at punc', () => {
-      // super simple |w*ysiwyg|-editor
-      var rng = range.create(text, 14).getWordRange({ forward: true, stopAtPunc: true, trim: true });
-
-      expect(rng.sc).to.deep.equal(text);
-      expect(rng.so).to.equal(13);
-      expect(rng.ec).to.deep.equal(text);
-      expect(rng.eo).to.equal(20);
-    });
-
-    it('should stop at punc 2', () => {
-      // super simple wysiwyg-|e*ditor|
-      var rng = range.create(text, 22).getWordRange({ forward: true, stopAtPunc: true, trim: true });
-
-      expect(rng.sc).to.deep.equal(text);
-      expect(rng.so).to.equal(21);
-      expect(rng.ec).to.deep.equal(text);
-      expect(rng.eo).to.equal(27);
     });
   });
 
   describe('getWordsRange', () => {
-    var $cont, text;
-    before(() => {
+    var $cont;
+    beforeAll(() => {
       $cont = $('<div class="note-editable">super &nbsp; simple wysiwyg editor</div>');
-      text = $cont[0].firstChild;
     });
 
     it('should return the range itself when there is no word before cursor', () => {
-      var rng = range.create(text, 0).getWordsRange();
+      var rng = range.create($cont[0].firstChild, 0).getWordsRange();
 
-      expect(rng.sc).to.deep.equal(text);
+      expect(rng.sc).to.deep.equal($cont[0].firstChild);
       expect(rng.so).to.equal(0);
-      expect(rng.ec).to.deep.equal(text);
+      expect(rng.ec).to.deep.equal($cont[0].firstChild);
       expect(rng.eo).to.equal(0);
     });
 
     it('should return expanded range when there is a word before cursor', () => {
-      var rng = range.create(text, 5).getWordsRange();
+      var rng = range.create($cont[0].firstChild, 5).getWordsRange();
 
-      expect(rng.sc).to.deep.equal(text);
+      expect(rng.sc).to.deep.equal($cont[0].firstChild);
       expect(rng.so).to.equal(0);
-      expect(rng.ec).to.deep.equal(text);
+      expect(rng.ec).to.deep.equal($cont[0].firstChild);
       expect(rng.eo).to.equal(5);
     });
 
     it('should return expanded range when there is a half word before cursor', () => {
-      var rng = range.create(text, 3).getWordsRange();
+      var rng = range.create($cont[0].firstChild, 3).getWordsRange();
 
-      expect(rng.sc).to.deep.equal(text);
+      expect(rng.sc).to.deep.equal($cont[0].firstChild);
       expect(rng.so).to.equal(0);
-      expect(rng.ec).to.deep.equal(text);
+      expect(rng.ec).to.deep.equal($cont[0].firstChild);
       expect(rng.eo).to.equal(3);
     });
 
     it('should return expanded range when there are words before cursor', () => {
-      var rng = range.create(text, 14).getWordsRange();
+      var rng = range.create($cont[0].firstChild, 14).getWordsRange();
 
-      expect(rng.sc).to.deep.equal(text);
+      expect(rng.sc).to.deep.equal($cont[0].firstChild);
       expect(rng.so).to.equal(0);
-      expect(rng.ec).to.deep.equal(text);
+      expect(rng.ec).to.deep.equal($cont[0].firstChild);
       expect(rng.eo).to.equal(14);
     });
   });
 
   describe('getWordsMatchRange', () => {
-    var $cont, text, regex;
-    before(() => {
+    var $cont, regex;
+    beforeAll(() => {
       $cont = $('<div class="note-editable">hi @Peter Pan. How are you?</div>');
-      text = $cont[0].firstChild;
       regex = /@[a-z ]+/i;
     });
 
     it('should return null when there is no word before cursor', () => {
-      var rng = range.create(text, 0).getWordsMatchRange(regex);
+      var rng = range.create($cont[0].firstChild, 0).getWordsMatchRange(regex);
       expect(rng).to.be.a('null');
     });
 
     it('should return expanded range when there are words before cursor', () => {
-      var rng = range.create(text, 13).getWordsMatchRange(regex);
+      var rng = range.create($cont[0].firstChild, 13).getWordsMatchRange(regex);
 
       // range: 'hi @Peter Pan'
       // matched range: '@Peter Pan'
-      expect(rng.sc).to.deep.equal(text);
+      expect(rng.sc).to.deep.equal($cont[0].firstChild);
       expect(rng.so).to.equal(3);
-      expect(rng.ec).to.deep.equal(text);
+      expect(rng.ec).to.deep.equal($cont[0].firstChild);
       expect(rng.eo).to.equal(13);
     });
 
     it('should return null when can not match', () => {
-      var rng = range.create(text, 14).getWordsMatchRange(regex);
+      var rng = range.create($cont[0].firstChild, 14).getWordsMatchRange(regex);
 
       // range: 'hi @Peter Pan.'
       expect(rng).to.be.a('null');

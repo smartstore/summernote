@@ -1,6 +1,7 @@
 import $ from 'jquery';
-import '/js/settings';
-import renderer from '/js/renderer';
+import '@/js/settings';
+import renderer from '@/js/renderer';
+
 import './summernote-bs5.scss';
 
 const editor = renderer.create('<div class="note-editor note-frame card"></div>');
@@ -164,10 +165,15 @@ const ui = function(editorOptions) {
         $node.html(contents.join(''));
 
         if (options.tooltip) {
-          $node.find('.note-color-btn').tooltip({
+          var tooltipOptions = {
             container: options.container || editorOptions.container,
             trigger: 'hover',
             placement: 'bottom',
+          };
+
+          $node.tooltip({
+            selector: '.note-color-btn',
+            ...tooltipOptions,
           });
         }
       })($node, options);

@@ -41,21 +41,16 @@ export default class Bullet {
     lists.each(clustereds, (paras) => {
       const head = lists.head(paras);
       if (dom.isLi(head)) {
-        const previousList = this.findList(head.previousElementSibling);
+        const previousList = this.findList(head.previousSibling);
         if (previousList) {
-          paras
-            .map(para => previousList.appendChild(para));
-        } else {
+          paras.map(para => previousList.appendChild(para));
+        } 
+        else {
           this.wrapList(paras, head.parentNode.nodeName);
-          
-          // move ul element to parent li element
-          paras
-            .map((para) => para.parentNode)
-            // distinct
-            .filter(function(elem, index, self) {	return index === self.indexOf(elem);  })
-            .map((para) => this.appendToPrevious(para));
+          paras.map((para) => para.parentNode).map((para) => this.appendToPrevious(para));
         }
-      } else {
+      } 
+      else {
         lists.each(paras, (para) => {
           $(para).css('marginLeft', (idx, val) => {
             return (parseInt(val, 10) || 0) + 25;
@@ -84,7 +79,7 @@ export default class Bullet {
       } else {
         lists.each(paras, (para) => {
           $(para).css('marginLeft', (idx, val) => {
-            val = (parseInt(val, 10) || 0);
+            val = parseInt(val, 10) || 0;
             return val > 25 ? val - 25 : '';
           });
         });
@@ -119,7 +114,7 @@ export default class Bullet {
       const diffLists = rng.nodes(dom.isList, {
         includeAncestor: true,
       }).filter((listNode) => {
-        return (listNode.nodeName !== listName);
+        return !$.nodeName(listNode, listName);
       });
 
       if (diffLists.length) {
@@ -144,8 +139,8 @@ export default class Bullet {
     const head = lists.head(paras);
     const last = lists.last(paras);
 
-    const prevList = dom.isList(head.previousElementSibling) && head.previousElementSibling;
-    const nextList = dom.isList(last.nextElementSibling) && last.nextElementSibling;
+    const prevList = dom.isList(head.previousSibling) && head.previousSibling;
+    const nextList = dom.isList(last.nextSibling) && last.nextSibling;
 
     //console.log('wrapList last', last);
     const listNode = prevList || dom.insertAfter(last, dom.create(listName || 'UL'));
@@ -156,10 +151,10 @@ export default class Bullet {
     });
 
     // append to list(<ul>, <ol>)
-    dom.appendChildNodes(listNode, paras);
+    dom.appendChildNodes(listNode, paras, true);
 
     if (nextList) {
-      dom.appendChildNodes(listNode, lists.from(nextList.childNodes));
+      dom.appendChildNodes(listNode, lists.from(nextList.childNodes), true);
       dom.remove(nextList);
     }
 
@@ -185,13 +180,10 @@ export default class Bullet {
 
       if (headList.parentNode.nodeName === 'LI') {
         paras.map(para => {
-          const newList = this.findNextElementSiblings(para);
+          const newList = this.findNextSiblings(para);
 
-          if (parentItem.nextElementSibling) {
-            parentItem.parentNode.insertBefore(
-              para,
-              parentItem.nextElementSibling
-            );
+          if (parentItem.nextSibling) {
+            parentItem.parentNode.insertBefore(para, parentItem.nextSibling);
           } else {
             parentItem.parentNode.appendChild(para);
           }
@@ -207,25 +199,37 @@ export default class Bullet {
         }
 
         // remove left-over ul or ul with only whitespace node
-        if (parentItem.childNodes.length === 0 || parentItem.childNodes.length === 1 && parentItem.childNodes[0].textContent.trim() === '') {
+        if (parentItem.childNodes.length === 0) {
           parentItem.parentNode.removeChild(parentItem);
         }
       } else {
-        const lastList = headList.childNodes.length > 1 ? Point.splitTree(headList, {
-          node: last.parentNode,
-          offset: dom.position(last) + 1,
-        }, {
-          isSkipPaddingBlankHTML: true,
-        }) : null;
+        const lastList =
+          headList.childNodes.length > 1
+            ? Point.splitTree(
+                headList,
+                {
+                  node: last.parentNode,
+                  offset: dom.position(last) + 1,
+                },
+                {
+                  isSkipPaddingBlankHTML: true,
+                },
+              )
+            : null;
 
-        const middleList = Point.splitTree(headList, {
-          node: head.parentNode,
-          offset: dom.position(head),
-        }, {
-          isSkipPaddingBlankHTML: true,
-        });
+        const middleList = Point.splitTree(
+          headList,
+          {
+            node: head.parentNode,
+            offset: dom.position(head),
+          },
+          {
+            isSkipPaddingBlankHTML: true,
+          },
+        );
 
-        paras = isEscapseToBody ? dom.children(middleList, dom.isLi)
+        paras = isEscapseToBody 
+          ? dom.children(middleList, dom.isLi)
           : lists.from(middleList.childNodes).filter(dom.isLi);
 
         // LI to P
@@ -267,9 +271,7 @@ export default class Bullet {
    * @return {HTMLNode}
    */
   appendToPrevious(node) {
-    return node.previousElementSibling
-      ? dom.appendChildNodes(node.previousElementSibling, [node])
-      : this.wrapList([node], 'LI');
+    return node.previousSibling ? dom.appendChildNodes(node.previousSibling, [node]) : this.wrapList([node], 'LI');
   }
 
   /**
@@ -281,9 +283,7 @@ export default class Bullet {
    * @return {Array[]}
    */
   findList(node) {
-    return node
-      ? node.children && lists.find(node.children, child => ['OL', 'UL'].indexOf(child.nodeName) > -1)
-      : null;
+    return node ? lists.find(node.children, (child) => ['OL', 'UL'].indexOf(child.nodeName) > -1) : null;
   }
 
   /**
@@ -294,11 +294,11 @@ export default class Bullet {
    * @param {HTMLNode} ListItem
    * @return {HTMLNode}
    */
-  findNextElementSiblings(node) {
+  findNextSiblings(node) {
     const siblings = [];
-    while (node.nextElementSibling) {
-      siblings.push(node.nextElementSibling);
-      node = node.nextElementSibling;
+    while (node.nextSibling) {
+      siblings.push(node.nextSibling);
+      node = node.nextSibling;
     }
     return siblings;
   }

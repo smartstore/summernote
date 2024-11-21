@@ -1,6 +1,6 @@
 import $ from 'jquery';
-import '/js/settings.js';
-import renderer from '/js/renderer';
+import '@/js/settings.js';
+import renderer from '@/js/renderer';
 import './summernote-sm.scss';
 import { summernote_global_config } from './js/globalinit';
 
@@ -28,61 +28,102 @@ const airEditable = renderer.create([
 
 const buttonGroup = renderer.create('<div class="note-btn-group btn-group"></div>');
 
-const dropdown = renderer.create('<div class="note-dropdown-menu dropdown-menu" role="list"></div>', function($node, options) {
-  const markup = Array.isArray(options.items) ? options.items.map(function(item) {
-    const value = (typeof item === 'string') ? item : (item.value || '');
-    const content = options.template ? options.template(item) : item;
-    const option = (typeof item === 'object') ? item.option : undefined;
+const dropdown = renderer.create(
+  '<div class="note-dropdown-menu dropdown-menu" role="list"></div>',
+  function($node, options) {
+    const markup = Array.isArray(options.items)
+      ? options.items
+        .map(function(item) {
+          const value = typeof item === 'string' ? item : item.value || '';
+          const content = options.template ? options.template(item) : item;
+          const option = typeof item === 'object' ? item.option : undefined;
 
-    const dataValue = 'data-value="' + value + '"';
-    const dataOption = (option !== undefined) ? ' data-option="' + option + '"' : '';
-    return '<a class="dropdown-item" href="#" ' + (dataValue + dataOption) + ' role="listitem" aria-label="' + value + '">' + content + '</a>';
-  }).join('') : options.items;
+          const dataValue = 'data-value="' + value + '"';
+          const dataOption = option !== undefined ? ' data-option="' + option + '"' : '';
+          return (
+            '<a class="dropdown-item" href="#" ' +
+              (dataValue + dataOption) +
+              ' role="listitem" aria-label="' +
+              value +
+              '">' +
+              content +
+              '</a>'
+          );
+        })
+        .join('')
+      : options.items;
 
-  $node.html(markup).attr({ 'aria-label': options.title });
+    $node.html(markup).attr({ 'aria-label': options.title });
 
-  if (options && options.codeviewKeepButton) {
-    $node.addClass('note-codeview-keep');
-  }
-});
+    if (options && options.codeviewKeepButton) {
+      $node.addClass('note-codeview-keep');
+    }
+  },
+);
 
 const dropdownButtonContents = function(contents) {
   return contents;
 };
 
-const dropdownCheck = renderer.create('<div class="note-dropdown-menu dropdown-menu note-check" role="list"></div>', function($node, options) {
-  const markup = Array.isArray(options.items) ? options.items.map(function(item) {
-    const value = (typeof item === 'string') ? item : (item.value || '');
-    const content = options.template ? options.template(item) : item;
-    return '<a class="dropdown-item" href="#" data-value="' + value + '" role="listitem" aria-label="' + item + '">' + icon(options.checkClassName) + ' ' + content + '</a>';
-  }).join('') : options.items;
-  $node.html(markup).attr({ 'aria-label': options.title });
+const dropdownCheck = renderer.create(
+  '<div class="note-dropdown-menu dropdown-menu note-check" role="list"></div>',
+  function($node, options) {
+    const markup = Array.isArray(options.items)
+      ? options.items
+        .map(function(item) {
+          const value = typeof item === 'string' ? item : item.value || '';
+          const content = options.template ? options.template(item) : item;
+          return (
+            '<a class="dropdown-item" href="#" data-value="' +
+              value +
+              '" role="listitem" aria-label="' +
+              item +
+              '">' +
+              icon(options.checkClassName) +
+              ' ' +
+              content +
+              '</a>'
+          );
+        })
+        .join('')
+      : options.items;
+    $node.html(markup).attr({ 'aria-label': options.title });
 
-  if (options && options.codeviewKeepButton) {
-    $node.addClass('note-codeview-keep');
-  }
-});
+    if (options && options.codeviewKeepButton) {
+      $node.addClass('note-codeview-keep');
+    }
+  },
+);
 
-const dialog = renderer.create('<div class="modal note-modal" aria-hidden="false" tabindex="-1" role="dialog"></div>', function($node, options) {
-  if (options.fade) {
-    $node.addClass('fade');
-  }
-  $node.attr({
-    'aria-label': options.title,
-  });
-  $node.html([
-    '<div class="modal-dialog">',
-      '<div class="modal-content">',
-        (options.title ? '<div class="modal-header">' +
-          '<h4 class="modal-title">' + options.title + '</h4>' +
-          '<button type="button" class="btn-close" data-dismiss="modal" aria-label="Close" aria-hidden="true"></button>' +
-        '</div>' : ''),
+const dialog = renderer.create(
+  '<div class="modal note-modal" aria-hidden="false" tabindex="-1" role="dialog"></div>',
+  function($node, options) {
+    if (options.fade) {
+      $node.addClass('fade');
+    }
+    $node.attr({
+      'aria-label': options.title,
+    });
+    $node.html(
+      [
+        '<div class="modal-dialog">',
+        '<div class="modal-content">',
+        options.title
+          ? '<div class="modal-header">' +
+            '<h4 class="modal-title">' +
+            options.title +
+            '</h4>' +
+            '<button type="button" class="close" data-dismiss="modal" aria-label="Close" aria-hidden="true">&times;</button>' +
+            '</div>'
+          : '',
         '<div class="modal-body">' + options.body + '</div>',
-        (options.footer ? '<div class="modal-footer">' + options.footer + '</div>' : ''),
-      '</div>',
-    '</div>',
-  ].join(''));
-});
+        options.footer ? '<div class="modal-footer">' + options.footer + '</div>' : '',
+        '</div>',
+        '</div>',
+      ].join(''),
+    );
+  },
+);
 
 const popover = renderer.create([
   '<div class="note-popover popover bs-popover-auto show" x-arrow="arrow">',
@@ -161,10 +202,15 @@ const ui = function(editorOptions) {
         $node.html(contents.join(''));
 
         if (options.tooltip) {
-          $node.find('.note-color-btn').tooltip({
+          var tooltipOptions = {
             container: options.container || editorOptions.container,
             trigger: 'hover',
             placement: 'bottom',
+          };
+
+          $node.tooltip({
+            selector: '.note-color-btn',
+            ...tooltipOptions,
           });
         }
       })($node, options);
@@ -216,29 +262,13 @@ const ui = function(editorOptions) {
     },
 
     createLayout: function($note) {
-      const $editor = (editorOptions.airMode ? airEditor([
-        editingArea([
-          codable(),
-          airEditable(),
-        ]),
-      ]) : (editorOptions.toolbarPosition === 'bottom'
-        ? editor([
-          editingArea([
-            codable(),
-            editable(),
-          ]),
-          toolbar(),
-          statusbar(),
-        ])
-        : editor([
-          toolbar(),
-          editingArea([
-            codable(),
-            editable(),
-          ]),
-          statusbar(),
-        ])
-      )).render();
+      const $editor = (
+        editorOptions.airMode
+          ? airEditor([editingArea([codable(), airEditable()])])
+          : editorOptions.toolbarPosition === 'bottom'
+            ? editor([editingArea([codable(), editable()]), toolbar(), statusbar()])
+            : editor([toolbar(), editingArea([codable(), editable()]), statusbar()])
+      ).render();
 
       $editor.insertAfter($note);
 

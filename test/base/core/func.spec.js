@@ -1,14 +1,5 @@
-/**
- * func.spec.js
- * (c) 2013~ Alan Hong
- * summernote may be freely distributed under the MIT license./
- */
-import chai from 'chai';
-import Str from 'src/js/core/Str';
-import Obj from 'src/js/core/Obj';
-import func from 'src/js/core/func';
-
-var expect = chai.expect;
+import { describe, it, expect } from 'vitest';
+import func from '@/js/core/func';
 
 describe('base:core.func', () => {
   describe('eq', () => {
@@ -82,18 +73,17 @@ describe('base:core.func', () => {
 
   describe('invertObject', () => {
     it('should return inverted object between keys and values', () => {
-      expect(Obj.invert({ keyA: 'valueA', keyB: 'valueB' }))
-        .to.deep.equal({ valueA: 'keyA', valueB: 'keyB' });
+      expect(func.invertObject({ keyA: 'valueA', keyB: 'valueB' })).to.deep.equal({ valueA: 'keyA', valueB: 'keyB' });
     });
   });
 
   describe('namespaceToCamel', () => {
     it('should return camelcase text', () => {
-      expect(Str.namespaceToCamel('upload.image')).to.be.equal('UploadImage');
+      expect(func.namespaceToCamel('upload.image')).to.be.equal('UploadImage');
     });
 
     it('should return prefixed camelcase text', () => {
-      expect(Str.namespaceToCamel('upload.image', 'summernote')).to.be.equal('summernoteUploadImage');
+      expect(func.namespaceToCamel('upload.image', 'summernote')).to.be.equal('summernoteUploadImage');
     });
   });
 
@@ -142,13 +132,13 @@ describe('base:core.func', () => {
 
   describe('isValidUrl', () => {
     it('should return true with valid URLs', () => {
-      expect(Str.isValidUrl('https://www.summernote.org')).to.be.ok;
-      expect(Str.isValidUrl('http://summernote.org')).to.be.ok;
-      expect(Str.isValidUrl('summernote.org')).to.be.ok;
+      expect(func.isValidUrl('https://www.summernote.org')).to.be.ok;
+      expect(func.isValidUrl('http://summernote.org')).to.be.ok;
+      expect(func.isValidUrl('summernote.org')).to.be.ok;
     });
 
     it('should return false with invalid URLs', () => {
-      expect(Str.isValidUrl('summernote')).to.be.not.ok;
+      expect(func.isValidUrl('summernote')).to.be.not.ok;
     });
   });
 });

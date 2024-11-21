@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import '../lang/summernote-en-US';
+import './summernote-en-US';
 import './summernote';
 import icons from './icons';
 import dom from './core/dom';

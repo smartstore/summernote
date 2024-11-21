@@ -4,17 +4,12 @@
  * summernote may be freely distributed under the MIT license./
  */
 
-import chai from 'chai';
+import { describe, it, expect } from 'vitest';
 import $ from 'jquery';
-import range from 'src/js/core/range';
-import Style from 'src/js/editing/Style';
-
-var expect = chai.expect;
+import range from '@/js/core/range';
+import Style from '@/js/editing/Style';
 
 describe('base:editing.Style', () => {
-  $('body').empty(); // important !
-  var options = $.extend({}, $.summernote.options);
-  options.historyLimit = 5;
   var style = new Style();
 
   describe('styleNodes', () => {
@@ -36,14 +31,14 @@ describe('base:editing.Style', () => {
       expect($cont.html()).to.deep.equal('<p>t<span>ex</span>t</p>');
     });
 
-    // it('should split text and insert span', () => {
-    //   var $cont = $('<div class="note-editable"><p>text</p></div>');
-    //   var $p = $cont.find('p');
-    //   var rng = range.create($p[0].firstChild, 2, $p[0].firstChild, 2);
-    //   style.styleNodes(rng);
+    it('should split text and insert span', () => {
+      var $cont = $('<div class="note-editable"><p>text</p></div>');
+      var $p = $cont.find('p');
+      var rng = range.create($p[0].firstChild, 2, $p[0].firstChild, 2);
+      style.styleNodes(rng);
 
-    //   expect($cont.html()).to.deep.equal('<p>te<span></span>xt</p>');
-    // });
+      expect($cont.html()).to.deep.equal('<p>te<span></span>xt</p>');
+    });
 
     it('should just return a parent span', () => {
       var $cont = $('<div class="note-editable"><p><span>text</span></p></div>');
@@ -87,7 +82,11 @@ describe('base:editing.Style', () => {
       var $cont = $('<div class="note-editable"><p>text<b>bold</b></p></div>');
       var $p = $cont.find('p');
       var rng = range.create($p[0].firstChild, 0, $p[0].firstChild, 4);
-      style.styleNodes(rng, { nodeName: 'B', expandClosestSibling: true, onlyPartialContains: true });
+      style.styleNodes(rng, {
+        nodeName: 'B',
+        expandClosestSibling: true,
+        onlyPartialContains: true,
+      });
 
       expect($cont.html()).to.deep.equal('<p><b>text</b><b>bold</b></p>');
     });

@@ -1029,7 +1029,7 @@ class WrappedRange {
    * Insert html at current cursor
    */
   pasteHTML(markup) {
-    markup = markup.trim();
+    markup = ((markup || '') + '').trim(markup);
     
     const contentsContainer = dom.create('div', null, markup);
     let childNodes = lists.from(contentsContainer.childNodes);
@@ -1044,7 +1044,7 @@ class WrappedRange {
     }
 
     childNodes = childNodes.map(function(childNode) {
-      return rng.insertNode(childNode, dom.isBlock(childNode));
+      return rng.insertNode(childNode, !dom.isInline(childNode));
     });
 
     if (reversed) {
