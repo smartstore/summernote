@@ -62,6 +62,7 @@ for (const style of styles.slice(0, 1)) {
 
     build: {
       sourcemap: true,
+      minify: true,
 
       lib: {
         entry: `./src/styles/${style}/summernote-${style}.js`,
@@ -72,9 +73,22 @@ for (const style of styles.slice(0, 1)) {
 
       rollupOptions: {
         external: (id) => {
-          if (id === 'jquery') return true; // do not bundle jQuery
-          if (id === 'underscore') return true; // do not bundle underscore
-          if (id.startsWith('./font/')) return true; // do not bundle font files
+          const lid = id.toLowerCase();
+          if (
+            lid.includes('jquery') || 
+            lid.includes('codemirror') || 
+            //lid.includes('popper') || 
+            //lid.includes('underscore') || 
+            //lid.includes('bootstrap') ||
+            //lid.includes('globalinit') ||
+            id.startsWith('./font/')) {
+            // Do not bundle some external libs like jQuery, CodeMirror etc.
+            return true;
+          }
+          // if (id === 'jquery') return true; // do not bundle jQuery
+          // if (id === 'underscore') return true; // do not bundle underscore
+          // if (id.includes('codemirror')) return true; // do not bundle CodeMirror
+          // if (id.startsWith('./font/')) return true; // do not bundle font files
           return false;
         },
 

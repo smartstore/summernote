@@ -4,13 +4,17 @@ in config/common.js
 ...
 in config/webpack.production.js
 -------------
-lang changes
+*lang changes
 -------------
 Check and apply summernote-bs4.js changes in history to sm.js
 -------------
-Put underscore and popper in vite.config.dev
+*Put underscore and popper in vite.config.dev
 -------------
 *Restore Editor.onFormatBlock
+-------------
+Implement "code" command
+-------------
+*globalinit ist raus (?)
 
 
 

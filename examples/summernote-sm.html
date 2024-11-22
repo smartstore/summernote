@@ -49,6 +49,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/display/fullscreen.min.css" integrity="sha512-T8xB3MmwpA77VK9lUH3UkdUTnkmpqOxHF8OceOKaHrvpcXMSNX0xtpa9FoLTDAVO1JnB2UiMdVeI2V0HTHjTWA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css" integrity="sha512-Gv0sGKOVrQcQjUHL+xd9Bpq5AvLKbcQMb8s4J1//caCLxqvj00CLJMzJlqnTHTCQbKFRpPHqzXteq6dSMs7PEw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+    <!-- include admin.js
+    <script src="/src/styles/sm/js/admin.js"></script> -->
+
     <script>
       window.Res = {
           "Common.Notification": "Alert","Common.Close": "Close","Common.On": "On","Common.OK": "OK","Common.Cancel": "Cancel","Common.Off": "Off","Common.Exit": "Exit","Common.CtrlKey": "Ctrl","Common.ShiftKey": "Shift","Common.AltKey": "Alt","Common.DelKey": "Del","Common.EnterKey": "Enter","Common.EscKey": "Esc","Common.DontAskAgain": "Don\u0027t ask again","Common.DontShowAgain": "Don\u0027t show again","Common.CopyToClipboard": "Copy to clipboard","Common.CopyToClipboard.Failed": "Failed to copy.","Common.CopyToClipboard.Succeeded": "Copied!","Products.Longdesc.More": "Show more","Products.Longdesc.Less": "Show less","Admin.Common.AreYouSure": "Are you sure?","Admin.Common.AskToProceed": "Would you like to proceed?"   
@@ -71,6 +74,10 @@
 
     <!-- include Summernote -->
     <script type="module" src="/src/styles/sm/summernote-sm.js"></script>
+
+    <!-- include admin theme -->
+    <link rel="stylesheet" href="/src/styles/sm/css/admin-theme.css" />
+    <link rel="stylesheet" href="/src/styles/sm/css/codemirror-custom.css" />
 
     <style type="text/css">
       h1, h3 {
@@ -132,14 +139,7 @@
     </div>
 
     <!-- initialize Summernote -->
-    <script>
-      $(document).ready(function() {
-        $('.summernote').summernote({
-          height: 500,
-          focus: true
-        });
-      });
-    </script>
+    <script src="/src/styles/sm/js/globalinit.js"></script>
 
   </body>
 </html>

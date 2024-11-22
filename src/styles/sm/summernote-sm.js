@@ -2,7 +2,7 @@ import $ from 'jquery';
 import '@/js/settings.js';
 import renderer from '@/js/renderer';
 import './summernote-sm.scss';
-import { summernote_global_config } from './js/globalinit';
+//import { summernote_global_config } from './js/globalinit';
 
 const editor = renderer.create('<div class="note-editor note-frame card"></div>');
 const toolbar = renderer.create('<div class="note-toolbar note-toolbar-main card-header" role="toolbar"></div>');
@@ -291,7 +291,7 @@ const ui = function(editorOptions) {
   };
 };
 
-$.summernote.options = $.extend($.summernote.options, summernote_global_config);
+//.summernote.options = $.extend($.summernote.options, summernote_global_config);
 
 $.summernote = $.extend($.summernote, {
   ui_template: ui,

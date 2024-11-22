@@ -15,7 +15,7 @@ import Typing from '../editing/Typing';
 import Table from '../editing/Table';
 import Bullet from '../editing/Bullet';
 import Selection from '../editing/Selection';
-import Formatter from '../fmt/Formatter';
+//import Formatter from '../fmt/Formatter';
 import HtmlSanitizer from '../util/HtmlSanitizer';
 
 const KEY_BOGUS = 'bogus';
@@ -40,8 +40,8 @@ export default class Editor {
     this.bullet = new Bullet(context);
     this.typing = new Typing(context, this.bullet);
     this.history = new History(context);
-    this.formatter = new Formatter(context);
-    this.style = new Style(context, this.formatter);
+    //this.formatter = new Formatter(context);
+    this.style = new Style(context);
     this.selection = new Selection(context);
 
     this.context.memo('help.escape', this.lang.help.escape);
@@ -58,48 +58,23 @@ export default class Editor {
     this.context.memo('help.insertHorizontalRule', this.lang.help.insertHorizontalRule);
     this.context.memo('help.fontName', this.lang.help.fontName);
 
-    // native commands(with execCommand), generate function for execCommand
+    // Native commands (with execCommand), generate function for execCommand
     const commands = [
-      'bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript',
+      'bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'code',
       'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull',
-      'formatBlock', 'removeFormat', 'backColor', 'code'
+      'formatBlock', 'removeFormat', 'backColor',
     ];
-
-    const formatMap = {
-      bold: 'bold',
-      italic: 'italic',
-      underline: 'underline',
-      strikethrough: 'strikethrough',
-      superscript: 'superscript',
-      subscript: 'subscript',
-      justifyLeft: 'alignleft',
-      justifyCenter: 'aligncenter',
-      justifyRight: 'alignright',
-      justifyFull: 'alignjustify',
-      removeFormat: 'removeformat',
-      code: 'code'
-    };
 
     for (let idx = 0, len = commands.length; idx < len; idx++) {
       this[commands[idx]] = ((sCmd) => {
         return (value) => {
           this.beforeCommand();
-          if (formatMap[sCmd]) {
-            this.formatter.toggle(formatMap[sCmd]);
-          }
-          else {
-            document.execCommand(sCmd, false, value);
-            this.afterCommand(true);
-          }
+          document.execCommand(sCmd, false, value);
+          this.afterCommand(true);
         };
       })(commands[idx]);
       this.context.memo('help.' + commands[idx], this.lang.help[commands[idx]]);
     }
-
-    // this.bold = this.wrapCommand((value) => {
-    //   //return this.selection.pasteContent('<span class="text-white bg-danger">Hallo Welt Yooooooooooo</span>');
-    //   this.insertText(' world');
-    // });
 
     this.fontName = this.wrapCommand((value) => {
       return this.fontStyling('font-family', env.validFontName(value));
@@ -167,10 +142,8 @@ export default class Editor {
         return;
       }
       const rng = this.selection.getRange();
-      //console.log('Before insertText setRange', this.selection.getRange());
       const textNode = rng.insertNode(dom.createText(text));
       this.selection.setRange(range.create(textNode, dom.nodeLength(textNode)));
-      //console.log('After insertText setRange', this.selection.getRange());
     });
 
     /**
@@ -671,20 +644,7 @@ export default class Editor {
     let rng = range.create();
     if (rng) {
       rng = rng.normalize();
-      const styleInfo = this.style.current(rng);
-      // TEST START
-      const formatter = this.formatter;
-      const formats = ['bold', 'italic', 'underline', 'code', 'strikethrough', 'subscript', 'superscript'];
-      const matches = formatter.matchAll(formats);
-  
-      lists.each(formats, name => {
-        styleInfo['font-' + name] = 'normal';
-        if (lists.contains(matches, name)) {
-          styleInfo['font-' + name] = name;
-        }
-      });
-      // TEST END
-      return styleInfo;
+      return this.style.current(rng);
     }
 
     return this.style.fromNode(this.$editable);

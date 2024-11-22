@@ -4,7 +4,7 @@ import lists from '../core/lists';
 import dom from '../core/dom';
 import range from '../core/range';
 import Bookmark from './Bookmark';
-import DomTreeWalker from '../util/DomTreeWalker';
+//import DomTreeWalker from '../util/DomTreeWalker';
 
 let win = window;
 
@@ -327,35 +327,35 @@ export default class Selection {
     return dom.isHTMLElement(elm) ? elm : root;
   }
 
-  getSelectedBlocks(startElm = null, endElm = null) {
-    const rng = this.getRange();
-    const selectedBlocks = [];
+  // getSelectedBlocks(startElm = null, endElm = null) {
+  //   const rng = this.getRange();
+  //   const selectedBlocks = [];
 
-    const root = this.editor.editable;
-    const start = dom.closest(startElm || this.getStart(rng.collapsed, rng), dom.isBlock);
-    const end = dom.closest(endElm || this.getEnd(rng.collapsed, rng), dom.isBlock);
+  //   const root = this.editor.editable;
+  //   const start = dom.closest(startElm || this.getStart(rng.collapsed, rng), dom.isBlock);
+  //   const end = dom.closest(endElm || this.getEnd(rng.collapsed, rng), dom.isBlock);
   
-    if (start && start !== root) {
-      selectedBlocks.push(start);
-    }
+  //   if (start && start !== root) {
+  //     selectedBlocks.push(start);
+  //   }
   
-    if (start && end && start !== end) {
-      let node;
+  //   if (start && end && start !== end) {
+  //     let node;
   
-      const walker = new DomTreeWalker(start, root);
-      while ((node = walker.next()) && node !== end) {
-        if (dom.isBlock(node)) {
-          selectedBlocks.push(node);
-        }
-      }
-    }
+  //     const walker = new DomTreeWalker(start, root);
+  //     while ((node = walker.next()) && node !== end) {
+  //       if (dom.isBlock(node)) {
+  //         selectedBlocks.push(node);
+  //       }
+  //     }
+  //   }
   
-    if (end && start !== end && end !== root) {
-      selectedBlocks.push(end);
-    }
+  //   if (end && start !== end && end !== root) {
+  //     selectedBlocks.push(end);
+  //   }
   
-    return selectedBlocks;
-  }
+  //   return selectedBlocks;
+  // }
 
   /**
    * Returns the selected contents as plain text.
