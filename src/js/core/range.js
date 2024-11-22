@@ -891,48 +891,47 @@ class WrappedRange {
     return this;
   }
 
-  /**
-   * Splits text on range and returns a new range.
-   */
-  splitText_yo() {
-    const pts = this.getPoints();
+  // /**
+  //  * Splits text on range and returns a new range.
+  //  */
+  // splitText_New() {
+  //   const pts = this.getPoints();
 
-    // Handle single text node
-    if (pts.sc === pts.ec && dom.isText(pts.sc)) {
-      if (pts.so > 0 && pts.so < pts.sc.data.length) {
-        pts.ec = pts.sc.splitText(pts.so);
-        pts.sc = pts.ec.previousSibling;
+  //   // Handle single text node
+  //   if (pts.sc === pts.ec && dom.isText(pts.sc)) {
+  //     if (pts.so > 0 && pts.so < pts.sc.data.length) {
+  //       pts.ec = pts.sc.splitText(pts.so);
+  //       pts.sc = pts.ec.previousSibling;
 
-        if (pts.eo > pts.so) {
-          pts.eo = pts.eo - pts.so;
-          const newContainer = pts.ec.splitText(pts.eo).previousSibling;
-          pts.sc = pts.ec = newContainer;
-          pts.eo = newContainer.data.length;
-          pts.so = 0;
-        } else {
-          pts.eo = 0;
-        }
-      }
-    } else {
-      // Split startContainer text node if needed
-      if (dom.isText(pts.sc) && pts.so > 0 && pts.so < pts.sc.data.length) {
-        pts.sc = pts.sc.splitText(pts.so);
-        pts.so = 0;
-      }
+  //       if (pts.eo > pts.so) {
+  //         pts.eo = pts.eo - pts.so;
+  //         const newContainer = pts.ec.splitText(pts.eo).previousSibling;
+  //         pts.sc = pts.ec = newContainer;
+  //         pts.eo = newContainer.data.length;
+  //         pts.so = 0;
+  //       } else {
+  //         pts.eo = 0;
+  //       }
+  //     }
+  //   } else {
+  //     // Split startContainer text node if needed
+  //     if (dom.isText(pts.sc) && pts.so > 0 && pts.so < pts.sc.data.length) {
+  //       pts.sc = pts.sc.splitText(pts.so);
+  //       pts.so = 0;
+  //     }
 
-      // Split endContainer text node if needed
-      if (dom.isText(pts.ec) && pts.eo > 0 && pts.eo < pts.ec.data.length) {
-        const newContainer = pts.ec.splitText(pts.eo).previousSibling;
-        pts.ec = newContainer;
-        pts.eo = newContainer.data.length;
-      }
-    }
+  //     // Split endContainer text node if needed
+  //     if (dom.isText(pts.ec) && pts.eo > 0 && pts.eo < pts.ec.data.length) {
+  //       const newContainer = pts.ec.splitText(pts.eo).previousSibling;
+  //       pts.ec = newContainer;
+  //       pts.eo = newContainer.data.length;
+  //     }
+  //   }
 
-    return create(pts.sc, pts.so, pts.ec, pts.eo);
-  }
+  //   return create(pts.sc, pts.so, pts.ec, pts.eo);
+  // }
 
   splitText() {
-    // TODO: Remove range.splitText_old()
     const isSameContainer = this.sc === this.ec;
     const pts = this.getPoints();
 

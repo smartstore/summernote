@@ -32,7 +32,7 @@ export default class Style {
    * @return {Object}
    */
   fromNode($node) {
-    const properties = ['font-size', 'text-align', 'list-style-type', 'line-height'];
+    const properties = ['font-family', 'font-size', 'text-align', 'list-style-type', 'line-height'];
     const styleInfo = this.jQueryCSS($node, properties) || {};
 
     const fontSize = $node[0].style.fontSize || styleInfo['font-size'];
@@ -123,12 +123,12 @@ export default class Style {
     // [workaround] prevent Firefox nsresult: "0x80004005 (NS_ERROR_FAILURE)"
     try {
       styleInfo = $.extend(styleInfo, {
-        // 'font-bold': document.queryCommandState('bold') ? 'bold' : 'normal',
-        // 'font-italic': document.queryCommandState('italic') ? 'italic' : 'normal',
-        // 'font-underline': document.queryCommandState('underline') ? 'underline' : 'normal',
-        // 'font-subscript': document.queryCommandState('subscript') ? 'subscript' : 'normal',
-        // 'font-superscript': document.queryCommandState('superscript') ? 'superscript' : 'normal',
-        // 'font-strikethrough': document.queryCommandState('strikethrough') ? 'strikethrough' : 'normal',
+        'font-bold': document.queryCommandState('bold') ? 'bold' : 'normal',
+        'font-italic': document.queryCommandState('italic') ? 'italic' : 'normal',
+        'font-underline': document.queryCommandState('underline') ? 'underline' : 'normal',
+        'font-subscript': document.queryCommandState('subscript') ? 'subscript' : 'normal',
+        'font-superscript': document.queryCommandState('superscript') ? 'superscript' : 'normal',
+        'font-strikethrough': document.queryCommandState('strikethrough') ? 'strikethrough' : 'normal',
         'font-family': document.queryCommandValue('fontname') || styleInfo['font-family'],
       });
     } catch (e) {

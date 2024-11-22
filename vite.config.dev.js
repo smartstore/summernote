@@ -35,7 +35,8 @@ const config = defineConfig({
 
     rollupOptions: {
       input: {
-        main: './index.html',
+        //main: './index.html',
+        main: './examples/summernote-sm.html'
       },
       output: {
         entryFileNames: `[name].js`,

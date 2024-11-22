@@ -69,6 +69,9 @@
       }
     </script>
 
+    <!-- include Summernote -->
+    <script type="module" src="/src/styles/sm/summernote-sm.js"></script>
+
     <style type="text/css">
       h1, h3 {
         font-family: Perpetua;
@@ -116,11 +119,11 @@
         <div class="card-body">
           <h5 class="card-title">Other styles</h5>
           <div class="btn-group" role="group" aria-label="Styles">
-            <% _.forEach(htmlWebpackPlugin.options.styles, function(style) { %>
-            <a href="summernote-<%- style.id %>.html" class="btn btn-sm btn-light">
-              <%- style.name %>
-            </a>
-            <% }); %>
+            <a href="summernote-bs3.html" class="btn btn-sm btn-light">bs3</a>
+            <a href="summernote-bs4.html" class="btn btn-sm btn-light">bs4</a>
+            <a href="summernote-bs5.html" class="btn btn-sm btn-light">bs5</a>
+            <a href="summernote-sm.html" class="btn btn-sm btn-light">sm</a>
+            <a href="/" class="btn btn-sm btn-light">lite</a>
           </div>
           <hr>
           <p><a href="/examples.html">Visit examples page ⮕</a></p>
@@ -129,7 +132,7 @@
     </div>
 
     <!-- initialize Summernote -->
-    <script type="text/javascript">
+    <script>
       $(document).ready(function() {
         $('.summernote').summernote({
           height: 500,
