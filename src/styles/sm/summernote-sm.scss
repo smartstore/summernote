@@ -264,6 +264,10 @@ $img-margin-right: 10px;
 // Color Palette
 // ------------------------------------------
 
+.note-color > .dropdown-toggle {
+  min-width: initial;
+}
+
 .note-palette {
   display: flex;
   flex-direction: column;
@@ -727,12 +731,12 @@ $img-margin-right: 10px;
   background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASAgMAAAAroGbEAAAACVBMVEUAAIjd6vvD2f9LKLW+AAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfYAR0BKwNDEVT0AAAAG0lEQVQI12NgAAOtVatWMTCohoaGUY+EmIkEAEruEzK2J7tvAAAAAElFTkSuQmCC") repeat;
 }
 
-.note-recent-color {
-  display: inline-block;
-  border: 1px solid rgba($black, 0.12);
-  padding-inline: 2px;
-  border-radius: 3px;
-}
+// .note-recent-color {
+//   display: inline-block;
+//   border: 1px solid rgba($black, 0.12);
+//   padding-inline: 2px;
+//   border-radius: 3px;
+// }
 
 
 // Misc

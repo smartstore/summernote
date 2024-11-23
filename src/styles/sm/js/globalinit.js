@@ -25,7 +25,7 @@ let summernote_image_upload_url;
     e4x: false,
     indent_empty_lines: false
   };
-  
+
   summernote_global_config = {
     disableDragAndDrop: false,
     dialogsInBody: true,
@@ -75,7 +75,7 @@ let summernote_image_upload_url;
       ['edit', ['undo', 'redo']],
       ['text', ['bold', 'italic', 'underline', 'moreFontStyles']],
       //['color', ['forecolor', 'backcolor']],
-      ['font', ['fontname', 'xcolor', 'fontsize']],
+      ['font', ['fontname', 'color', 'fontsize']],
       ['para', ['style', 'cssclass', 'ul', 'ol', 'paragraph', 'clear']],
       ['insert', ['link', 'image', 'video', 'table', 'hr']],
       ['view', ['codeview', 'fullscreen', 'help']]
@@ -183,6 +183,38 @@ let summernote_image_upload_url;
 
 	// Initialize summernote
 	$(function () {
+    $.extend(true, $.summernote.lang, {
+      'en-US': {
+        common: {
+          ok: 'OK',
+          cancel: 'Cancel'
+        },
+        font: {
+          code: 'Code'
+        },
+        attrs: {
+          cssClass: 'CSS Class',
+          cssStyle: 'CSS Style',
+          rel: 'Rel',
+        },
+        link: {
+          browse: 'Browse'
+        },
+        image: {
+          imageProps: 'Image Attributes'
+        },
+        imageShapes: {
+          tooltip: 'Shape',
+          tooltipShapeOptions: ['Responsive', 'Border', 'Rounded', 'Circle', 'Thumbnail', 'Shadow (small)', 'Shadow (medium)', 'Shadow (large)']
+        },
+        tableStyles: {
+          tooltip: "Table style",
+          stylesExclusive: ["Basic", "Bordered"],
+          stylesInclusive: ["Striped", "Condensed", "Hoverable"]
+        }
+      }
+    });
+
     const options = $.extend(true, { height: 500, focus: true }, summernote_global_config);
     $('.summernote').summernote(options);
 	});

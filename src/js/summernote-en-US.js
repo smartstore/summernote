@@ -164,35 +164,3 @@ $.extend(true, $.summernote.lang, {
     },
   },
 });
-
-$.extend(true, $.summernote.lang, {
-  'en-US': {
-    common: {
-      ok: 'OK',
-      cancel: 'Cancel'
-    },
-    font: {
-      code: 'Code'
-    },
-    attrs: {
-      cssClass: 'CSS Class',
-      cssStyle: 'CSS Style',
-      rel: 'Rel',
-    },
-    link: {
-      browse: 'Browse'
-    },
-    image: {
-      imageProps: 'Image Attributes'
-    },
-    imageShapes: {
-      tooltip: 'Shape',
-      tooltipShapeOptions: ['Responsive', 'Border', 'Rounded', 'Circle', 'Thumbnail', 'Shadow (small)', 'Shadow (medium)', 'Shadow (large)']
-    },
-    tableStyles: {
-      tooltip: "Table style",
-      stylesExclusive: ["Basic", "Bordered"],
-      stylesInclusive: ["Striped", "Condensed", "Hoverable"]
-    }
-  }
-});
