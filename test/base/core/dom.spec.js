@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import $ from 'jquery';
 import dom from '@/js/core/dom';
+import Point from '@/js/core/Point';
 import func from '@/js/core/func';
 
 describe('base:core.dom', () => {
@@ -41,14 +42,14 @@ describe('base:core.dom', () => {
     });
 
     it('should return [$b, $u, $s, $i] from b to i', () => {
-      let result = dom.listAncestor($b[0], (node) => {
+      let result = dom.parentsWhile($b[0], (node) => {
         return node === $i[0];
       });
       expect(result).to.deep.equal([$b[0], $u[0], $s[0], $i[0]]);
     });
 
     it('should return [$u, $s] from u to s', () => {
-      let result = dom.listAncestor($u[0], (node) => {
+      let result = dom.parentsWhile($u[0], (node) => {
         return node === $s[0];
       });
       expect(result).to.deep.equal([$u[0], $s[0]]);
@@ -66,11 +67,11 @@ describe('base:core.dom', () => {
     });
 
     it('should return an array of descendant elements', () => {
-      expect(dom.listDescendant($cont[0])).to.deep.equal([$b[0], $u[0], $s[0], $i[0]]);
+      expect(dom.children($cont[0])).to.deep.equal([$b[0], $u[0], $s[0], $i[0]]);
     });
 
     it('should filter an array of descendant elements', () => {
-      let result = dom.listDescendant($cont[0], (node) => {
+      let result = dom.children($cont[0], (node) => {
         return node.nodeName === 'B' || node.nodeName === 'S';
       });
       expect(result).to.deep.equal([$b[0], $s[0]]);
@@ -91,11 +92,11 @@ describe('base:core.dom', () => {
     });
 
     it('should return a common element in ancestors', () => {
-      expect(dom.commonAncestor($b[0], $u[0])).to.deep.equal($span[0]);
+      expect(dom.commonParent($b[0], $u[0])).to.deep.equal($span[0]);
     });
 
     it('should return a common element in ancestors even if they have same nodeName', () => {
-      expect(dom.commonAncestor($b[0], $s[0])).to.deep.equal($div[0]);
+      expect(dom.commonParent($b[0], $s[0])).to.deep.equal($div[0]);
     });
   });
 
@@ -109,15 +110,15 @@ describe('base:core.dom', () => {
     });
 
     it('should return an array of next sibling elements including itself', () => {
-      expect(dom.listNext($u[0])).to.deep.equal([$u[0], $s[0], $i[0]]);
+      expect(dom.nextSiblings($u[0])).to.deep.equal([$u[0], $s[0], $i[0]]);
     });
 
     it('should return itself if there are no next sibling', () => {
-      expect(dom.listNext($i[0])).to.deep.equal([$i[0]]);
+      expect(dom.nextSiblings($i[0])).to.deep.equal([$i[0]]);
     });
 
     it('should return an array of next sibling elements before predicate is true', () => {
-      expect(dom.listNext($s[0], func.eq($i[0]))).to.deep.equal([$s[0]]);
+      expect(dom.nextSiblings($s[0], func.eq($i[0]))).to.deep.equal([$s[0]]);
     });
   });
 
@@ -132,15 +133,15 @@ describe('base:core.dom', () => {
     });
 
     it('should return an array of previous sibling elements including itself', () => {
-      expect(dom.listPrev($s[0])).to.deep.equal([$s[0], $u[0], $b[0]]);
+      expect(dom.prevSiblings($s[0])).to.deep.equal([$s[0], $u[0], $b[0]]);
     });
 
     it('should return itself if there are no previous sibling', () => {
-      expect(dom.listPrev($b[0])).to.deep.equal([$b[0]]);
+      expect(dom.prevSiblings($b[0])).to.deep.equal([$b[0]]);
     });
 
     it('should return an array of previous sibling elements before predicate is true', () => {
-      expect(dom.listPrev($i[0], func.eq($s[0]))).to.deep.equal([$i[0]]);
+      expect(dom.prevSiblings($i[0], func.eq($s[0]))).to.deep.equal([$i[0]]);
     });
   });
 
@@ -231,7 +232,7 @@ describe('base:core.dom', () => {
     describe('element pivot case', () => {
       it('should be split by u tag with offset 0', () => {
         let $u = $para.find('u');
-        dom.splitTree($para[0], { node: $u[0], offset: 0 });
+        Point.splitTree($para[0], { node: $u[0], offset: 0 });
 
         expect($para.html()).to.equalsIgnoreCase('<b>b</b><u><br></u>');
         expect($para.next().html()).to.equalsIgnoreCase('<u>u</u><s>strike</s><i>i</i>');
@@ -239,7 +240,7 @@ describe('base:core.dom', () => {
 
       it('should be split by u tag with offset 1', () => {
         let $u = $para.find('u');
-        dom.splitTree($para[0], { node: $u[0], offset: 1 });
+        Point.splitTree($para[0], { node: $u[0], offset: 1 });
 
         expect($para.html()).to.equalsIgnoreCase('<b>b</b><u>u</u>');
         expect($para.next().html()).to.equalsIgnoreCase('<u><br></u><s>strike</s><i>i</i>');
@@ -247,7 +248,7 @@ describe('base:core.dom', () => {
 
       it('should be split by b tag with offset 0 (left edge case)', () => {
         let $b = $para.find('b');
-        dom.splitTree($para[0], { node: $b[0], offset: 0 });
+        Point.splitTree($para[0], { node: $b[0], offset: 0 });
 
         expect($para.html()).to.equalsIgnoreCase('<b><br></b>');
         expect($para.next().html()).to.equalsIgnoreCase('<b>b</b><u>u</u><s>strike</s><i>i</i>');
@@ -255,7 +256,7 @@ describe('base:core.dom', () => {
 
       it('should be split by i tag with offset 1 (right edge case)', () => {
         let $i = $para.find('i');
-        dom.splitTree($para[0], { node: $i[0], offset: 1 });
+        Point.splitTree($para[0], { node: $i[0], offset: 1 });
 
         expect($para.html()).to.equalsIgnoreCase('<b>b</b><u>u</u><s>strike</s><i>i</i>');
         expect($para.next().html()).to.equalsIgnoreCase('<i><br></i>');
@@ -263,7 +264,7 @@ describe('base:core.dom', () => {
 
       it('should discard first split if empty and isDiscardEmptySplits=true', () => {
         var $u = $para.find('u');
-        dom.splitTree($para[0], { node: $u[0], offset: 0 }, { isDiscardEmptySplits: true });
+        Point.splitTree($para[0], { node: $u[0], offset: 0 }, { isDiscardEmptySplits: true });
 
         expect($para.html()).to.equalsIgnoreCase('<b>b</b>');
         expect($para.next().html()).to.equalsIgnoreCase('<u>u</u><s>strike</s><i>i</i>');
@@ -271,7 +272,7 @@ describe('base:core.dom', () => {
 
       it('should discard second split if empty and isDiscardEmptySplits=true', () => {
         var $u = $para.find('u');
-        dom.splitTree($para[0], { node: $u[0], offset: 1 }, { isDiscardEmptySplits: true });
+        Point.splitTree($para[0], { node: $u[0], offset: 1 }, { isDiscardEmptySplits: true });
 
         expect($para.html()).to.equalsIgnoreCase('<b>b</b><u>u</u>');
         expect($para.next().html()).to.equalsIgnoreCase('<s>strike</s><i>i</i>');
@@ -281,7 +282,7 @@ describe('base:core.dom', () => {
     describe('textNode case', () => {
       it('should be split by s tag with offset 3 (middle case)', () => {
         let $s = $para.find('s');
-        dom.splitTree($para[0], { node: $s[0].firstChild, offset: 3 });
+        Point.splitTree($para[0], { node: $s[0].firstChild, offset: 3 });
 
         expect($para.html()).to.equalsIgnoreCase('<b>b</b><u>u</u><s>str</s>');
         expect($para.next().html()).to.equalsIgnoreCase('<s>ike</s><i>i</i>');
@@ -289,7 +290,7 @@ describe('base:core.dom', () => {
 
       it('should be split by s tag with offset 0 (left edge case)', () => {
         let $s = $para.find('s');
-        dom.splitTree($para[0], { node: $s[0].firstChild, offset: 0 });
+        Point.splitTree($para[0], { node: $s[0].firstChild, offset: 0 });
 
         expect($para.html()).to.equalsIgnoreCase('<b>b</b><u>u</u><s><br></s>');
         expect($para.next().html()).to.equalsIgnoreCase('<s>strike</s><i>i</i>');
@@ -297,7 +298,7 @@ describe('base:core.dom', () => {
 
       it('should be split by s tag with offset 6 (right edge case)', () => {
         let $s = $para.find('s');
-        dom.splitTree($para[0], { node: $s[0].firstChild, offset: 6 });
+        Point.splitTree($para[0], { node: $s[0].firstChild, offset: 6 });
 
         expect($para.html()).to.equalsIgnoreCase('<b>b</b><u>u</u><s>strike</s><i><br></i>');
         expect($para.next().html()).to.equalsIgnoreCase('<i>i</i>');
@@ -305,14 +306,14 @@ describe('base:core.dom', () => {
 
       it('should be split by s tag with offset 3 (2 depth case)', () => {
         let $s = $para.find('s');
-        dom.splitTree($s[0], { node: $s[0].firstChild, offset: 3 });
+        Point.splitTree($s[0], { node: $s[0].firstChild, offset: 3 });
 
         expect($para.html()).to.equalsIgnoreCase('<b>b</b><u>u</u><s>str</s><s>ike</s><i>i</i>');
       });
 
       it('should be split by s tag with offset 3 (1 depth and textNode case)', () => {
         let $s = $para.find('s');
-        dom.splitTree($s[0].firstChild, { node: $s[0].firstChild, offset: 3 });
+        Point.splitTree($s[0].firstChild, { node: $s[0].firstChild, offset: 3 });
 
         expect($para.html()).to.equalsIgnoreCase('<b>b</b><u>u</u><s>strike</s><i>i</i>');
       });
@@ -320,7 +321,7 @@ describe('base:core.dom', () => {
       it('should be split by span tag with offset 2 (1 depth and element case)', () => {
         let $cont = $('<div class="note-editable"><p><span><b>b</b><u>u</u><s>s</s><i>i</i></span></p></div>'); // busi
         let $span = $cont.find('span');
-        dom.splitTree($span[0], { node: $span[0], offset: 2 });
+        Point.splitTree($span[0], { node: $span[0], offset: 2 });
 
         expect($cont.html()).to.equalsIgnoreCase('<p><span><b>b</b><u>u</u></span><span><s>s</s><i>i</i></span></p>');
       });
@@ -333,7 +334,7 @@ describe('base:core.dom', () => {
       let $para = $editable.clone().find('p');
       let $br = $para.find('br');
 
-      let result = dom.splitPoint({ node: $para[0], offset: 0 }, true);
+      let result = Point.splitPoint({ node: $para[0], offset: 0 }, true);
       expect(result).to.deep.equal({ rightNode: $br[0], container: $para[0] });
     });
   });
@@ -343,7 +344,7 @@ describe('base:core.dom', () => {
       let $editable = $('<div><table></table></div>');
       let $point = $editable.clone().find('div');
 
-      let result = dom.isVisiblePoint($point);
+      let result = Point.isVisiblePoint($point);
       expect(result).to.be.true;
     });
   });

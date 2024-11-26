@@ -36,7 +36,7 @@ const getNode = (node) =>
 
 // Private
 const isUpperNodeName = (str) => {
-  const code = str.charCodeAt(0);
+  const code = str?.charCodeAt(0);
   return code >= 65 && code <= 90;
 };
 

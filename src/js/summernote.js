@@ -1,5 +1,6 @@
 import $ from 'jquery';
 import env from './core/env';
+import Type from './core/Type';
 import lists from './core/lists';
 import Context from './Context';
 
@@ -11,33 +12,42 @@ $.fn.extend({
    * @return {this}
    */
   summernote: function() {
-    const type = typeof(lists.head(arguments));
-    const isExternalAPICalled = type === 'string';
-    const hasInitOptions = type === 'object';
+    const param = lists.head(arguments);
+    const hasOptions = Type.isNullOrUndefined() || Type.isPlainObject(param);
 
-    const options = $.extend({}, $.summernote.options, hasInitOptions ? lists.head(arguments) : {});
+    let options;
+    if (hasOptions) {
+      options = $.extend({}, $.summernote.options, param || {});
 
-    // Update options
-    options.langInfo = $.extend(true, {}, $.summernote.lang['en-US'], $.summernote.lang[options.lang]);
-    options.icons = $.extend(true, {}, $.summernote.options.icons, options.icons);
-    options.tooltip = options.tooltip === 'auto' ? !env.isSupportTouch : options.tooltip;
+      // Update options
+      options.langInfo = $.extend(true, {}, $.summernote.lang['en-US'], $.summernote.lang[options.lang]);
+      options.icons = $.extend(true, {}, $.summernote.options.icons, options.icons);
+      options.tooltip = options.tooltip === 'auto' ? !env.isSupportTouch : options.tooltip;
+    }
 
-    this.each((idx, note) => {
-      const $note = $(note);
-      if (!$note.data('summernote')) {
-        const context = new Context($note, options);
-        $note.data('summernote', context);
-        $note.data('summernote').triggerEvent('init', context.layoutInfo);
-      }
-    });
+    if (options) {
+      this.each((_i, el) => {
+        let $note = $(el);
+        let context = $note.data('summernote');
+
+        if (!context) {
+          context = new Context($note, options);
+          $note.data('summernote', context);
+          context.triggerEvent('init', context.layoutInfo);
+        }
+      });
+    }
 
     const $note = this.first();
     if ($note.length) {
       const context = $note.data('summernote');
-      if (isExternalAPICalled) {
-        return context.invoke.apply(context, lists.from(arguments));
-      } else if (options.focus) {
-        context.invoke('editor.focus');
+      if (context) {
+        if (Type.isString(param)) {
+          return context.invoke.apply(context, lists.from(arguments));
+        } 
+        else if (options.focus) {
+          context.invoke('editor.focus');
+        }
       }
     }
 

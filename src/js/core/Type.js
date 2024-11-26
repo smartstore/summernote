@@ -1,4 +1,5 @@
 import _ from 'underscore';
+import $ from 'jquery';
 
 const isArguments = obj => _.isArguments(obj);
 const isArray = obj => _.isArray(obj);
@@ -17,12 +18,13 @@ const isNullOrUndefined = obj => obj === undefined || obj === null;
 const isAssigned = obj => obj != undefined && obj != null;
 const isNumber = obj => _.isNumber(obj);
 const isObject = obj => _.isObject(obj);
+const isPlainObject = obj => $.isPlainObject(obj);
 const isRegExp = obj => _.isRegExp(obj);
 const isString = obj => _.isString(obj);
 const isSymbol = obj => _.isSymbol(obj);
 const isTypedArray = obj => _.isTypedArray(obj);
 const isUndefined = obj => _.isUndefined(obj);
-const isJquery = obj => obj instanceof jQuery;
+const isJquery = obj => !!(obj?.addSelf); // obj instanceof jQuery;
 
 export default {
   isArguments,
@@ -42,6 +44,7 @@ export default {
   isAssigned,
   isNumber,
   isObject,
+  isPlainObject,
   isRegExp,
   isString,
   isSymbol,

@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import func from '@/js/core/func';
+import Str from '@/js/core/Str';
+import Obj from '@/js/core/Obj';
 
 describe('base:core.func', () => {
   describe('eq', () => {
@@ -73,17 +75,17 @@ describe('base:core.func', () => {
 
   describe('invertObject', () => {
     it('should return inverted object between keys and values', () => {
-      expect(func.invertObject({ keyA: 'valueA', keyB: 'valueB' })).to.deep.equal({ valueA: 'keyA', valueB: 'keyB' });
+      expect(Obj.invert({ keyA: 'valueA', keyB: 'valueB' })).to.deep.equal({ valueA: 'keyA', valueB: 'keyB' });
     });
   });
 
   describe('namespaceToCamel', () => {
     it('should return camelcase text', () => {
-      expect(func.namespaceToCamel('upload.image')).to.be.equal('UploadImage');
+      expect(Str.namespaceToCamel('upload.image')).to.be.equal('UploadImage');
     });
 
     it('should return prefixed camelcase text', () => {
-      expect(func.namespaceToCamel('upload.image', 'summernote')).to.be.equal('summernoteUploadImage');
+      expect(Str.namespaceToCamel('upload.image', 'summernote')).to.be.equal('summernoteUploadImage');
     });
   });
 
@@ -132,13 +134,13 @@ describe('base:core.func', () => {
 
   describe('isValidUrl', () => {
     it('should return true with valid URLs', () => {
-      expect(func.isValidUrl('https://www.summernote.org')).to.be.ok;
-      expect(func.isValidUrl('http://summernote.org')).to.be.ok;
-      expect(func.isValidUrl('summernote.org')).to.be.ok;
+      expect(Str.isValidUrl('https://www.summernote.org')).to.be.ok;
+      expect(Str.isValidUrl('http://summernote.org')).to.be.ok;
+      expect(Str.isValidUrl('summernote.org')).to.be.ok;
     });
 
     it('should return false with invalid URLs', () => {
-      expect(func.isValidUrl('summernote')).to.be.not.ok;
+      expect(Str.isValidUrl('summernote')).to.be.not.ok;
     });
   });
 });

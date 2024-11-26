@@ -220,6 +220,7 @@ export default class Buttons {
                 $color.css(key, value);
                 $currentButton.attr('data-' + eventName, value);
               }
+
               this.context.invoke('editor.' + eventName, value);
             }
           },
