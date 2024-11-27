@@ -84,7 +84,7 @@ export default class Typing {
           if (Point.isRightEdgePoint(rng.getStartPoint()) && dom.isBR(rng.sc.nextSibling)) {
             $(rng.sc.nextSibling).remove();
           }
-          const split = Point.splitTree(blockquote, rng.getStartPoint(), { isDiscardEmptySplits: true });
+          const split = Point.splitTree(blockquote, rng.getStartPoint(), { discardEmptySplits: true });
           if (split) {
             split.parentNode.insertBefore(nextPara, split);
           } 
