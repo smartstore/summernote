@@ -1101,10 +1101,6 @@ class WrappedRange {
     const trim = options?.trim === true;
     const stopAtPunc = options?.stopAtPunc === true;
     const pred = makeCharPredicate(stopAtPunc);
-    //const pred = (pt) => Point.getCharType(pt) != 2;
-
-    // const startPoint = this.findWordEndpoint(true, stopAtPunc, trim);
-    // const endPoint = forward ? this.findWordEndpoint(false, stopAtPunc, trim) : startPoint;
 
     let endPoint = this.getEndPoint();
 
@@ -1112,10 +1108,10 @@ class WrappedRange {
       return this;
     }
 
-    const startPoint = Point.prevPointUntil(endPoint, pred);
+    const startPoint = this.findWordEndpoint(true, stopAtPunc, trim);
 
     if (forward) {
-      endPoint = Point.nextPointUntil(endPoint, pred);
+      endPoint = this.findWordEndpoint(false, stopAtPunc, trim);
     }
 
     return new WrappedRange(
