@@ -13,7 +13,7 @@ import Context from '@/js/Context';
 import '@/styles/lite/summernote-lite';
 
 describe('Editor', () => {
-  var editor, context, $editable;
+  var editor, context, $editable, selection;
 
   function expectContents(context, markup) {
     expect(context.layoutInfo.editable.html()).toEqual(markup);
@@ -34,12 +34,15 @@ describe('Editor', () => {
 
   beforeEach(function() {
     $('body').empty(); // important !
+    document.getSelection()?.removeAllRanges();
+
     var options = $.extend({}, $.summernote.options);
     options.historyLimit = 5;
     context = new Context($('<div><p>hello</p></div>'), options);
 
     editor = context.modules.editor;
     $editable = context.layoutInfo.editable;
+    selection = editor.selection;
 
     // [workaround]
     //  - IE8-11 can't create range in headless mode
@@ -192,7 +195,8 @@ describe('Editor', () => {
 
       await nextTick();
       var textNode = $editable.find('p')[0].firstChild;
-      editor.setLastRange(range.create(textNode, 0, textNode, 0).select());
+      //editor.setLastRange(range.create(textNode, 0, textNode, 0).select());
+      selection.setRange(range.create(textNode, 0, textNode, 0));
 
       await nextTick();
       editor.insertNode($('<span> world</span>')[0]);
@@ -226,7 +230,8 @@ describe('Editor', () => {
       context.invoke('editor.focus');
 
       var textNode = $editable.find('p')[0].firstChild;
-      editor.setLastRange(range.create(textNode, 0, textNode, 0).select());
+      //editor.setLastRange(range.create(textNode, 0, textNode, 0).select());
+      selection.setRange(range.create(textNode, 0, textNode, 0));
 
       await nextTick();
       editor.insertText(' world');
@@ -256,7 +261,7 @@ describe('Editor', () => {
       );
       await expectContentsAwait(
         context,
-        '<p>hello</p><ul><li>list</li></ul><hr><p>paragraph</p><table><tbody><tr><td>table</td></tr></tbody></table><p></p><blockquote>blockquote</blockquote><data>data</data>',
+        '<p>hello</p><ul><li>list</li></ul><hr><p>paragraph</p><table><tbody><tr><td>table</td></tr></tbody></table><p></p><blockquote>blockquote</blockquote><p><data>data</data></p>',
       );
     });
 
@@ -321,7 +326,8 @@ describe('Editor', () => {
   describe('styleWithCSS', () => {
     it('should style with tag when it is false (default)', async() => {
       $editable.appendTo('body');
-      range.createFromNode($editable.find('p')[0]).normalize().select();
+      //range.createFromNode($editable.find('p')[0]).normalize().select();
+      selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());
       editor.bold();
       await expectContentsAwait(context, '<p><b>hello</b></p>');
     });
@@ -331,12 +337,16 @@ describe('Editor', () => {
       options.styleWithCSS = true;
 
       $('body').empty();
+      document.getSelection()?.removeAllRanges();
       context = new Context($('<div><p>hello</p></div>').appendTo('body'), options);
       editor = context.modules.editor;
+      selection = editor.selection;
       $editable = context.layoutInfo.editable;
       $editable.appendTo('body');
 
-      range.createFromNode($editable.find('p')[0]).normalize().select();
+      //range.createFromNode($editable.find('p')[0]).normalize().select();
+      selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());
+      
       editor.bold();
       await expectContentsAwait(context, '<p><span style="font-weight: bold;">hello</span></p>');
     });
@@ -347,7 +357,8 @@ describe('Editor', () => {
       $editable.appendTo('body');
 
       var textNode = $editable.find('p')[0].firstChild;
-      editor.setLastRange(range.create(textNode, 0, textNode, 0).select());
+      //editor.setLastRange(range.create(textNode, 0, textNode, 0).select());
+      selection.setRange(range.create(textNode, 0, textNode, 0));
 
       await nextTick();
       editor.formatBlock('h1');
@@ -364,7 +375,8 @@ describe('Editor', () => {
       var endNode = $editable.find('p').last()[0];
 
       // all p tags is wrapped
-      range.create(startNode, 0, endNode, 1).normalize().select();
+      //range.create(startNode, 0, endNode, 1).normalize().select();
+      selection.setRange(range.create(startNode, 0, endNode, 1).normalize());
 
       editor.insertUnorderedList();
       await expectContentsAwait(context, '<ul><li><br></li><li>endpoint</li></ul>');
@@ -384,7 +396,8 @@ describe('Editor', () => {
       var endNode = $editable.find('p').last()[0];
 
       // all p tags is wrapped
-      range.create(startNode, 0, endNode, 1).normalize().select();
+      //range.create(startNode, 0, endNode, 1).normalize().select();
+      selection.setRange(range.create(startNode, 0, endNode, 1).normalize());
 
       editor.formatBlock('h3');
 
@@ -399,7 +412,8 @@ describe('Editor', () => {
     it('should apply custom className in formatBlock', async() => {
       var $target = $('<h4 class="customH4Class"></h4>');
       $editable.appendTo('body');
-      range.createFromNode($editable.find('p')[0]).normalize().select();
+      //range.createFromNode($editable.find('p')[0]).normalize().select();
+      selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());
       editor.formatBlock('h4', $target);
 
       // start <p>hello</p> => <h4 class="h4">hello</h4>
@@ -411,7 +425,8 @@ describe('Editor', () => {
         '<a class="dropdown-item" href="#" data-value="h6" role="listitem" aria-label="h6"><h6 class="customH6Class">H6</h6></a>',
       );
       $editable.appendTo('body');
-      range.createFromNode($editable.find('p')[0]).normalize().select();
+      //range.createFromNode($editable.find('p')[0]).normalize().select();
+      selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());
       editor.formatBlock('h6', $target);
 
       // start <p>hello</p> => <h6 class="h6">hello</h6>
@@ -421,7 +436,8 @@ describe('Editor', () => {
     it('should replace existing class in formatBlock if target has class', async() => {
       const $target1 = $('<p class="old"></p>');
       $editable.appendTo('body');
-      range.createFromNode($editable.find('p')[0]).normalize().select();
+      //range.createFromNode($editable.find('p')[0]).normalize().select();
+      selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());
       editor.formatBlock('p', $target1);
       const $target2 = $('<p class="new"></p>');
       editor.formatBlock('p', $target2);
@@ -433,13 +449,14 @@ describe('Editor', () => {
     it('should remove existing class in formatBlock if target has no class', async() => {
       const $target1 = $('<p class="customClass" />');
       $editable.appendTo('body');
-      range.createFromNode($editable.find('p')[0]).normalize().select();
+      //range.createFromNode($editable.find('p')[0]).normalize().select();
+      selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());
       editor.formatBlock('p', $target1);
       const $target2 = $('<p />');
       editor.formatBlock('p', $target2);
 
       // start <p class="customClass">hello</p> => <p>hello</p>
-      await expectContentsAwait(context, '<p class="">hello</p>');
+      await expectContentsAwait(context, '<p>hello</p>');
     });
 
     it('should add fontSize to block', async() => {
@@ -448,7 +465,8 @@ describe('Editor', () => {
 
       await nextTick();
       var textNode = $editable.find('p')[0].firstChild;
-      editor.setLastRange(range.create(textNode, 0, textNode, 0).select());
+      //editor.setLastRange(range.create(textNode, 0, textNode, 0).select());
+      selection.setRange(range.create(textNode, 0, textNode, 0));
 
       await nextTick();
       editor.fontSize(20);
@@ -464,7 +482,8 @@ describe('Editor', () => {
       var startIndex = textNode.wholeText.indexOf(text);
       var endIndex = startIndex + text.length;
 
-      range.create(textNode, startIndex, textNode, endIndex).normalize().select();
+      //range.create(textNode, startIndex, textNode, endIndex).normalize().select();
+      selection.setRange(range.create(textNode, startIndex, textNode, endIndex).normalize());
 
       // check creation normal link
       editor.createLink({

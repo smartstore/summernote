@@ -24,7 +24,7 @@ const isString = obj => _.isString(obj);
 const isSymbol = obj => _.isSymbol(obj);
 const isTypedArray = obj => _.isTypedArray(obj);
 const isUndefined = obj => _.isUndefined(obj);
-const isJquery = obj => !!(obj?.addSelf); // obj instanceof jQuery;
+const isJquery = obj => obj instanceof $;
 
 export default {
   isArguments,

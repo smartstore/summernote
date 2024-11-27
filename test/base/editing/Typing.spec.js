@@ -9,17 +9,18 @@
 import { describe, it, expect } from 'vitest';
 import $ from 'jquery';
 import range from '@/js/core/range';
-import settings from '@/js/settings';
 import Context from '@/js/Context';
 import Typing from '@/js/editing/Typing';
+import '@/styles/lite/summernote-lite';
 
 describe('base:editing.Style', () => {
   function typing(level) {
-    $('body').empty(); // important !
+    $('body').empty(); // important!
+    document.getSelection()?.removeAllRanges();
+
     var $note = $('<div></div>').appendTo('body');
-    //var options = $.extend({}, $.summernote.options, { blockquoteBreakingLevel: level });
-    var context = new Context($note, { blockquoteBreakingLevel: level });
-    //context.initialize();
+    var options = $.extend({}, $.summernote.options, { blockquoteBreakingLevel: level });
+    var context = new Context($note, options);
 
     return new Typing(context);
   }

@@ -264,15 +264,15 @@ describe('base:core.dom', () => {
 
       it('should discard first split if empty and isDiscardEmptySplits=true', () => {
         var $u = $para.find('u');
-        Point.splitTree($para[0], { node: $u[0], offset: 0 }, { isDiscardEmptySplits: true });
+        Point.splitTree($para[0], { node: $u[0], offset: 0 }, { discardEmptySplits: true });
 
         expect($para.html()).to.equalsIgnoreCase('<b>b</b>');
         expect($para.next().html()).to.equalsIgnoreCase('<u>u</u><s>strike</s><i>i</i>');
       });
 
-      it('should discard second split if empty and isDiscardEmptySplits=true', () => {
+      it('should discard second split if empty and discardEmptySplits=true', () => {
         var $u = $para.find('u');
-        Point.splitTree($para[0], { node: $u[0], offset: 1 }, { isDiscardEmptySplits: true });
+        Point.splitTree($para[0], { node: $u[0], offset: 1 }, { discardEmptySplits: true });
 
         expect($para.html()).to.equalsIgnoreCase('<b>b</b><u>u</u>');
         expect($para.next().html()).to.equalsIgnoreCase('<s>strike</s><i>i</i>');

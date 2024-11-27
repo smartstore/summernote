@@ -13,6 +13,7 @@ import Bullet from '../editing/Bullet';
 export default class Typing {
   constructor(context) {
     this.context = context;
+    this.options = context.options;
     // a Bullet instance to toggle lists off
     this.bullet = new Bullet(context);
   }
@@ -69,9 +70,9 @@ export default class Typing {
       } 
       else {
         let blockquote = null;
-        if (this.context.options.blockquoteBreakingLevel === 1) {
+        if (this.options.blockquoteBreakingLevel === 1) {
           blockquote = dom.ancestor(splitRoot, dom.isBlockquote);
-        } else if (this.context.options.blockquoteBreakingLevel === 2) {
+        } else if (this.options.blockquoteBreakingLevel === 2) {
           blockquote = dom.farthestParent(splitRoot, dom.isBlockquote);
         }
 

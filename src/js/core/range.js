@@ -18,9 +18,10 @@ const makeIsOn = (selector, root) => {
 const makeCharPredicate = (stopAtPunc) => {
   // -1 = UNKNOWN, 0 = SPACE, 1 = PUNC, 2 = CHAR
   if (stopAtPunc === true) {
-    return (pt) => [0, 1].indexOf(Point.getCharType(pt)) > -1; // Stop at space and punc
-  } else {
-    return (pt) => Point.getCharType(pt) === 0; // Stop at space only
+    return (pt) => [-1, 0, 1].indexOf(Point.getCharType(pt)) > -1; // Stop at space and punc
+  } 
+  else {
+    return (pt) => [-1, 0].indexOf(Point.getCharType(pt)) > -1; // Stop at space only
   }
 };
 
@@ -1099,9 +1100,23 @@ class WrappedRange {
     const forward = Type.isBoolean(options) ? options : (options?.forward === true);
     const trim = options?.trim === true;
     const stopAtPunc = options?.stopAtPunc === true;
+    const pred = makeCharPredicate(stopAtPunc);
+    //const pred = (pt) => Point.getCharType(pt) != 2;
 
-    const startPoint = this.findWordEndpoint(true, stopAtPunc, trim);
-    const endPoint = forward ? this.findWordEndpoint(false, stopAtPunc, trim) : startPoint;
+    // const startPoint = this.findWordEndpoint(true, stopAtPunc, trim);
+    // const endPoint = forward ? this.findWordEndpoint(false, stopAtPunc, trim) : startPoint;
+
+    let endPoint = this.getEndPoint();
+
+    if (pred(endPoint)) {
+      return this;
+    }
+
+    const startPoint = Point.prevPointUntil(endPoint, pred);
+
+    if (forward) {
+      endPoint = Point.nextPointUntil(endPoint, pred);
+    }
 
     return new WrappedRange(
       startPoint.node,

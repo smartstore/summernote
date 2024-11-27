@@ -4,6 +4,7 @@ import lists from '../core/lists';
 import dom from '../core/dom';
 import range from '../core/range';
 import Bookmark from './Bookmark';
+import $ from 'jquery';
 //import DomTreeWalker from '../util/DomTreeWalker';
 
 let win = window;
@@ -13,7 +14,7 @@ const createRootRange = (editor) => {
   if ($(rng.sc).closest('.note-editable').length === 0) {
     rng = range.createFromBodyElement(editor.editable);
   }
-  
+
   return rng;
 };
 
@@ -115,7 +116,7 @@ export default class Selection {
   }
 
   /**
-   * Checks whether the given range is completely within the boundaries of the root editable.
+   * Checks whether the given range is a valid range object and is completely within the boundaries of the root editable.
    */
   isValidRange(rng) {
     const isValidObj = rng && (rng.isWrapper || rng instanceof Range);
@@ -204,6 +205,10 @@ export default class Selection {
     const sel = this.nativeSelection;
 
     if (sel) {
+      if (!rng) {
+        rng = createRootRange(this.editor);
+      }
+
       if (!rng.isWrapper) {
         rng = range.getWrappedRange(rng);
       }

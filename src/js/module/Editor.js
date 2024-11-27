@@ -600,6 +600,11 @@ export default class Editor {
     return this.selection.bookmark;
   }
 
+  get lastRange() {
+    // Compat
+    return this.getLastRange();
+  }
+
   saveRange(thenCollapse) {
     // Compat
     if (thenCollapse) {
@@ -882,11 +887,7 @@ export default class Editor {
     $block = $([currentRange.sc, currentRange.ec]).closest(tagName);
 
     // Apply all memoized attributes to new block
-    if (attrs.hasOwnProperty() && $block?.length) {
-      Object.keys(attrs).forEach((key) => {
-        $block[0].setAttribute(key, attrs[key]);
-      });
-    }
+    dom.setAttrs($block, attrs);
 
     // Support custom class
     if ($target?.length) {
@@ -896,6 +897,10 @@ export default class Editor {
       }
 
       if ($target?.length) {
+        const currentRange = this.selection.getRange();
+        $block = $([currentRange.sc, currentRange.ec]).closest(tagName);
+        // remove class added for current block
+        $block.removeClass();
         const className = $target[0].className || '';
         if (className) {
           $block.addClass(className);

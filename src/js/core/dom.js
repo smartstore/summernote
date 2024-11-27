@@ -373,7 +373,6 @@ const getAttr = (node, name) => {
  * @param {any} node - an HTML DOM node or jQuery object
  * @param {String} name - the attribute name
  * @param {String} value - the attribute value. If null or undefined, attribute will be removed.
- * @return {Boolean}
  */
 const setAttr = (node, name, value) => {
   node = getNode(node);
@@ -382,6 +381,22 @@ const setAttr = (node, name, value) => {
       node.setAttribute(name, value)
     else
       node.removeAttribute(name);
+  }
+}
+
+/**
+ * Apply all attributes to node
+ *
+ * @param {any} node - an HTML DOM node or jQuery object
+ * @param {Object} attrs - All attributes
+ */
+const setAttrs = (node, attrs) => {
+  node = getNode(node);
+  if (node && attrs.hasOwnProperty()) {
+    Object.keys(attrs).forEach((key) => {
+      const value = attrs[key];
+      Type.isNullOrUndefined(value) ? node.removeAttribute(key) : node.setAttribute(key, value);
+    });
   }
 }
 
@@ -1006,13 +1021,14 @@ const insertBefore = (marker, element) => {
 const insertAfter = (marker, element) => {
   const sibling = marker.nextSibling;
   if (marker.parentNode) {
-    if (sibling == null) {
-      return append(marker.parentNode, element);
-    }
-    else {
+    if (sibling) {
       return insertBefore(sibling, element);
     }
+    else {
+      return append(marker.parentNode, element);
+    }
   }
+
   return null;
 };
 
@@ -1255,6 +1271,7 @@ export default {
   detachEvents,
   isCustomStyleTag,
   setAttr,
+  setAttrs,
   removeAllAttrs,
   getAttr,
   getStyle,
