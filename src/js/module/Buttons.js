@@ -159,7 +159,7 @@ export default class Buttons {
                 colorsName: this.options.colorsName,
                 eventName: $holder.data('event'),
                 container: this.options.container,
-                tooltip: this.options.tooltip,
+                //tooltip: this.options.tooltip,
               }).render());
             });
             /* TODO: do we have to record recent custom colors within cookies? */
@@ -173,7 +173,7 @@ export default class Buttons {
                 colorsName: customColors,
                 eventName: $holder.data('event'),
                 container: this.options.container,
-                tooltip: this.options.tooltip,
+                //tooltip: this.options.tooltip,
               }).render());
             });
             $dropdown.find('input[type=color]').each((idx, item) => {

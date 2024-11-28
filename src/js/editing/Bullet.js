@@ -35,7 +35,7 @@ export default class Bullet {
     rng = rng || this.selection.getRange();
     rng = rng.wrapBodyInlineWithPara();
     
-    const paras = rng.nodes(dom.isPara, { includeAncestor: true });
+    const paras = rng.nodes(dom.isParaNoBlockquote, { includeAncestor: true });
     const clustereds = lists.clusterBy(paras, 'parentNode');
 
     lists.each(clustereds, (paras) => {
@@ -69,7 +69,7 @@ export default class Bullet {
     rng = rng || this.selection.getRange();
     rng = rng.wrapBodyInlineWithPara();
 
-    const paras = rng.nodes(dom.isPara, { includeAncestor: true });
+    const paras = rng.nodes(dom.isParaNoBlockquote, { includeAncestor: true });
     const clustereds = lists.clusterBy(paras, 'parentNode');
 
     lists.each(clustereds, (paras) => {
@@ -98,7 +98,7 @@ export default class Bullet {
     rng = rng || this.selection.getRange();
     rng = rng.wrapBodyInlineWithPara();
 
-    let paras = rng.nodes(dom.isPara, { includeAncestor: true });
+    let paras = rng.nodes(dom.isParaNoBlockquote, { includeAncestor: true });
     const bookmark = rng.createParaBookmark(paras);
     const clustereds = lists.clusterBy(paras, 'parentNode');
 

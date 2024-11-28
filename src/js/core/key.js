@@ -1,5 +1,4 @@
 import lists from './lists';
-import func from './func';
 import Obj from './Obj';
 
 const KEY_MAP = {

@@ -722,9 +722,13 @@ export default class Editor {
    */
   tab() {
     const rng = this.selection.getRange();
-    if (rng.collapsed && rng.isOnCell()) {
+    if (rng.isOnList()) {
+      this.indent(rng);
+    }
+    else if (rng.collapsed && rng.isOnCell()) {
       this.table.tab(rng);
-    } else {
+    } 
+    else {
       if (this.options.tabSize === 0) {
         return false;
       }
@@ -742,9 +746,13 @@ export default class Editor {
    */
   untab() {
     const rng = this.selection.getRange();
-    if (rng.collapsed && rng.isOnCell()) {
+    if (rng.isOnList()) {
+      this.outdent(rng);
+    }
+    else if (rng.collapsed && rng.isOnCell()) {
       this.table.tab(rng, true);
-    } else {
+    } 
+    else {
       if (this.options.tabSize === 0) {
         return false;
       }

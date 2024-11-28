@@ -306,7 +306,9 @@ const splitNode = (point, options) => {
     const childNode = point.node.childNodes[point.offset];
     let childNodes = dom.nextSiblings(childNode);
     // Remove empty nodes
-    childNodes = childNodes.filter(func.not(dom.isEmpty));
+    //console.log('--- childNodes before', childNodes.length);
+    //childNodes = lists.filter(childNodes, func.not(dom.isEmpty));
+    //console.log('--- childNodes after', childNodes.length);
 
     const clone = dom.insertAfter(point.node, point.node.cloneNode(false));
     dom.appendChildNodes(clone, childNodes);
@@ -345,6 +347,7 @@ const splitTree = (root, point, options) => {
   const rootPred = dom.matchSelector(root);
   let parents = dom.parents(point.node, rootPred);
   //console.log('splitTree', root.nodeName, point.node.nodeName, parents.length);
+
   if (!parents.length) {
     return null;
   } else if (parents.length === 1) {
@@ -357,12 +360,12 @@ const splitTree = (root, point, options) => {
     if (ifHasNextSibling && point.offset != 0 && isRightEdgePoint(point)) {
       let nestSibling = ifHasNextSibling.nextSibling;
       let textNode;
-      if (nestSibling.nodeType == 1) {
+      if (dom.isElement(nestSibling)) {
         textNode = nestSibling.childNodes[0];
         parents = dom.parents(textNode, rootPred);
         point = { node: textNode, offset: 0 };
       }
-      else if (nestSibling.nodeType == 3 && !nestSibling.data.match(/[\n\r]/g)) {
+      else if (dom.isText(nestSibling) && !nestSibling.data.match(/[\n\r]/g)) {
         textNode = nestSibling;
         parents = dom.parents(textNode, rootPred);
         point = { node: textNode, offset: 0 };

@@ -209,11 +209,14 @@ const isCellOrCaption = matchNodeNames(['TD', 'TH', 'CAPTION']);
 const isMedia = matchNodeNames(['VIDEO', 'AUDIO', 'OBJECT', 'EMBED']);
 const isHeading = matchSchemaMap(schema.getHeadingElements());
 const isPara = (node) => Obj.has(schema.getTextBlockElements(), node.nodeName) && !isEditableRoot(node);
-const isPurePara = (node) => isPara(node) && !isLi(node);
+const isParaNoBlockquote = (node) => isPara(node) && !isBlockquote(node);
+const isPurePara = (node) => isParaNoBlockquote(node) && !isLi(node);
 const isInline = (node) => schema.isInline(node.nodeName);
 const isBlock = (node) => schema.isBlock(node.nodeName);
 const isParaInline = (node) => (isText(node) || isInline(node)) && !!closest(node, isPara);
+const isParaInlineNoBlockQuote = (node) => (isText(node) || isInline(node)) && !!closest(node, isParaNoBlockquote);
 const isBodyInline = (node) => (isText(node) || isInline(node)) && !closest(node, isPara);
+const isBodyInlineNoBlockQuote = (node) => (isText(node) || isInline(node)) && !closest(node, isParaNoBlockquote);
 const isBodyContainer = (node) => isCell(node) || isBlockquote(node) || isEditableRoot(node);
 
 const isBookmarkNode = func.and(matchNodeName('SPAN'), matchAttributeValue('data-note-type', 'bookmark'))
@@ -700,7 +703,7 @@ const select = (node, selector) => {
  * @param {Function|String} selector - Selector function, string or node.
  * @param {boolean} [includeSelf] - Whether to start bubbling with given `node`. Default is true.
  */
-const closest = (node, selector, includeSelf = true, parentSelector = null) => {
+const closest = (node, selector, includeSelf = true) => {
   node = getNode(includeSelf ? node : node.parentNode);
   if (node) {
     const pred = matchSelector(selector);
@@ -1189,13 +1192,16 @@ export default {
   isWhiteSpace,
   findPara,
   isPurePara,
+  isParaNoBlockquote,
   isHeading,
   isInline,
   isInlineOrText: func.or(isInline, isText),
   isBlock,
   isBodyInline,
+  isBodyInlineNoBlockQuote,
   isBody,
   isParaInline,
+  isParaInlineNoBlockQuote,
   isPre,
   isList,
   isTable,

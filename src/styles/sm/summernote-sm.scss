@@ -273,7 +273,7 @@ $img-margin-right: 10px;
   flex-direction: column;
   row-gap: 8px;
   margin: 0;
-  width: 160px;
+  //width: 160px;
 }
 
 .note-palette-title {
@@ -288,10 +288,6 @@ $img-margin-right: 10px;
   width: 100%;
 }
 
-.note-color-row {
-  height: 20px;
-}
-
 .note-color-select-btn {
   display: none;
 }
@@ -301,11 +297,21 @@ $img-margin-right: 10px;
 }
 
 .note-color-palette {
+  --note-color-gap: 4px;
+  --note-color-size: 16px;
   line-height: 1;
+  display: flex;
+  flex-flow: column;
+  row-gap: var(--note-color-gap);
+
+  .note-color-row {
+    display: flex;
+    column-gap: var(--note-color-gap);
+  }
 
   .note-color-btn {
-    width: 20px;
-    height: 20px;
+    width: var(--note-color-size);
+    height: var(--note-color-size);
     padding: 0;
     margin: 0;
     border: 0;
@@ -548,8 +554,9 @@ $img-margin-right: 10px;
 
 .note-toolbar {
   $btn-height: calc((#{$btn-line-height-sm} * 1em) + (#{$btn-padding-y-sm} * 2) + (#{$btn-border-width} * 2));
+  $btn-height: 32.56px;
   --note-toolbar-gap: 5px;
-  --note-toolbar-rowheight: calc(#{$btn-height} + (var(--note-toolbar-gap) * 2) - 1px);
+  --note-toolbar-rowheight: calc(#{$btn-height} + (var(--note-toolbar-gap) * 2));
 
   margin: 0;
   flex-direction: row;
@@ -626,11 +633,12 @@ $img-margin-right: 10px;
       --btn-active-color: var(--primary-text-emphasis);
       --btn-active-border-color: transparent;
       --btn-active-shadow: none;
+    }
 
-      &:active {
-        --btn-active-bg: var(--primary-bg-subtle);
-        --btn-active-border-color: rgba(var(--primary-rgb), 0.3);
-      }
+    .note-btn:active,
+    .note-btn-group.show>.note-btn {
+      --btn-active-bg: var(--primary-bg-subtle) !important;
+      --btn-active-border-color: rgba(var(--primary-rgb), 0.3) !important;
     }
   }
 
@@ -687,7 +695,7 @@ $img-margin-right: 10px;
 .note-color-all>.note-dropdown-menu {
   min-width: auto;
   padding: 12px;
-  column-gap: 8px;
+  column-gap: 16px;
 
   &.show {
     display: flex;

@@ -614,7 +614,7 @@ class WrappedRange {
     const endContainer = inline ? dom.getRangeNode(this.endContainer, endOffset - 1) : this.endContainer;
 
     /**
-     * Excludes start/end text node if they are out side the range
+     * Excludes start/end text node if they are outside the range
      *
      * @private
      * @param {Array} nodes Nodes to exclude items from.
@@ -993,7 +993,7 @@ class WrappedRange {
      *  - chrome: <p>|text|</p>
      */
     const rng = this.normalize();
-    if (dom.isParaInline(this.sc) || dom.isPara(this.sc)) {
+    if (dom.isParaInlineNoBlockQuote(this.sc) || dom.isParaNoBlockquote(this.sc)) {
       return rng;
     }
 
@@ -1004,7 +1004,6 @@ class WrappedRange {
       topAncestor = lists.last(ancestors);
       if (dom.isBlock(topAncestor)) {
         topAncestor = ancestors[ancestors.length - 2] || rng.sc.childNodes[rng.so];
-        //console.log('wrapBodyInlineWithPara topAncestor', topAncestor);
       }
     } else {
       topAncestor = rng.sc.childNodes[rng.so > 0 ? rng.so - 1 : 0];
@@ -1012,8 +1011,8 @@ class WrappedRange {
 
     if (topAncestor) {
       // siblings not in paragraph
-      let inlineSiblings = dom.prevSiblings(topAncestor, dom.isParaInline).reverse();
-      inlineSiblings = inlineSiblings.concat(dom.nextSiblings(topAncestor.nextSibling, dom.isParaInline));
+      let inlineSiblings = dom.prevSiblings(topAncestor, dom.isParaInlineNoBlockQuote).reverse();
+      inlineSiblings = inlineSiblings.concat(dom.nextSiblings(topAncestor.nextSibling, dom.isParaInlineNoBlockQuote));
 
       // wrap with paragraph
       if (inlineSiblings.length) {

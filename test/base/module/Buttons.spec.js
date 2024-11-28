@@ -13,13 +13,16 @@ import Context from '@/js/Context';
 import '@/styles/lite/summernote-lite';
 
 describe('Buttons', () => {
-  var context, $toolbar, $editable;
+  var context, selection, $toolbar, $editable;
 
   beforeEach(() => {
     $('body').empty(); // important !
+    document.getSelection()?.removeAllRanges();
+
     var $note = $('<div><p>hello</p></div>').appendTo('body');
 
     var options = $.extend({}, $.summernote.options);
+    options.icons.eraser = 'note-icon-eraser';
     options.toolbar = [
       ['font1', ['style', 'clear']],
       ['font2', ['bold', 'underline', 'italic', 'superscript', 'subscript', 'strikethrough']],
@@ -31,13 +34,16 @@ describe('Buttons', () => {
       ['view', ['fullscreen', 'codeview', 'help']],
     ];
     context = new Context($note, options);
-    context.initialize();
+    //context.initialize();
 
     $toolbar = context.layoutInfo.toolbar;
     $editable = context.layoutInfo.editable;
 
+    selection = context.modules.editor.selection;
+
     // Select the first paragraph
-    range.createFromNode($editable.find('p')[0]).normalize().select();
+    //range.createFromNode($editable.find('p')[0]).normalize().select();
+    selection.setRange(range.createFromNode($editable.find('p')[0]).normalize());
 
     // [workaround]
     //  - IE8~11 can't create range in headless mode

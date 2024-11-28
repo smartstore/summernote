@@ -1,5 +1,7 @@
 import $ from 'jquery';
 import dom from '../core/dom';
+import lists from '../core/lists';
+import func from '../core/func';
 import range from '../core/range';
 import Point from '../core/Point';
 import Bullet from '../editing/Bullet';
@@ -55,9 +57,9 @@ export default class Typing {
 
     // Wrap range if it needs to be wrapped by paragraph
     rng = rng.wrapBodyInlineWithPara();
-
+    
     // finding paragraph
-    const splitRoot = dom.closest(rng.sc, dom.isPara);
+    const splitRoot = dom.closest(rng.sc, dom.isParaNoBlockquote);
 
     let nextPara;
     // on paragraph: split paragraph
@@ -71,7 +73,7 @@ export default class Typing {
       else {
         let blockquote = null;
         if (this.options.blockquoteBreakingLevel === 1) {
-          blockquote = dom.ancestor(splitRoot, dom.isBlockquote);
+          blockquote = dom.closest(splitRoot, dom.isBlockquote);
         } else if (this.options.blockquoteBreakingLevel === 2) {
           blockquote = dom.farthestParent(splitRoot, dom.isBlockquote);
         }
@@ -99,7 +101,7 @@ export default class Typing {
           let emptyAnchors = dom.children(splitRoot, dom.isEmptyAnchor);
           emptyAnchors = emptyAnchors.concat(dom.children(nextPara, dom.isEmptyAnchor));
 
-          $.each(emptyAnchors, (idx, anchor) => {
+          lists.each(emptyAnchors, (anchor) => {
             dom.remove(anchor);
           });
 

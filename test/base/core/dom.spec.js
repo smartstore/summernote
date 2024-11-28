@@ -42,14 +42,14 @@ describe('base:core.dom', () => {
     });
 
     it('should return [$b, $u, $s, $i] from b to i', () => {
-      let result = dom.parentsWhile($b[0], (node) => {
+      let result = dom.parents($b[0], (node) => {
         return node === $i[0];
       });
       expect(result).to.deep.equal([$b[0], $u[0], $s[0], $i[0]]);
     });
 
     it('should return [$u, $s] from u to s', () => {
-      let result = dom.parentsWhile($u[0], (node) => {
+      let result = dom.parents($u[0], (node) => {
         return node === $s[0];
       });
       expect(result).to.deep.equal([$u[0], $s[0]]);
