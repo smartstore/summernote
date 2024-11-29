@@ -15,7 +15,7 @@ export default class HelpDialog {
   initialize() {
     const $container = this.options.dialogsInBody ? this.$body : this.options.container;
     const body = [
-      '<p class="text-center">',
+      '<p class="text-center small m-0">',
         '<a href="http://summernote.org/" target="_blank" rel="noopener noreferrer">Summernote @@VERSION@@</a> · ',
         '<a href="https://github.com/summernote/summernote" target="_blank" rel="noopener noreferrer">Project</a> · ',
         '<a href="https://github.com/summernote/summernote/issues" target="_blank" rel="noopener noreferrer">Issues</a>',
@@ -29,8 +29,8 @@ export default class HelpDialog {
       footer: body,
       callback: ($node) => {
         $node.find('.modal-body,.note-modal-body').css({
-          'max-height': 300,
-          'overflow': 'scroll',
+          'max-height': 350,
+          'overflow-y': 'scroll',
         });
       },
     }).render().appendTo($container);
@@ -43,15 +43,18 @@ export default class HelpDialog {
 
   createShortcutList() {
     const keyMap = this.options.keyMap[env.isMac ? 'mac' : 'pc'];
-    return Object.keys(keyMap).map((key) => {
+
+    const $root = $('<div><div class="help-list" style="display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px"></div></div>');
+    const $list = $root.find('.help-list');
+
+    Object.keys(keyMap).forEach(key => {
       const command = keyMap[key];
-      const $row = $('<div><div class="help-list-item"></div></div>');
-      $row.append($('<label><kbd>' + key + '</kdb></label>').css({
-        'width': 180,
-        'margin-right': 10,
-      })).append($('<span></span>').html(this.context.memo('help.' + command) || command));
-      return $row.html();
-    }).join('');
+      $list
+        .append($('<div><kbd class="fwm">' + key + '</kdb></div>'))
+        .append($('<div></div>').html(this.context.memo('help.' + command) || command));
+    });
+
+    return $root.html();
   }
 
   /**

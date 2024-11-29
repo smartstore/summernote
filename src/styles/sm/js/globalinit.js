@@ -75,7 +75,7 @@ let summernote_image_upload_url;
       ['edit', ['undo', 'redo']],
       ['text', ['bold', 'italic', 'underline', 'moreFontStyles']],
       //['color', ['forecolor', 'backcolor']],
-      ['font', ['fontname', 'color', 'fontsize']],
+      //['font', ['fontname', 'color', 'fontsize']],
       ['para', ['style', 'cssclass', 'ul', 'ol', 'paragraph', 'clear']],
       ['insert', ['link', 'image', 'video', 'table', 'hr']],
       ['view', ['codeview', 'fullscreen', 'help']]

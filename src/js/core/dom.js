@@ -495,10 +495,15 @@ const isEmpty = (node) => {
 
   if (len === 0) {
     return true;
-  } else if (!isText(node) && len === 1 && node.innerHTML === blankHTML) {
+  } 
+  else if (!isText(node) && len === 1 && node.innerHTML.trim() === blankHTML) {
     // ex) <p><br></p>, <span><br></span>
     return true;
-  } else if (lists.all(node.childNodes, isText) && node.innerHTML === '') {
+  }
+  else if (isText(node) && node.textContent.trim() === '') {
+    return true;
+  }
+  else if (lists.all(node.childNodes, isText) && node.innerHTML === '') {
     // ex) <p></p>, <span></span>
     return true;
   }
@@ -1043,14 +1048,18 @@ const insertAfter = (marker, element) => {
  */
 const appendChildNodes = (node, children, skipPaddingBlankHtml) => {
   lists.each(children, (child) => {
-    // special case: appending a pure UL/OL to a LI element creates inaccessible LI element
-    // e.g. press enter in last LI which has UL/OL-subelements
-    // Therefore, if current node is LI element with no child nodes (text-node) and appending a list, add a br before
-    if (!skipPaddingBlankHtml && isLi(node) && node.firstChild === null && isList(child)) {
-      node.appendChild(create("br"));
-    }
-    node.appendChild(child);
+    if (isElement(node)) {
+      // special case: appending a pure UL/OL to a LI element creates inaccessible LI element
+      // e.g. press enter in last LI which has UL/OL-subelements
+      // Therefore, if current node is LI element with no child nodes (text-node) and appending a list, add a br before
+      if (!skipPaddingBlankHtml && isLi(node) && node.firstChild === null && isList(child)) {
+        node.appendChild(create("br"));
+      }
+
+      node.appendChild(child);
+    }  
   });
+
   return node;
 }
 

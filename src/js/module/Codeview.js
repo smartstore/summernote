@@ -1,5 +1,4 @@
 import dom from '../core/dom';
-import func from '../core/func';
 import key from '../core/key';
 import range from '../core/range';
 import Str from '../core/Str';

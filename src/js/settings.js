@@ -29,6 +29,7 @@ import VideoDialog from './module/VideoDialog';
 import HelpDialog from './module/HelpDialog';
 //import AirPopover from './module/AirPopover';
 import HintPopover from './module/HintPopover';
+import CssClass from './module/CssClass';
 
 $.summernote = $.extend($.summernote, {
   version: '@@VERSION@@',
@@ -56,6 +57,7 @@ $.summernote = $.extend($.summernote, {
       'autoSync': AutoSync,
       'autoReplace': AutoReplace,
       'placeholder': Placeholder,
+      'cssclass': CssClass,
       'buttons': Buttons,
       'toolbar': Toolbar,
       'linkDialog': LinkDialog,
