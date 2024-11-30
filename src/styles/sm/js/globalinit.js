@@ -38,6 +38,10 @@ let summernote_image_upload_url;
     recordEveryKeystroke: false,
     // TODO: Turn on spellCheck again
     spellCheck: false,
+    colorButton: {
+      foreColor: '#424242',
+      backColor: '#CEE7F7',
+    },
     callbacks: {
       onBlurCodeview(code, e) {
         // Summernote does not update WYSIWYG content on codable blur,
@@ -73,7 +77,7 @@ let summernote_image_upload_url;
     },
     toolbar: [
       ['edit', ['undo', 'redo']],
-      ['text', ['bold', 'italic', 'underline', 'moreFontStyles']],
+      ['text', ['bold', 'italic', 'underline', 'color', 'moreFontStyles']],
       //['color', ['forecolor', 'backcolor']],
       //['font', ['fontname', 'color', 'fontsize']],
       ['para', ['style', 'cssclass', 'ul', 'ol', 'paragraph', 'clear']],

@@ -278,14 +278,15 @@ $img-margin-right: 10px;
 
 .note-palette-title {
   font-size: 13px;
-  text-align: center;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .note-color-reset,
 .note-color-select {
-  font-size: 11px;
-  width: 100%;
+  --btn-height: 24px;
 }
 
 .note-color-select-btn {
@@ -298,7 +299,7 @@ $img-margin-right: 10px;
 
 .note-color-palette {
   --note-color-gap: 4px;
-  --note-color-size: 16px;
+  --note-color-size: 18px;
   line-height: 1;
   display: flex;
   flex-flow: column;
@@ -739,12 +740,18 @@ $img-margin-right: 10px;
   background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASAgMAAAAroGbEAAAACVBMVEUAAIjd6vvD2f9LKLW+AAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfYAR0BKwNDEVT0AAAAG0lEQVQI12NgAAOtVatWMTCohoaGUY+EmIkEAEruEzK2J7tvAAAAAElFTkSuQmCC") repeat;
 }
 
-// .note-recent-color {
-//   display: inline-block;
-//   border: 1px solid rgba($black, 0.12);
-//   padding-inline: 2px;
-//   border-radius: 3px;
-// }
+.note-current-color-button {
+  --btn-padding-x: 4px;
+  --btn-padding-y: 4px;
+
+  > .note-recent-color {
+    display: inline-block;
+    outline: 1px solid rgba($black, 0.1);
+    outline-offset: -1px;
+    padding: 2px;
+    border-radius: 3px;
+  }
+}
 
 
 // Misc

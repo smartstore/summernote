@@ -197,7 +197,7 @@ export default class CssClass {
               btn.tooltip();
 
               btn.on('click', (e) => {
-                this.refreshDropdown($(e.currentTarget).next(), $(this.context.layoutInfo.editable.data('target')), true);
+                this.refreshDropdown($(e.currentTarget).next(), $(this.selection.selectedControl), true);
               });
             },
             data: {
@@ -230,7 +230,12 @@ export default class CssClass {
   }
 
   applyClassToSelection(value, obj) {
-    const controlNode = $(this.editor.restoreTarget());
+    const rng = this.selection.getRange();
+    if (!this.selection.isValidRange(rng)) {
+      return;
+    }
+
+    const controlNode = $(this.selection.selectedControl);
     const sel = this.selection.nativeSelection;
     let node = $(sel.focusNode.parentElement, ".note-editable");
     const caret = sel.type === 'None' || sel.type === 'Caret';
@@ -278,9 +283,6 @@ export default class CssClass {
         if (isInlineElement(node[0])) {
           // Traverse parents until a block-level element is found
           node = $(dom.closest(node, n => !isInlineElement(n)));
-          // while (node.length && isInlineElement(node[0])) {
-          //   node = node.parent();
-          // }
         }
 
         if (node.length && !dom.isEditableRoot(node[0])) {
@@ -314,6 +316,7 @@ export default class CssClass {
         match = false;
 
       while (curNode.length) {
+        
         if (curNode.is(expr)) {
           match = true;
           break;
