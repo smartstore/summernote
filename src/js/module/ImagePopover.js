@@ -17,7 +17,12 @@ export default class ImagePopover {
     this.options = context.options;
 
     this.events = {
-      'summernote.disable summernote.dialog.shown summernote.popover.shown': () => {
+      'summernote.popover.shown': (e, popover) => {
+        if (popover != this.$popover) {
+          this.hide();
+        }
+      },
+      'summernote.disable summernote.dialog.shown': (e) => {
         this.hide();
       },
       'summernote.blur': (we, event) => {

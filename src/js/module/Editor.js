@@ -1140,6 +1140,7 @@ export default class Editor {
 
   showPopover($popover, target, placement = 'top') {
     if ($popover?.length) {
+
       let popper = $popover.data('popper');
       if (popper) {
         popper.destroy();
@@ -1154,7 +1155,7 @@ export default class Editor {
       });
 
       popper.scheduleUpdate();
-      this.context.triggerEvent('popover.shown');
+      this.context.triggerEvent('popover.shown', $popover);
       $popover.data('popper', popper).show();
     }
   }

@@ -117,7 +117,7 @@ export default class Buttons {
 
   colorPalette(className, tooltip, backColor, foreColor) {
     return this.ui.buttonGroup({
-      className: 'note-color ' + className,
+      className: 'note-color btn-group-split ' + className,
       children: [
         this.button({
           className: 'note-current-color-button',
@@ -155,7 +155,7 @@ export default class Buttons {
           },
         }),
         this.button({
-          className: 'dropdown-toggle',
+          className: 'dropdown-toggle dropdown-toggle-split',
           contents: this.ui.dropdownButtonContents('', this.options),
           tooltip: this.lang.color.more,
           data: {

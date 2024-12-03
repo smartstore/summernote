@@ -12,6 +12,7 @@ $zindex-tooltip:            1070;
 $btn-border-width:          1px;
 $btn-line-height-sm:        1.429;
 $btn-padding-y-sm:          0.375rem; // --> 6px
+$btn-border-radius-sm:      6px;
 
 @function valid-radius($radius) {
     $return: ();

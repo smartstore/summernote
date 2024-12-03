@@ -11,13 +11,18 @@ export default class TablePopover {
     this.ui = $.summernote.ui;
     this.options = context.options;
     this.events = {
+      'summernote.popover.shown': (e, popover) => {
+        if (popover != this.$popover) {
+          this.hide();
+        }
+      },
       'summernote.mousedown': (we, e) => {
         this.update(e?.target, e);
       },
       'summernote.keyup summernote.scroll summernote.change': (we, e) => {
         this.update(e?.target, e);
       },
-      'summernote.disable summernote.dialog.shown summernote.popover.shown': () => {
+      'summernote.disable summernote.dialog.shown': () => {
         this.hide();
       },
       'summernote.blur': (we, e) => {
@@ -28,6 +33,9 @@ export default class TablePopover {
         } else {
           this.hide();
         }
+      },
+      'summernote.codeview.toggled': () => {
+        this.hide();
       },
     };
   }

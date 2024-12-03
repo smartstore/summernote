@@ -26,7 +26,7 @@ export default class Handle {
       //   this.hide();
       // },
       'summernote.codeview.toggled': () => {
-        this.update();
+        this.hide();
       },
     };
   }

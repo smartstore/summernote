@@ -10,10 +10,15 @@ export default class LinkPopover {
     this.ui = $.summernote.ui;
     this.options = context.options;
     this.events = {
+      'summernote.popover.shown': (e, popover) => {
+        if (popover != this.$popover) {
+          this.hide();
+        }
+      },
       'summernote.keyup summernote.mouseup summernote.change summernote.scroll': () => {
         this.update();
       },
-      'summernote.disable summernote.dialog.shown summernote.popover.shown': () => {
+      'summernote.disable summernote.dialog.shown': () => {
         this.hide();
       },
       'summernote.blur': (we, event) => {
@@ -24,6 +29,9 @@ export default class LinkPopover {
         } else {
           this.hide();
         }
+      },
+      'summernote.codeview.toggled': () => {
+        this.hide();
       },
     };
   }
