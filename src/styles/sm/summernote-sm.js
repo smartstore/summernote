@@ -27,6 +27,8 @@ const airEditable = renderer.create([
 ].join(''));
 
 const buttonGroup = renderer.create('<div class="note-btn-group btn-group"></div>');
+//const toolGroup = renderer.create('<div class="note-btn-group btn-group"></div>');
+const toolGroup = renderer.create('<div class="note-toolgroup"></div>');
 
 const dropdown = renderer.create(
   '<div class="note-dropdown-menu dropdown-menu" role="list"></div>',
@@ -167,6 +169,7 @@ const ui = function(editorOptions) {
     airEditor: airEditor,
     airEditable: airEditable,
     buttonGroup: buttonGroup,
+    toolGroup: toolGroup,
     dropdown: dropdown,
     dropdownButtonContents: dropdownButtonContents,
     dropdownCheck: dropdownCheck,

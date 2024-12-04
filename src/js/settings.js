@@ -25,6 +25,7 @@ import LinkPopover from './module/LinkPopover';
 import ImageDialog from './module/ImageDialogEx';
 import ImagePopover from './module/ImagePopover';
 import TablePopover from './module/TablePopover';
+import TableStyles from './module/TableStyles';
 import VideoDialog from './module/VideoDialog';
 import HelpDialog from './module/HelpDialog';
 //import AirPopover from './module/AirPopover';
@@ -58,6 +59,7 @@ $.summernote = $.extend($.summernote, {
       'autoReplace': AutoReplace,
       'placeholder': Placeholder,
       'cssclass': CssClass,
+      'tableStyles': TableStyles,
       'buttons': Buttons,
       'toolbar': Toolbar,
       'linkDialog': LinkDialog,
@@ -202,6 +204,12 @@ $.summernote = $.extend($.summernote, {
     lineHeights: ['1.0', '1.2', '1.4', '1.5', '1.6', '1.8', '2.0', '3.0'],
 
     tableClassName: 'table table-bordered',
+
+    tableStyles: {
+      // Must keep the same order as in lang.tableStyles.styles*
+      stylesExclusive: ["", "table-bordered"],
+      stylesInclusive: ["table-striped", "table-sm", "table-hover"]
+    },
 
     insertTableMaxSize: {
       col: 10,

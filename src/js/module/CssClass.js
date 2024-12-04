@@ -16,17 +16,6 @@ export default class CssClass {
     this.buttons = context.modules.buttons;
     this.editor = context.modules.editor;
     this.selection = this.editor.selection;
-
-    this.events = {
-				// This will be called after modules are initialized.
-				'summernote.init': function (we, e) {
-					//console.log('summernote initialized', we, e);
-				},
-				// This will be called when user releases a key on editable.
-				'summernote.keyup': function (we, e) {
-					//  console.log('summernote keyup', we, e);
-				}
-    };
   }
 
   initialize() {
@@ -190,15 +179,9 @@ export default class CssClass {
           this.ui.button({
             className: 'dropdown-toggle',
             contents: this.ui.icon("fab fa-css3"),
-            callback: (btn) => {
-              btn.data("placement", "bottom");
-              btn.data("trigger", "hover");
-              btn.attr("title", this.lang.imageShapes.tooltip);
-              btn.tooltip();
-
-              btn.on('click', (e) => {
-                this.refreshDropdown($(e.currentTarget).next(), $(this.selection.selectedControl), true);
-              });
+            tooltip: this.lang.imageShapes.tooltip,
+            click: (e) => {
+              this.refreshDropdown($(e.currentTarget).next(), $(this.selection.selectedControl), true);
             },
             data: {
               toggle: 'dropdown'

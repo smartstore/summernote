@@ -657,6 +657,7 @@ const ui = function(editorOptions) {
     airEditor: airEditor,
     airEditable: airEditable,
     buttonGroup: buttonGroup,
+    toolGroup: buttonGroup,
     button: (options) => {
       return button({
         ...options,

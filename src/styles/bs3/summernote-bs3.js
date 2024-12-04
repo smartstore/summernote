@@ -129,6 +129,7 @@ const ui = function(editorOptions) {
     airEditor: airEditor,
     airEditable: airEditable,
     buttonGroup: buttonGroup,
+    toolGroup: buttonGroup,
     dropdown: dropdown,
     dropdownButtonContents: dropdownButtonContents,
     dropdownCheck: dropdownCheck,

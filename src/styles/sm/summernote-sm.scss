@@ -1,3 +1,5 @@
+/// <reference path="../../../../shared/references.scss" />
+//@import 'summernote-icons.scss'; // Obsolete, we now use inline SVG icons for the missing ones
 @import "scss/variables.scss";
 
 $note-border-color: $input-border-color;
@@ -555,6 +557,8 @@ $img-margin-right: 10px;
 .note-toolbar {
   $btn-height: calc((#{$btn-line-height-sm} * 1em) + (#{$btn-padding-y-sm} * 2) + (#{$btn-border-width} * 2));
   $btn-height: 32.56px;
+
+  --note-btn-active-border-color: rgba(var(--primary-rgb), 0.3);
   --note-toolbar-gap: 5px;
   --note-toolbar-rowheight: calc(#{$btn-height} + (var(--note-toolbar-gap) * 2));
 
@@ -575,7 +579,7 @@ $img-margin-right: 10px;
     background-size: 100% var(--note-toolbar-rowheight);
     background-position: 0 -1px;
 
-    > .note-btn-group:last-of-type {
+    > .note-toolgroup:last-of-type {
       margin-inline-start: auto;
     }
   }
@@ -587,11 +591,41 @@ $img-margin-right: 10px;
   &.dropdown-menu.show {
     display: flex;
   }
+
+  .scrollable-menu {
+    --scrollbar-track-color: #fff;
+    --scrollbar-track-hover-color: #fff;
+    height: auto;
+    max-height: 340px;
+    min-width: 280px;
+    overflow-x: hidden;
+  }
+}
+
+.note-toolgroup {
+  display: inline-flex;
+  position: relative;
+  column-gap: 2px;
+  border: 0 solid rgba($black, 0.12);
+  border-inline-end-width: 1px;
+  padding-inline-end: 5px;
+
+  &:last-of-type {
+    border-inline-end-width: 0;
+    padding-inline-end: 0;
+  }
 }
 
 .note-btn {
-  --btn-padding-x: 6px;
+  @include button-flat();
   min-width: 32px;
+
+  // Change color hover/active/pressed styling
+  --btn-padding-x: 6px;
+  --btn-active-bg: rgba(var(--primary-bg-subtle-rgb), 0.75);
+  --btn-active-color: var(--primary-text-emphasis);
+  --btn-active-border-color: transparent;
+  --btn-active-shadow: none;
 
   >i,
   >svg {
@@ -602,101 +636,28 @@ $img-margin-right: 10px;
   >svg {
     height: 16px;
   }
-}
 
-.note-toolbar {
-  --note-btn-active-border-color: rgba(var(--primary-rgb), 0.3);
-
-  > .note-btn-group {
-    column-gap: 2px;
-    border: 0 solid rgba($black, 0.12);
-    border-inline-end-width: 1px;
-    padding-inline-end: 5px;
-
-    &:last-of-type {
-      border-inline-end-width: 0;
-      padding-inline-end: 0;
-    }
-
-    >.note-btn,
-    >.note-btn-group>.note-btn {
-      --btn-color: #{$yiq-text-dark};
-      --btn-bg: transparent;
-      --btn-border-color: transparent;
-      --btn-box-shadow: none;
-      --btn-disabled-color: var(--btn-color);
-      --btn-disabled-bg: var(--btn-bg);
-      --btn-disabled-border-color: var(--btn-border-color);
-
-      // Change color hover/active/pressed styling
-      --btn-active-bg: rgba(var(--primary-bg-subtle-rgb), 0.75);
-      --btn-active-color: var(--primary-text-emphasis);
-      --btn-active-border-color: transparent;
-      --btn-active-shadow: none;
-  
-      // INFO: Must have high specificty, .btn-group will kill radius otherwise.
-      border-radius: var(--btn-border-radius) !important;
-      background-image: none;
-      margin-inline-start: 0;
-
-      &:not(:hover) {
-        transition: none !important;
-      }
-    }
-
-    .note-btn:active,
-    .note-btn-group.show>.note-btn {
-      --btn-active-bg: var(--primary-bg-subtle) !important;
-      --btn-active-border-color: var(--note-btn-active-border-color) !important;
-    }
-
-    > .btn-group-split {
-      // Split dropdown buttons, e.g. "Color"
-      outline: 1px solid transparent;
-      outline-offset: -1px;
-      border-radius: $btn-border-radius-sm;
-
-      &:hover, 
-      &.show {
-        outline-color: var(--note-btn-active-border-color);
-      }
-
-      > .note-btn {
-        &:first-child {
-          border-start-end-radius: 0 !important;
-          border-end-end-radius: 0 !important;
-        }
-
-        &.dropdown-toggle-split {
-          border-start-start-radius: 0 !important;
-          border-end-start-radius: 0 !important;
-        }
-      }
-    }
-  }
-
-  // > .note-btn-group > .note-btn-group {
-  //   // Split dropdown buttons, e.g. "Color"
-  //   border: 1px solid transparent;
-  //   border-radius: 6px;
-
-  //   &:hover {
-  //     border: 1px solid rgba(var(--primary-rgb), 0.3);
-  //   }
-
-  //   > .note-btn {
-  //     border-width: 0 !important;
-  //   }
+  // &:not(:hover) {
+  //   //transition: none !important;
   // }
 
-  .scrollable-menu {
-    --scrollbar-track-color: #fff;
-    --scrollbar-track-hover-color: #fff;
-    height: auto;
-    max-height: 340px;
-    min-width: 280px;
-    overflow-x: hidden;
+  &:active,
+  .note-btn-group.show > & {
+    --btn-active-bg: var(--primary-bg-subtle) !important;
+    --btn-active-border-color: var(--note-btn-active-border-color) !important;
   }
+}
+
+.btn-group-split {
+    // Split dropdown buttons, e.g. "Color"
+    outline: 1px solid transparent;
+    outline-offset: -1px;
+    border-radius: $btn-border-radius-sm;
+
+    &:hover, 
+    &.show {
+      outline-color: var(--note-btn-active-border-color);
+    }
 }
 
 

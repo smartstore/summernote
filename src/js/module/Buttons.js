@@ -617,7 +617,7 @@ export default class Buttons {
               '<div class="note-dimension-picker-highlighted"></div>',
               '<div class="note-dimension-picker-unhighlighted"></div>',
             '</div>',
-            '<div class="note-dimension-display">1 x 1</div>',
+            '<div class="note-dimension-display text-center fwm">1 x 1</div>',
           ].join(''),
         }),
       ], {
@@ -872,7 +872,7 @@ export default class Buttons {
       const groupName = Array.isArray(group) ? group[0] : group;
       const buttons = Array.isArray(group) ? ((group.length === 1) ? [group[0]] : group[1]) : [group];
 
-      const $group = this.ui.buttonGroup({
+      const $group = this.ui.toolGroup({
         className: 'note-' + groupName,
       }).render();
 

@@ -45,7 +45,7 @@ export default class LinkPopover {
       className: 'note-link-popover',
       callback: ($node) => {
         const $content = $node.find('.popover-content,.note-popover-content');
-        $content.prepend('<span class="text-truncate d-inline-block ml-1" style="max-width: 300px"><a target="_blank" class="text-truncate"></a>&nbsp;</span>');
+        $content.prepend('<span class="text-truncate d-inline-block ml-1" style="max-width: 300px"><a target="_blank" class="text-truncate"></a>&nbsp;</span><span class="vr"></span>');
       },
     }).render().appendTo(this.options.container);
     const $content = this.$popover.find('.popover-content,.note-popover-content');

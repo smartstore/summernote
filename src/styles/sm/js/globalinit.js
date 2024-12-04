@@ -78,6 +78,7 @@ let summernote_image_upload_url;
     toolbar: [
       ['edit', ['undo', 'redo']],
       ['text', ['bold', 'italic', 'underline', 'color', 'moreFontStyles']],
+      //['color', ['color']],
       //['color', ['forecolor', 'backcolor']],
       //['font', ['fontname', 'color', 'fontsize']],
       ['para', ['style', 'cssclass', 'ul', 'ol', 'paragraph', 'clear']],
@@ -97,7 +98,7 @@ let summernote_image_upload_url;
       table: [
         ['add', ['addRowDown', 'addRowUp', 'addColLeft', 'addColRight']],
         ['delete', ['deleteRow', 'deleteCol', 'deleteTable']],
-        //['custom', ['tableStyles']]
+        ['custom', ['tableStyles']]
       ],
       // air: [
       //   ['color', ['color']],
