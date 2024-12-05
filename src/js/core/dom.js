@@ -718,6 +718,7 @@ const closest = (node, selector, includeSelf = true) => {
       node = node.parentNode;
     }
   }
+
   return null;
 }
 

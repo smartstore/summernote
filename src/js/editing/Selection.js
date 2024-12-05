@@ -28,7 +28,7 @@ const getEndpointElement = (
 ) => {
   let container = start ? rng.startContainer : rng.endContainer;
   let offset = start ? rng.startOffset : rng.endOffset;
-  
+
   if (container) {
     if (!real || !rng.collapsed) {
       container = container.childNodes[resolve(container, offset)] || container;
@@ -82,7 +82,7 @@ export default class Selection {
       }
       else if (e.type !== 'summernote') {
         this.bookmark = createBookmarkFromSelection();
-      }  
+      }
     }, 200);
 
     const events = ['keydown', 'keyup', 'mouseup', 'paste', 'focus', 'blur']
@@ -165,7 +165,7 @@ export default class Selection {
         if (selection && selection.rangeCount > 0 && !dom.isRestrictedNode(selection.anchorNode)) {
           rng = range.createFromNativeRange(selection.getRangeAt(0));
         }
-      } catch {}
+      } catch { }
     }
 
     if (!rng) {
@@ -339,14 +339,14 @@ export default class Selection {
   //   const root = this.editor.editable;
   //   const start = dom.closest(startElm || this.getStart(rng.collapsed, rng), dom.isBlock);
   //   const end = dom.closest(endElm || this.getEnd(rng.collapsed, rng), dom.isBlock);
-  
+
   //   if (start && start !== root) {
   //     selectedBlocks.push(start);
   //   }
-  
+
   //   if (start && end && start !== end) {
   //     let node;
-  
+
   //     const walker = new DomTreeWalker(start, root);
   //     while ((node = walker.next()) && node !== end) {
   //       if (dom.isBlock(node)) {
@@ -354,11 +354,11 @@ export default class Selection {
   //       }
   //     }
   //   }
-  
+
   //   if (end && start !== end && end !== root) {
   //     selectedBlocks.push(end);
   //   }
-  
+
   //   return selectedBlocks;
   // }
 
@@ -375,7 +375,7 @@ export default class Selection {
       rng = range.createFromNode(dom.closest(rng.startContainer, dom.isAnchor));
     }
 
-    return rng.toString();     
+    return rng.toString();
   }
 
   /**
@@ -388,7 +388,7 @@ export default class Selection {
     // TODO: Perform cleanup in Selection.getContent() before returning content.
     let rng = this.getRange();
     var container = rng.commonAncestorContainer.parentNode.cloneNode(false);
-    container.appendChild( rng.cloneContents() );
+    container.appendChild(rng.cloneContents());
     return container.innerHTML;
   }
 
@@ -408,29 +408,9 @@ export default class Selection {
     }
 
     content = this.context.invoke('codeview.purify', content.trim());
-    
+
     const rng = this.getRange();
-    const container = dom.create('div', null, content); // $('<div></div>').html(content)[0];
-    let childNodes = lists.from(container.childNodes);
-    
-    let reversed = false;
-
-    if (rng.so >= 0) {
-      childNodes = childNodes.reverse();
-      reversed = true;
-    }
-
-    childNodes = childNodes.map(node => {
-      //console.log('pasteContent childNodes.map', node.nodeName, dom.isBlock(node), dom.isData(node));
-      return rng.insertNode(node, /* true */ dom.isBlock(node) || dom.isData(node));
-    });
-
-    if (reversed) {
-      childNodes = childNodes.reverse();
-    }
-
-    this.setRange(range.createFromNodeAfter(lists.last(childNodes)));
-    return childNodes;
+    return rng.pasteHTML(content);
   }
 
   /**
@@ -469,7 +449,7 @@ export default class Selection {
       return Bookmark.getPersistentBookmark(this);
     } else {
       return this.getRange().createBookmark(this.editor.editable);
-    }  
+    }
   }
 
   /**
@@ -495,7 +475,7 @@ export default class Selection {
     if (this.isValidRange(bookmark)) {
       // Is a range bookmark
       rng = bookmark;
-    } 
+    }
     else if (bookmark.s && bookmark.e) {
       // Is an offset bookmark
       rng = range.createFromBookmark(this.editor.editable, bookmark);
@@ -513,7 +493,7 @@ export default class Selection {
     if (rng) {
       this.setRange(rng, forward);
       rng.scrollIntoView(this.editor.editable);
-    }   
+    }
   }
 
   /**
@@ -651,7 +631,7 @@ export default class Selection {
       return true;
     }
 
-    return anchorRange.compareBoundaryPoints(anchorRange.START_TO_START, focusRange) <= 0;   
+    return anchorRange.compareBoundaryPoints(anchorRange.START_TO_START, focusRange) <= 0;
   }
 
   normalize() {
@@ -664,6 +644,6 @@ export default class Selection {
       return normRng;
     }
 
-    return rng;    
+    return rng;
   }
 }

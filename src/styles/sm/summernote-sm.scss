@@ -578,6 +578,8 @@ $img-margin-right: 10px;
     background-image: linear-gradient(rgba(0,0,0, 0.1) 1px, transparent 1px);
     background-size: 100% var(--note-toolbar-rowheight);
     background-position: 0 -1px;
+    background-color: var(--gray-100);
+    @include border-top-radius($input-border-radius);
 
     > .note-toolgroup:last-of-type {
       margin-inline-start: auto;

@@ -391,7 +391,7 @@ export default class Buttons {
         this.ui.dropdown({
           className: 'note-toolbar',
           css: { 'min-width': 'auto' },
-          items: this.ui.buttonGroup({
+          items: this.ui.toolGroup({
             className: 'note-more-fontstyles',
             children: [strikethrough, superscript, subscript, code],
           }).render()
@@ -565,11 +565,11 @@ export default class Buttons {
           className: 'note-toolbar',
           css: { 'min-width': 'auto' },
           children: [
-            this.ui.buttonGroup({
+            this.ui.toolGroup({
               className: 'note-align',
               children: [justifyLeft, justifyCenter, justifyRight, justifyFull],
             }),
-            this.ui.buttonGroup({
+            this.ui.toolGroup({
               className: 'note-list',
               children: [outdent, indent],
             })

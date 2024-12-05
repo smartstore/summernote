@@ -90,9 +90,10 @@ export default class Toolbar {
         marginTop: this.$toolbar.outerHeight(),
       });
       this.$toolbar.css({
-        position: 'fixed',
+        //position: 'fixed',
+        position: 'sticky',
         top: otherBarHeight,
-        width: editorWidth,
+        //width: editorWidth,
         zIndex: 1000,
       });
     } else if (this.isFollowing &&
@@ -101,7 +102,7 @@ export default class Toolbar {
       this.$toolbar.css({
         position: 'relative',
         top: 0,
-        width: '100%',
+        //width: '100%',
         zIndex: 'auto',
       });
       this.$editable.css({
