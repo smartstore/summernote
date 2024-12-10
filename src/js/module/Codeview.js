@@ -108,7 +108,8 @@ export default class CodeView {
     if (selection.selectedControl) {
       // TODO: selectedControl is always null due to Handle.js blur event firing beforehand.
       rng = range.createFromNodeBefore(selection.selectedControl);
-    } else {
+    } 
+    else {
       rng = selection.getRange().cloneRange().collapse(true);
     }
 
@@ -188,6 +189,23 @@ export default class CodeView {
       });
     }
   }
+
+  // removeJumpMarker() {
+  //   const $editable = this.context.layoutInfo.editable;
+
+  //   const treeWalker = document.createTreeWalker($editable[0], NodeFilter.SHOW_COMMENT, {
+  //     acceptNode(node) {
+  //       return node.nodeValue.trim() === jumpMarker ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+  //     }
+  //   });
+    
+  //   let node;
+  //   while ((node = treeWalker.nextNode())) {
+  //     console.log('MARKER', node);
+  //     node.parentNode.removeChild(node); // Remove the comment node
+  //     break;
+  //   }
+  // }
 
   /**
    * deactivate code view

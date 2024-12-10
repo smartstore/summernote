@@ -1,6 +1,8 @@
 import $ from 'jquery';
 import _ from 'underscore';
 import dom from '../core/dom';
+import range from '../core/range';
+import lists from '../core/lists';
 
 const isInlineElement = (el) => dom.isInline(el);
 
@@ -213,7 +215,7 @@ export default class CssClass {
   }
 
   applyClassToSelection(value, obj) {
-    const rng = this.selection.getRange();
+    let rng = this.selection.getRange();
     if (!this.selection.isValidRange(rng)) {
       return;
     }
@@ -224,32 +226,35 @@ export default class CssClass {
     const caret = sel.type === 'None' || sel.type === 'Caret';
 
     const apply = (el) => {
-      if (el.is('.' + value.replace(' ', '.'))) {
+      const $el = $(el);
+      if ($el.is('.' + value.replace(' ', '.'))) {
         // "btn btn-info" > ".btn.btn-info"
         // Just remove the same style
-        el.removeClass(value);
-        if (!el.attr('class')) {
-          el.removeAttr('class');
+        $el.removeClass(value);
+        if (!$el.attr('class')) {
+          $el.removeAttr('class');
         }
 
-        if (isInlineElement(el[0]) && !el[0].attributes.length) {
+        if (isInlineElement(el) && !el.attributes.length) {
           // Unwrap the node when it is inline and no attributes are present
-          el.replaceWith(el.html());
+          $el.replaceWith($el.html());
         }
       }
       else {
         if (obj.toggle) {
           // Remove equivalent classes first
-          const classNames = (el.attr('class') || '').split(' ');
+          const classNames = ($el.attr('class') || '').split(' ');
           _.each(classNames, (name) => {
             if (name && name !== value && obj.toggle.test(name)) {
-              el.removeClass(name);
+              $el.removeClass(name);
             }
           });
         }
 
-        el.toggleClass(value);
+        $el.toggleClass(value);
       }
+
+      return el;
     }
 
     this.editor.beforeCommand();
@@ -276,11 +281,8 @@ export default class CssClass {
         apply(node);
       }
       else if (sel.rangeCount) {
-        const range = sel.getRangeAt(0).cloneRange();
-        const span = $('<span class="' + value + '"></span>');
-        range.surroundContents(span[0]);
-        sel.removeAllRanges();
-        sel.addRange(range);
+        const spans =  this.editor.style.styleNodes(rng).map(apply);
+        this.selection.setRange(range.createFromNodes(spans));
       }
     }
 

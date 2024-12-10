@@ -235,8 +235,6 @@ export default class Buttons {
             const eventName = $button.data('event');
             const value = $button.attr('data-value');
 
-            console.log(event, eventName, event.target);
-
             if (eventName === 'openPalette') {
               const $picker = $parent.find('#' + value);
               $picker.trigger('click');
@@ -367,17 +365,17 @@ export default class Buttons {
       click: this.context.createInvokeHandlerAndUpdateState('editor.subscript'),
     });
     
-    const code = this.button({
-      className: 'note-btn-inlinecode',
-      contents: this.ui.icon(this.options.icons.inlineCode),
-      tooltip: this.lang.font.code,
-      click: this.context.createInvokeHandlerAndUpdateState('editor.code'),
-    });
+    // const code = this.button({
+    //   className: 'note-btn-inlinecode',
+    //   contents: this.ui.icon(this.options.icons.inlineCode),
+    //   tooltip: this.lang.font.code,
+    //   click: this.context.createInvokeHandlerAndUpdateState('editor.code'),
+    // });
     
     this.context.memo('button.strikethrough', () => strikethrough.render());
     this.context.memo('button.superscript', () => superscript.render());
     this.context.memo('button.subscript', () => subscript.render());
-    this.context.memo('button.inlinecode', () => code.render());
+    //this.context.memo('button.inlinecode', () => code.render());
 
     this.context.memo('button.moreFontStyles', () => {
       return this.ui.buttonGroup([
@@ -393,7 +391,7 @@ export default class Buttons {
           css: { 'min-width': 'auto' },
           items: this.ui.toolGroup({
             className: 'note-more-fontstyles',
-            children: [strikethrough, superscript, subscript, code],
+            children: [strikethrough, superscript, subscript/*, code*/],
           }).render()
         })
       ]).render();

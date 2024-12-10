@@ -4,6 +4,10 @@ import lists from '../core/lists';
 import dom from '../core/dom';
 
 export default class Style {
+  constructor(formatter) {
+    this.formatter = formatter;
+  }
+
   /**
    * @method jQueryCSS
    *
@@ -79,7 +83,7 @@ export default class Style {
     }
 
     let pred = dom.matchNodeNames(nodeName);
-    const nodes = rng.nodes(dom.isText, {
+    const nodes = rng.nodes(dom.isNonEmptyText, {
       fullyContains: true,
     }).map((text) => {
       return dom.closestSingleParent(text, pred) || dom.wrap(text, nodeName);
@@ -123,13 +127,20 @@ export default class Style {
     // [workaround] prevent Firefox nsresult: "0x80004005 (NS_ERROR_FAILURE)"
     try {
       styleInfo = $.extend(styleInfo, {
-        'font-bold': document.queryCommandState('bold') ? 'bold' : 'normal',
-        'font-italic': document.queryCommandState('italic') ? 'italic' : 'normal',
-        'font-underline': document.queryCommandState('underline') ? 'underline' : 'normal',
-        'font-subscript': document.queryCommandState('subscript') ? 'subscript' : 'normal',
-        'font-superscript': document.queryCommandState('superscript') ? 'superscript' : 'normal',
-        'font-strikethrough': document.queryCommandState('strikethrough') ? 'strikethrough' : 'normal',
-        'font-family': document.queryCommandValue('fontname') || styleInfo['font-family'],
+        // 'font-bold': document.queryCommandState('bold') ? 'bold' : 'normal',
+        // 'font-italic': document.queryCommandState('italic') ? 'italic' : 'normal',
+        // 'font-underline': document.queryCommandState('underline') ? 'underline' : 'normal',
+        // 'font-subscript': document.queryCommandState('subscript') ? 'subscript' : 'normal',
+        // 'font-superscript': document.queryCommandState('superscript') ? 'superscript' : 'normal',
+        // 'font-strikethrough': document.queryCommandState('strikethrough') ? 'strikethrough' : 'normal',
+        // 'font-family': document.queryCommandValue('fontname') || styleInfo['font-family'],
+        'font-bold': this.formatter.match('bold') ? 'bold' : 'normal',
+        'font-italic': this.formatter.match('italic') ? 'italic' : 'normal',
+        'font-underline': this.formatter.match('underline') ? 'underline' : 'normal',
+        'font-subscript': this.formatter.match('subscript') ? 'subscript' : 'normal',
+        'font-superscript': this.formatter.match('superscript') ? 'superscript' : 'normal',
+        'font-strikethrough': this.formatter.match('strikethrough') ? 'strikethrough' : 'normal',
+        'font-family': this.formatter.match('fontname') || styleInfo['font-family'],
       });
     } catch (e) {
       // eslint-disable-next-line

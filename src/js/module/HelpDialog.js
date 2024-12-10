@@ -16,9 +16,9 @@ export default class HelpDialog {
     const $container = this.options.dialogsInBody ? this.$body : this.options.container;
     const body = [
       '<p class="text-center small m-0">',
-        '<a href="http://summernote.org/" target="_blank" rel="noopener noreferrer">Summernote @@VERSION@@</a> · ',
-        '<a href="https://github.com/summernote/summernote" target="_blank" rel="noopener noreferrer">Project</a> · ',
-        '<a href="https://github.com/summernote/summernote/issues" target="_blank" rel="noopener noreferrer">Issues</a>',
+        '<a href="http://summernote.org/" target="_blank" rel="noopener noreferrer">Summernote ' + $.summernote.version + '</a> · ',
+        '<a href="https://github.com/smartstore/summernote" target="_blank" rel="noopener noreferrer">Fork</a> ',
+        //'<a href="https://github.com/summernote/summernote/issues" target="_blank" rel="noopener noreferrer">Issues</a>',
       '</p>',
     ].join('');
 

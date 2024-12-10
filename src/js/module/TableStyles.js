@@ -3,17 +3,6 @@ import _ from 'underscore';
 import dom from '../core/dom';
 import lists from '../core/lists';
 
-// $(function() {
-//   $.extend($.summernote.options, {
-//     tableStyles: {
-//       // Must keep the same order as in lang.tableStyles.styles*
-//       stylesExclusive: ["", "table-bordered"],
-//       stylesInclusive: ["table-striped", "table-sm", "table-hover"]
-//     }
-//   });
-  
-// });
-
 export default class TableStyles {
   constructor(context) {
     this.context = context;
@@ -25,15 +14,6 @@ export default class TableStyles {
     this.$editable = context.layoutInfo.editable;
     this.editable = this.$editable[0];
     this.editor = context.modules.editor;
-
-    // // Fix blur event (?)
-    // let module = context.modules.tablePopover;
-    // module.events['summernote.disable summernote.blur'] = function (we, e) {
-    //   const evt = e.originalEvent;
-    //   if (evt.type === 'blur' && !$(evt.relatedTarget).closest('.note-custom').length) {
-    //     module.hide();
-    //   }
-    // };
   }
 
   initialize() {
@@ -44,17 +24,9 @@ export default class TableStyles {
           contents: this.ui.dropdownButtonContents(this.ui.icon(this.options.icons.magic), this.options),
           tooltip: this.lang.tableStyles.tooltip,
           click: (e) => this.updateTableMenuState($(e.currentTarget)),
-          // callback: (btn) => {
-          //   btn.data("placement", "bottom");
-          //   btn.data("trigger", "hover");
-          //   btn.attr("title", this.lang.tableStyles.tooltip);
-          //   btn.attr("tabindex", "-1");
-          //   btn.tooltip();
-
-          //   btn.on('click', () => {
-          //     this.updateTableMenuState(btn);
-          //   });
-          // },
+          attrs: {
+            tabindex: -1
+          },
           data: {
             toggle: "dropdown"
           }

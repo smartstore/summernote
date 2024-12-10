@@ -38,6 +38,7 @@
     "@babel/plugin-external-helpers": "^7.8.3",
     "@babel/preset-env": "^7.9.5",
     "@popperjs/core": "^2.9.2",
+    "@rollup/plugin-replace": "^6.0.1",
     "@vitest/browser": "^1.6.0",
     "adm-zip": "^0.5.16",
     "autoprefixer": "^10.2.4",
@@ -70,13 +71,13 @@
     "sass-loader": "^14.2.1",
     "serve-static": "^1.14.1",
     "uglify-js": "^3.9.1",
+    "underscore": "^1.13.1",
     "vite": "^5.4.9",
     "vite-plugin-banner": "^0.8.0",
     "vitest": "^1.6.0",
     "webdriverio": "^8.35.1",
     "webfont": "^11.1.1",
-    "webpack-sources": "^3.2.3",
-    "underscore": "^1.13.1"
+    "webpack-sources": "^3.2.3"
   },
   "dependencies": {
     "popper.js": "1.16.1"

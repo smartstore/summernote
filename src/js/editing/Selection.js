@@ -65,9 +65,12 @@ export default class Selection {
       let rng;
       if (sel.rangeCount > 0) {
         rng = range.createFromNativeRange(sel.getRangeAt(0));
-      } else {
+      } 
+      else {
         rng = createRootRange(this.editor);
       }
+
+      this.context.triggerEvent('selectionchange', rng);
 
       return rng;
     };
@@ -76,6 +79,7 @@ export default class Selection {
       if (e.type === 'blur') {
         this.hasFocus = false;
       }
+
       if (e.type === 'focus') {
         this.hasFocus = true;
         this.bookmark = createBookmarkFromSelection();
@@ -303,7 +307,7 @@ export default class Selection {
         }
       }
 
-      // If the anchor node is a element instead of a text node then return this element
+      // If the anchor node is an element instead of a text node then return this element
       // if (isWebKit && sel.anchorNode && sel.anchorNode.nodeType == 1)
       // return anchorNode.childNodes[sel.anchorOffset];
 

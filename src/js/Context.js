@@ -22,6 +22,9 @@ export default class Context {
     $.summernote.ui = $.summernote.ui_template(this.options);
     this.ui = $.summernote.ui;
 
+    // Special handling for change event: trigger only all 10 ms.
+    this.triggerChangeEvent = func.throttle(this.triggerChangeEvent.bind(this), 10, { trailing: false });
+
     this.initialize();
   }
 
@@ -137,6 +140,10 @@ export default class Context {
     this.invoke('toolbar.deactivate', true);
 
     this.triggerEvent('disable', true);
+  }
+
+  triggerChangeEvent($editable) {
+    this.triggerEvent('change', $editable);
   }
 
   triggerEvent() {

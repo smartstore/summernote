@@ -26,11 +26,12 @@ export default class TablePopover {
         this.hide();
       },
       'summernote.blur': (we, e) => {
-        if (e.originalEvent && e.originalEvent.relatedTarget) {
+        if (e.originalEvent?.relatedTarget) {
           if (!this.$popover[0].contains(e.originalEvent.relatedTarget)) {
             this.hide();
           }
-        } else {
+        } 
+        else {
           this.hide();
         }
       },

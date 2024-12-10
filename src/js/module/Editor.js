@@ -15,7 +15,7 @@ import Typing from '../editing/Typing';
 import Table from '../editing/Table';
 import Bullet from '../editing/Bullet';
 import Selection from '../editing/Selection';
-//import Formatter from '../fmt/Formatter';
+import LegacyFormatter from '../fmt/LegacyFormatter';
 import HtmlSanitizer from '../util/HtmlSanitizer';
 
 const KEY_BOGUS = 'bogus';
@@ -40,8 +40,8 @@ export default class Editor {
     this.bullet = new Bullet(context);
     this.typing = new Typing(context, this.bullet);
     this.history = new History(context);
-    //this.formatter = new Formatter(context);
-    this.style = new Style(context);
+    this.formatter = new LegacyFormatter();
+    this.style = new Style(this.formatter);
     this.selection = new Selection(context);
 
     this.context.memo('help.escape', this.lang.help.escape);
@@ -60,7 +60,7 @@ export default class Editor {
 
     // Native commands (with execCommand), generate function for execCommand
     const commands = [
-      'bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript', 'code',
+      'bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript',
       'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull',
       'formatBlock', 'removeFormat', 'backColor',
     ];
@@ -69,12 +69,25 @@ export default class Editor {
       this[commands[idx]] = ((sCmd) => {
         return (value) => {
           this.beforeCommand();
-          document.execCommand(sCmd, false, value);
+          console.log('execCommand', sCmd, value);
+          //document.execCommand(sCmd, false, value);
+          this.formatter.toggle(sCmd, value);
           this.afterCommand(true);
         };
       })(commands[idx]);
       this.context.memo('help.' + commands[idx], this.lang.help[commands[idx]]);
     }
+
+    // this.code = this.wrapCommand(() => {
+    //   const rng = this.selection.getRange();
+    //   if (!rng.collapsed) {
+    //     this.style.styleNodes(rng, {
+    //       nodeName: 'CODE',
+    //       expandClosestSibling: false,
+    //       onlyPartialContains: false
+    //     });
+    //   }
+    // });
 
     this.fontName = this.wrapCommand((value) => {
       return this.fontStyling('font-family', env.validFontName(value));
@@ -241,7 +254,7 @@ export default class Editor {
           anchors = this.style.styleNodes(rng, {
             nodeName: 'A',
             expandClosestSibling: true,
-            onlyPartialContains: true,
+            onlyPartialContains: true
           });
         }
       }
@@ -295,8 +308,8 @@ export default class Editor {
       const foreColor = colorInfo.foreColor;
       const backColor = colorInfo.backColor;
 
-      if (foreColor) { document.execCommand('foreColor', false, foreColor); }
-      if (backColor) { document.execCommand('backColor', false, backColor); }
+      if (foreColor) { this.formatter.toggle('foreColor', foreColor); }
+      if (backColor) { this.formatter.toggle('backColor', backColor); }
     });
 
     /**
@@ -305,7 +318,7 @@ export default class Editor {
      * @param {String} colorCode foreground color code
      */
     this.foreColor = this.wrapCommand((colorInfo) => {
-      document.execCommand('foreColor', false, colorInfo);
+      this.formatter.toggle('foreColor', colorInfo);
     });
 
     /**
@@ -432,7 +445,6 @@ export default class Editor {
     });
 
     this.$editable.attr('spellcheck', this.options.spellCheck); 
-
     this.$editable.attr('autocorrect', this.options.spellCheck);
 
     if (this.options.disableGrammar) {
@@ -442,9 +454,7 @@ export default class Editor {
     // init content before set event
     this.$editable.html(dom.value(this.$note) || dom.emptyPara);
 
-    this.$editable.on(env.inputEventName, func.debounce(() => {
-      this.context.triggerEvent('change', this.$editable);
-    }, 10));
+    this.$editable.on(env.inputEventName, this.context.triggerChangeEvent);
 
     this.$editable.on('focusin', (event) => {
       this.context.triggerEvent('focusin', event);
@@ -618,13 +628,29 @@ export default class Editor {
   }
 
   html(sanitize) {
+    this.cleanupDom();
+
     let html = this.$editable.html();
     // TODO: How to deal with both opts sanitize & prettify?
     const sanitizeOption = Obj.valueOrDefault(this.options.sanitizeHtml, this.options.prettifyHtml);
     if (Obj.valueOrDefault(sanitize, sanitizeOption)) {
       html = HtmlSanitizer.sanitizeHtml(this.context, html);
     }
+
     return html;
+  }
+
+  cleanupDom(root = null) {
+    root = dom.isElement(root) ? root : this.editable;
+    if (root) {
+      // Remove all <span> elements with the attribute `data-note-fragment`
+      const spans = root.querySelectorAll('span[data-note-fragment]');
+      if (spans.length > 0) {
+          spans.forEach(span => {
+              dom.unwrap(span.firstChild);
+          });
+      }      
+    }
   }
 
   saveTarget(node) {
@@ -671,7 +697,7 @@ export default class Editor {
   undo() {
     this.context.triggerEvent('before.command', this.$editable);
     this.history.undo();
-    this.context.triggerEvent('change', this.$editable);
+    this.context.triggerChangeEvent(this.$editable);
   }
 
   /*
@@ -680,7 +706,7 @@ export default class Editor {
   commit() {
     this.context.triggerEvent('before.command', this.$editable);
     this.history.commit();
-    this.context.triggerEvent('change', this.$editable);
+    this.context.triggerChangeEvent(this.$editable);
   }
 
   /**
@@ -689,7 +715,7 @@ export default class Editor {
   redo() {
     this.context.triggerEvent('before.command', this.$editable);
     this.history.redo();
-    this.context.triggerEvent('change', this.$editable);
+    this.context.triggerChangeEvent(this.$editable);
   }
 
   /**
@@ -713,7 +739,7 @@ export default class Editor {
     this.normalizeContent();
     this.history.recordUndo();
     if (!silent) {
-      this.context.triggerEvent('change', this.$editable);
+      this.context.triggerChangeEvent(this.$editable);
     }
   }
 
@@ -889,7 +915,8 @@ export default class Editor {
     }
 
     // [workaround] for MSIE, IE need `<`
-    document.execCommand('FormatBlock', false, env.isMSIE ? '<' + tagName + '>' : tagName);
+    //document.execCommand('FormatBlock', false, env.isMSIE ? '<' + tagName + '>' : tagName);
+    this.formatter.apply('FormatBlock', tagName);
 
     currentRange = this.createRange();
     $block = $([currentRange.sc, currentRange.ec]).closest(tagName);

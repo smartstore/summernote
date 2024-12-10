@@ -223,6 +223,7 @@ const matchAllOnNode = (editor, node, formatNames) => {
 };
 
 export default {
+  boldFormats,
   matchNode,
   matchName,
   match,

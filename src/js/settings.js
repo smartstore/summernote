@@ -33,7 +33,7 @@ import HintPopover from './module/HintPopover';
 import CssClass from './module/CssClass';
 
 $.summernote = $.extend($.summernote, {
-  version: '@@VERSION@@',
+  version: '0.9.1',
   plugins: {},
 
   dom: dom,

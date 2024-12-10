@@ -222,6 +222,7 @@ const isBodyContainer = (node) => isCell(node) || isBlockquote(node) || isEditab
 const isBookmarkNode = func.and(matchNodeName('SPAN'), matchAttributeValue('data-note-type', 'bookmark'))
 const isVoid = (node) => node && schema.isVoid(node.nodeName);
 const isEmptyAnchor = (node) => isAnchor(node) && isEmpty(node);
+const isNonEmptyText = (node) => isText(node) && !isEmpty(node);
 
 const matches = (node, selector) => matchSelector(selector)(node);
 
@@ -1186,6 +1187,7 @@ export default {
   isControlSizing,
   isNode,
   isText,
+  isNonEmptyText,
   isElement,
   isBookmarkNode,
   isCData,
