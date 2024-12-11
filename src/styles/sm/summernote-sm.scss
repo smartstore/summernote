@@ -67,6 +67,8 @@ $img-margin-right: 10px;
   @include border-top-radius($input-border-radius);
   @include border-bottom-radius($input-border-radius);
 
+  --note-sticky-toolbar-zindex: #{$zindex-sticky - 1};
+
   &:focus-within,
   &:focus,
   &.focus {
@@ -199,6 +201,13 @@ $img-margin-right: 10px;
   border-radius: 0 !important;
   border-color: $note-border-color !important;
   z-index: $zindex-tooltip !important;
+
+  > .note-toolbar {
+    position: relative !important;
+    z-index: auto !important;
+    top: 0 !important;
+    width: 100% !important;
+  }
 
   .note-resizebar {
     display: none;
@@ -584,6 +593,12 @@ $img-margin-right: 10px;
     > .note-toolgroup:last-of-type {
       margin-inline-start: auto;
     }
+  }
+
+  &.note-toolbar-sticky {
+    // Main toolbar
+    position: sticky;
+    z-index: var(--note-sticky-toolbar-zindex);
   }
 
   &:not(.dropdown-menu) {

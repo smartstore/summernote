@@ -297,7 +297,7 @@ export default class Selection {
     let endContainer = rng.endContainer;
     let node = rng.commonAncestorContainer;
 
-    // Handle selection a image or other control like element such as anchors
+    // Handle selection an image or other control like element such as anchors
     if (!rng.collapsed) {
       if (startContainer === endContainer) {
         if (endOffset - startOffset < 2) {

@@ -10,7 +10,7 @@ const matchesUnInheritedFormatSelector = (editor, node, name) => {
     for (let i = 0; i < formatList.length; i++) {
       const format = formatList[i];
       if (FormatUtils.isSelectorFormat(format) && format.inherit === false && dom.matches(node, format.selector)) {
-        return true;
+        return { node, format };
       }
     }
   }
@@ -20,15 +20,24 @@ const matchesUnInheritedFormatSelector = (editor, node, name) => {
 
 const matchParents = (editor, node, name, vars = null) => {
   // Find first node with similar format settings
-  const matchedNode = dom.closest(node, (elm) => {
-    if (matchesUnInheritedFormatSelector(editor, elm, name)) {
+  let matchedFormat;
+  let matchedNode = dom.closest(node, (elm) => {
+    let match = matchesUnInheritedFormatSelector(editor, elm, name);
+    if (match) {
+      matchedFormat = match.format;
       return true;
     }
 
-    return !!matchNode(editor, elm, name, vars);
+    match = matchNode(editor, elm, name, vars);
+    if (match) {
+      matchedFormat = match.format;
+      return true;
+    }
+
+    return false;
   });
 
-  return matchedNode;
+  return !!matchedNode ? { node: matchedNode, format: matchedFormat } : undefined;
 };
 
 const matchName = (node, format) => {
@@ -104,6 +113,8 @@ const matchNode = (editor, node, name, vars = null) => {
   };
 
   if (formatList && dom.isElement(node)) {
+    let isMatch;
+
     // Check each format in list
     for (let i = 0; i < formatList.length; i++) {
       const format = formatList[i];
@@ -111,16 +122,17 @@ const matchNode = (editor, node, name, vars = null) => {
       // Custom match
       if (Type.isFunction(format.onmatch)) {
         // onmatch is generic in a way that we can't really express without casting
-        return format.onmatch(node, format);
+        isMatch = format.onmatch(node, format);
+        return isMatch ? { node, format } : undefined;
       }
 
       // Match name, attributes, styles and classes
       if (matchName(node, format) && matchItems(node, format, 'attributes', vars)) {
         const stylesMatch = matchItems(node, format, 'styles', vars);
-        const isMatch = format.compound ? stylesMatch && classesMatch(format) : stylesMatch || classesMatch(format);
+        isMatch = format.compound ? stylesMatch && classesMatch(format) : stylesMatch || classesMatch(format);
 
         if (isMatch) {
-          return format;
+          return { node, format };
         }     
       }
     }
@@ -135,11 +147,14 @@ const match = (editor, node, name, vars = null) => {
     return matchParents(editor, node, name, vars);
   }
 
-  // // Check selected node
-  // node = editor.selection.getNode();
-  // if (matchParents(editor, node, name, vars)) {
-  //   return true;
-  // }
+  // Check selected start node
+  //node = editor.selection.getNode();
+  node = editor.selection.getRange().startContainer;
+
+  let match = matchParents(editor, node, name, vars);
+  if (match) {
+    return match;
+  }
 
   // // Check start node if it's different
   // const startNode = editor.selection.getStart();

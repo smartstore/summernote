@@ -68,8 +68,8 @@ export default class Toolbar {
 
     const editorHeight = this.$editor.outerHeight();
     const editorWidth = this.$editor.width();
-    const toolbarHeight = this.$toolbar.height();
-    const statusbarHeight = this.$statusbar.height();
+    // const toolbarHeight = this.$toolbar.outerHeight();
+    // const statusbarHeight = this.$statusbar.outerHeight();
 
     // check if the web app is currently using another static bar
     let otherBarHeight = 0;
@@ -77,37 +77,27 @@ export default class Toolbar {
       otherBarHeight = $(this.options.otherStaticBar).outerHeight();
     }
 
+    let stickyOffset = parseInt(window.getComputedStyle(document.body).getPropertyValue('--content-offset') || 0);
+
     const currentOffset = this.$document.scrollTop();
     const editorOffsetTop = this.$editor.offset().top;
     const editorOffsetBottom = editorOffsetTop + editorHeight;
-    const activateOffset = editorOffsetTop - otherBarHeight;
-    const deactivateOffsetBottom = editorOffsetBottom - otherBarHeight - toolbarHeight - statusbarHeight;
+    const activateOffset = editorOffsetTop - otherBarHeight - stickyOffset;
+    const deactivateOffsetBottom = editorOffsetBottom - otherBarHeight - stickyOffset;
+    
+    if (!this.isFollowing && 
+      (currentOffset > activateOffset && currentOffset < deactivateOffsetBottom)) {
 
-    if (!this.isFollowing &&
-      (currentOffset > activateOffset) && (currentOffset < deactivateOffsetBottom - toolbarHeight)) {
       this.isFollowing = true;
-      this.$editable.css({
-        marginTop: this.$toolbar.outerHeight(),
+      this.$toolbar.addClass('note-toolbar-sticky').css({
+        top: stickyOffset,
+        width: editorWidth
       });
-      this.$toolbar.css({
-        //position: 'fixed',
-        position: 'sticky',
-        top: otherBarHeight,
-        //width: editorWidth,
-        zIndex: 1000,
-      });
-    } else if (this.isFollowing &&
+    } 
+    else if (this.isFollowing &&
       ((currentOffset < activateOffset) || (currentOffset > deactivateOffsetBottom))) {
       this.isFollowing = false;
-      this.$toolbar.css({
-        position: 'relative',
-        top: 0,
-        //width: '100%',
-        zIndex: 'auto',
-      });
-      this.$editable.css({
-        marginTop: '',
-      });
+      this.$toolbar.removeClass('note-toolbar-sticky').css({ top: '', bottom: '', width: '' });
     }
   }
 
