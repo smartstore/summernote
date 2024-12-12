@@ -13,7 +13,7 @@ export default class Handle {
     this.events = {
       'summernote.mousedown': (we, e) => {
         if (this.update(e.target, e)) {
-          e.preventDefault();
+          //e.preventDefault();
         }
       },
       'summernote.keyup summernote.scroll summernote.change summernote.dialog.shown': (_, e) => {
@@ -22,9 +22,12 @@ export default class Handle {
       'summernote.disable': () => {
         this.hide();
       },
-      // 'summernote.blur': () => {
-      //   this.hide();
-      // },
+      'summernote.focusout': (we, e) => {
+        if (dom.isContainedTarget(e)) {
+          return;
+        }
+        this.hide();
+      },
       'summernote.codeview.toggled': () => {
         this.hide();
       },
@@ -68,7 +71,7 @@ export default class Handle {
         this.$document
           .on('mousemove', onMouseMove)
           .one('mouseup', (e) => {
-            e.preventDefault();
+            //e.preventDefault();
             this.$document.off('mousemove', onMouseMove);
             this.context.invoke('editor.afterCommand');
           });

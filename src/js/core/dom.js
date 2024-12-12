@@ -297,6 +297,11 @@ const getContentEditableParent = (node) => {
   return state;
 };
 
+const isContainedTarget = (e) => {
+  const origEvent = e?.originalEvent || e;
+  return origEvent?.relatedTarget && origEvent.relatedTarget.closest('.note-editor, .note-popover') != null;
+}
+
 // #endregion
 
 
@@ -1242,6 +1247,7 @@ export default {
   isEmpty,
   isEmptyAnchor,
   isClosestSibling,
+  isContainedTarget,
   deepestChildIsEmpty,
   withClosestSiblings,
   nodeLength,

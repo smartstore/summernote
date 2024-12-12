@@ -1,4 +1,6 @@
 import $ from 'jquery';
+import dom from '../core/dom';
+
 export default class Toolbar {
   constructor(context) {
     this.context = context;
@@ -48,8 +50,21 @@ export default class Toolbar {
     });
 
     this.context.invoke('buttons.updateCurrentStyle');
+
+    this.$toolbar.on('mousedown touchstart', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
     if (this.options.followingToolbar) {
       this.$window.on('scroll resize', this.followScroll);
+      this.$editor.on('focusin', this.followScroll);
+      this.$editor.on('focusout', (e) => {
+        if (dom.isContainedTarget(e)) {
+          return;
+        }
+        this.followScroll();
+      });
     }
   }
 
@@ -77,17 +92,17 @@ export default class Toolbar {
       otherBarHeight = $(this.options.otherStaticBar).outerHeight();
     }
 
-    let stickyOffset = parseInt(window.getComputedStyle(document.body).getPropertyValue('--content-offset') || 0);
+    let stickyOffset = parseInt(getComputedStyle(document.body).getPropertyValue('--content-offset') || 0);
 
     const currentOffset = this.$document.scrollTop();
     const editorOffsetTop = this.$editor.offset().top;
     const editorOffsetBottom = editorOffsetTop + editorHeight;
     const activateOffset = editorOffsetTop - otherBarHeight - stickyOffset;
     const deactivateOffsetBottom = editorOffsetBottom - otherBarHeight - stickyOffset;
+    const hasFocus = this.context.modules.editor.hasFocus();
     
-    if (!this.isFollowing && 
+    if (hasFocus && !this.isFollowing && 
       (currentOffset > activateOffset && currentOffset < deactivateOffsetBottom)) {
-
       this.isFollowing = true;
       this.$toolbar.addClass('note-toolbar-sticky').css({
         top: stickyOffset,
@@ -95,7 +110,7 @@ export default class Toolbar {
       });
     } 
     else if (this.isFollowing &&
-      ((currentOffset < activateOffset) || (currentOffset > deactivateOffsetBottom))) {
+      (!hasFocus || currentOffset < activateOffset || currentOffset > deactivateOffsetBottom)) {
       this.isFollowing = false;
       this.$toolbar.removeClass('note-toolbar-sticky').css({ top: '', bottom: '', width: '' });
     }

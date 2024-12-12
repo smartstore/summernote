@@ -338,14 +338,24 @@ export default class Editor {
      * Remove media object and Figure Elements if media object is img with Figure.
      */
     this.removeMedia = this.wrapCommand(() => {
-      let $target = $(this.restoreTarget()).parent();
+      const target = this.selection.selectedControl;
+      if (!target) {
+        return;
+      }
+
+      let rng = range.createFromNodeBefore(target);
+      let $target = $(target).parent();
       if ($target.closest('figure').length) {
         $target.closest('figure').remove();
-      } else {
-        $target = $(this.restoreTarget()).detach();
+      } 
+      else {
+        $target = $(target).detach();
       }
-      
-      this.selection.setRange(range.createFromSelection($target));
+
+      this.selection.selectedControl = null;
+
+      //this.selection.setRange(range.createFromSelection($target));
+      this.selection.setRange(rng);
       this.context.triggerEvent('media.delete', $target, this.$editable);
     });
 
@@ -1129,7 +1139,7 @@ export default class Editor {
    * returns whether editable area has focus or not.
    */
   hasFocus() {
-    return this.$editable.is(':focus');
+    return this.editable.matches(':focus') || this.$editor[0].matches(':focus-within');
   }
 
   /**
@@ -1192,7 +1202,7 @@ export default class Editor {
       const popper = $popover.data('popper');
       if (popper) {
         popper.destroy();
-        $popover.removeData('popper');     
+        $popover.removeData('popper');  
       }
   
       $popover.hide();

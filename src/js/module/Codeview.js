@@ -163,10 +163,10 @@ export default class CodeView {
       }
 
       cmEditor.on('blur', (event) => {
-        this.context.triggerEvent('codeview.blur', cmEditor.getValue(), event);
+        this.context.triggerEvent('blur.codeview', cmEditor.getValue(), event);
       });
       cmEditor.on('change', () => {
-        this.context.triggerEvent('codeview.change', cmEditor.getValue(), cmEditor);
+        this.context.triggerEvent('change.codeview', cmEditor.getValue(), cmEditor);
       });
 
       // CodeMirror hasn't Padding.
@@ -182,10 +182,10 @@ export default class CodeView {
     } 
     else {
       this.$codable.on('blur', (event) => {
-        this.context.triggerEvent('codeview.blur', this.$codable.val(), event);
+        this.context.triggerEvent('blur.codeview', this.$codable.val(), event);
       });
       this.$codable.on('input', () => {
-        this.context.triggerEvent('codeview.change', this.$codable.val(), this.$codable);
+        this.context.triggerEvent('change.codeview', this.$codable.val(), this.$codable);
       });
     }
   }

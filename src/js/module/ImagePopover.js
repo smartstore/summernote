@@ -22,11 +22,11 @@ export default class ImagePopover {
           this.hide();
         }
       },
-      'summernote.disable summernote.dialog.shown': (e) => {
+      'summernote.disable summernote.dialog.shown summernote.media.delete': (e) => {
         this.hide();
       },
       'summernote.blur': (we, event) => {
-        if (event.originalEvent && event.originalEvent.relatedTarget) {
+        if (event.originalEvent?.relatedTarget) {
           if (!this.$popover[0].contains(event.originalEvent.relatedTarget)) {
             this.hide();
           }
