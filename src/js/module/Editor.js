@@ -653,13 +653,13 @@ export default class Editor {
   cleanupDom(root = null) {
     root = dom.isElement(root) ? root : this.editable;
     if (root) {
-      // Remove all <span> elements with the attribute `data-note-fragment`
+      // Remove all <span> elements with the attribute 'data-note-fragment'
       const spans = root.querySelectorAll('span[data-note-fragment]');
       if (spans.length > 0) {
           spans.forEach(span => {
               dom.unwrap(span.firstChild);
           });
-      }      
+      }
     }
   }
 

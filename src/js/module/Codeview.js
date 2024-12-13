@@ -190,22 +190,20 @@ export default class CodeView {
     }
   }
 
-  // removeJumpMarker() {
-  //   const $editable = this.context.layoutInfo.editable;
+  removeJumpMarker() {
+    const $editable = this.context.layoutInfo.editable;
 
-  //   const treeWalker = document.createTreeWalker($editable[0], NodeFilter.SHOW_COMMENT, {
-  //     acceptNode(node) {
-  //       return node.nodeValue.trim() === jumpMarker ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-  //     }
-  //   });
+    const treeWalker = document.createTreeWalker($editable[0], NodeFilter.SHOW_COMMENT, {
+      acceptNode(node) {
+        return node.nodeValue.trim() === jumpMarker ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+      }
+    });
     
-  //   let node;
-  //   while ((node = treeWalker.nextNode())) {
-  //     console.log('MARKER', node);
-  //     node.parentNode.removeChild(node); // Remove the comment node
-  //     break;
-  //   }
-  // }
+    let node;
+    while ((node = treeWalker.nextNode())) {
+      node.parentNode.removeChild(node); // Remove the comment node
+    }
+  }
 
   /**
    * deactivate code view
@@ -221,14 +219,18 @@ export default class CodeView {
       cmEditor.toTextArea();
     }
 
-    const value = this.purify(dom.value(this.$codable, this.options.prettifyHtml) || dom.emptyPara);
-    const isChange = this.$editable.html() !== value;
+    let value = dom.value(this.$codable, this.options.prettifyHtml) || dom.emptyPara;
+    if (this.options.purifyCustomCode) {
+      value = this.purify(value);
+    }
+    
+    const hasChanged = this.$editable.html() !== value;
 
     this.$editable.html(value);
     this.$editable.height(this.options.height ? this.$codable.height() : 'auto');
     this.$editor.removeClass('codeview');
 
-    if (isChange) {
+    if (hasChanged) {
       this.context.triggerEvent('change', this.$editable);
     }
 
