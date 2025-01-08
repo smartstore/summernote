@@ -42,17 +42,34 @@ export default class CssClass {
       this.options.cssclass = {};
     }
 
-    if (typeof this.options.cssclass.classes === 'undefined') {
-      const rgAlert = /^alert(-.+)?$/;
-      const rgBtn = /^btn(-.+)?$/;
-      const rgBg = /^bg-.+$/;
-      const rgTextColor = /^text-(muted|primary|success|danger|warning|info|dark|white)$/;
-      const rgTextAlign = /^text-(start|center|end)$/;
-      const rgDisplay = /^display-[1-4]$/;
-      const rgWidth = /^w-(25|50|75|100)$/;
-      const rgRounded = /^rounded(-.+)?$/;
+    const rgAlert = /^alert(-.+)?$/;
+    const rgBtn = /^btn(-.+)?$/;
+    const rgBg = /^bg-.+$/;
+    const rgTextColor = /^text-(muted|primary|success|danger|warning|info|dark|white)$/;
+    const rgFontSize = /^fs-(xs|sm)$/;
+    const rgDisplay = /^display-[1-4]$/;
+    const rgWidth = /^w-(25|50|75|100)$/;
+    const rgRounded = /^rounded(-.+)?$/;
 
-      this.options.cssclass.classes = {
+    const metadata = {
+      imageShapes: {
+        "img-fluid": { inline: true },
+        "border": { inline: true },
+        "rounded": { toggle: /^(rounded(-.+)?)|img-thumbnail$/, inline: true },
+        "rounded-circle": { toggle: /^(rounded(-.+)?)|img-thumbnail$/, inline: true },
+        "img-thumbnail": { toggle: /^rounded(-.+)?$/, inline: true },
+        "shadow-sm": { toggle: /^(shadow(-.+)?)$/, inline: true },
+        "shadow": { toggle: /^(shadow(-.+)?)$/, inline: true },
+        "shadow-lg": { toggle: /^(shadow(-.+)?)$/, inline: true }
+      },
+      formats: {
+        "fs-xs": { inline: true, toggle: rgFontSize },
+        "fs-sm": { inline: true, toggle: rgFontSize },
+        "lead": {},
+        "display-4": { displayClass: "fs-h4", toggle: rgDisplay },
+        "display-3": { displayClass: "fs-h3", toggle: rgDisplay },
+        "display-2": { displayClass: "fs-h2", toggle: rgDisplay },
+        "display-1": { displayClass: "fs-h1", toggle: rgDisplay },
         "alert alert-primary": { toggle: rgAlert },
         "alert alert-secondary": { toggle: rgAlert },
         "alert alert-success": { toggle: rgAlert },
@@ -73,8 +90,8 @@ export default class CssClass {
         "rtl": { displayClass: "text-uppercase", inline: true, toggle: /^ltr$/ },
         "ltr": { displayClass: "text-uppercase", inline: true, toggle: /^rtl$/ },
         "text-muted": { inline: true, toggle: rgTextColor },
-        "text-primary": {inline: true, toggle: rgTextColor },
-        "text-success": {inline: true, toggle: rgTextColor },
+        "text-primary": { inline: true, toggle: rgTextColor },
+        "text-success": { inline: true, toggle: rgTextColor },
         "text-danger": { inline: true, toggle: rgTextColor },
         "text-warning": { inline: true, toggle: rgTextColor },
         "text-info": { inline: true, toggle: rgTextColor },
@@ -100,27 +117,11 @@ export default class CssClass {
         "rounded-4": { displayClass: "px-2 py-2 bg-light border rounded-4", toggle: rgRounded },
         "rounded-5": { displayClass: "px-2 py-2 bg-light border rounded-5", toggle: rgRounded },
         "rounded-pill": { displayClass: "px-2 py-1 bg-light border rounded-pill", toggle: rgRounded },
-        "list-unstyled": { },
-        "display-1": { displayClass: "fs-h1", toggle: rgDisplay },
-        "display-2": { displayClass: "fs-h2", toggle: rgDisplay },
-        "display-3": { displayClass: "fs-h3", toggle: rgDisplay },
-        "display-4": { displayClass: "fs-h4", toggle: rgDisplay },
-        "lead": { }
-      };
-    }
+        "list-unstyled": {}
+      }
+    };
 
-    if (typeof this.options.cssclass.imageShapes === 'undefined') {
-      this.options.cssclass.imageShapes = {
-        "img-fluid": { inline: true },
-        "border": { inline: true },
-        "rounded": { toggle: /^(rounded(-.+)?)|img-thumbnail$/, inline: true },
-        "rounded-circle": { toggle: /^(rounded(-.+)?)|img-thumbnail$/, inline: true  },
-        "img-thumbnail": { toggle: /^rounded(-.+)?$/, inline: true },
-        "shadow-sm": { toggle: /^(shadow(-.+)?)$/, inline: true },
-        "shadow": { toggle: /^(shadow(-.+)?)$/, inline: true },
-        "shadow-lg": { toggle: /^(shadow(-.+)?)$/, inline: true }
-      };
-    }
+    this.options.cssclass = $.extend(true, metadata, this.options.cssclass);
   }
 
   initializeButtons() {
@@ -143,17 +144,17 @@ export default class CssClass {
           }),
           this.ui.dropdown({
             className: 'dropdown-cssclass scrollable-menu',
-            items: _.keys(this.options.cssclass.classes),
+            items: _.keys(this.options.cssclass.formats),
             template: (item) => {
-                const obj = this.options.cssclass.classes[item] || {};
+              const obj = this.options.cssclass.formats[item] || {};
 
-                let cssClass = item;
-                if (obj.displayClass) {
-                    cssClass += " " + obj.displayClass;
-                }
-                if (!obj.inline) {
-                    cssClass += " d-block";
-                }
+              let cssClass = item;
+              if (obj.displayClass) {
+                cssClass += " " + obj.displayClass;
+              }
+              if (!obj.inline) {
+                cssClass += " d-block";
+              }
 
               const cssStyle = obj.style ? ' style="{0}"'.format(obj.style) : '';
               return `<span class="${cssClass}" title="${item}"${cssStyle}>${item}</span>`;
@@ -163,7 +164,7 @@ export default class CssClass {
 
               var ddi = $(e.target).closest('[data-value]');
               value = value || ddi.data('value');
-              var obj = this.options.cssclass.classes[value] || {};
+              var obj = this.options.cssclass.formats[value] || {};
 
               this.applyClassToSelection(value, obj);
             }
@@ -203,7 +204,7 @@ export default class CssClass {
               const ddi = $(e.target).closest('[data-value]');
               const value = ddi.data('value');
               const obj = this.options.cssclass.imageShapes[value] || {};
-              
+
               this.applyClassToSelection(value, obj);
             }
           })
@@ -281,7 +282,7 @@ export default class CssClass {
         apply(node);
       }
       else if (sel.rangeCount) {
-        const spans =  this.editor.style.styleNodes(rng).map(apply);
+        const spans = this.editor.style.styleNodes(rng).map(apply);
         this.selection.setRange(range.createFromNodes(spans));
       }
     }
@@ -296,12 +297,12 @@ export default class CssClass {
       let ddi = $(this),
         curNode = node,
         value = ddi.data('value'),
-        //obj = options.cssclass.classes[value] || {},
+        //obj = options.cssclass.formats[value] || {},
         expr = '.' + value.replace(' ', '.'),
         match = false;
 
       while (curNode.length) {
-        
+
         if (curNode.is(expr)) {
           match = true;
           break;

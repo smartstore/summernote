@@ -1,5 +1,23 @@
-export default class LegacyFormatter {
-  constructor() {
+import LegacyFormatter from './LegacyFormatter';
+import MatchFormat from './MatchFormat2';
+
+export default class Formatter {
+  constructor(context) {
+    this.context = context;
+    this.legacyFormatter = new LegacyFormatter();
+    // Test only
+    this.formats = {
+      bold: [
+        { inline: 'strong' },
+        { inline: 'b' },
+        { inline: true, classes: ['fw-bold'], styles: { fontWeight: 'bold' }, compound: false},
+        { inline: true, classes: ['fwb'], styles: { fontWeight: 'bold' }, compound: false}
+      ]
+    };
+  }
+
+  get editor() {
+    return this.context.modules.editor;
   }
 
   /**
@@ -10,7 +28,18 @@ export default class LegacyFormatter {
    * @return {Array/Object} Array/Object with all registered formats or a specific format.
    */
   get(name) {
-    return null;
+    return name ? this.formats[name] : this.formats;
+  }
+
+  /**
+   * Returns true or false if a format is registered for the specified name.
+   *
+   * @method has
+   * @param {String} name Format name to check if a format exists.
+   * @return {Boolean} True if a format for the specified name exists.
+   */
+  has(name) {
+    return Obj.has(this.formats, name);
   }
 
   /**
@@ -22,7 +51,7 @@ export default class LegacyFormatter {
    * @param {Node} node Optional node to apply the format to. Defaults to current selection.
    */
   apply(name, vars = null, node = null) {
-    return this.toggle(name, vars, node);
+    return this.legacyFormatter.apply(name, vars, node);
   }
 
   /**
@@ -34,7 +63,7 @@ export default class LegacyFormatter {
    * @param {Node/Range} node Optional node or DOM range to remove the format from. Defaults to current selection.
    */
   remove(name, vars = null, node = null) {
-    return this.toggle(name, vars, node);
+    return this.legacyFormatter.remove(name, vars, node);
   }
 
   /**
@@ -46,7 +75,7 @@ export default class LegacyFormatter {
    * @param {Node} node Optional node to apply the format to or remove from. Defaults to current selection.
    */
   toggle(name, vars = null, node = null) {
-    return document.execCommand(name, false, vars);
+    return this.legacyFormatter.toggle(name, vars, node);
   }
 
   /**
@@ -59,15 +88,11 @@ export default class LegacyFormatter {
    * @return {Boolean/String} true/false/string if the specified selection/node matches the format.
    */
   match(name, vars = null, node = null) {
-    switch (name) {
-      case 'backColor':
-      case 'fontName':
-      case 'fontSize':
-      case 'foreColor':
-      case 'highlightColor':
-        return document.queryCommandValue(name);
-      default:
-        return document.queryCommandState(name);
+    if (this.has(name)) {
+      return MatchFormat.match(this.editor, node, name, vars);
+    }
+    else {
+      return this.legacyFormatter.match(name, vars, node); 
     }   
   }
 }

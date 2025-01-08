@@ -8,6 +8,9 @@ $note-bg: #8080801d;
 $img-margin-left: 10px;
 $img-margin-right: 10px;
 
+body {
+  --content-offset: 80px;
+}
 
 // Wrapper & Preview
 // ------------------------------------------
