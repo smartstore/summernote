@@ -49,15 +49,14 @@ export default class LinkDialog {
         ? $('<div></div>').append(this.ui.checkbox({
           id: 'sn-checkbox-open-in-new-window',
           className: 'form-switch note-new-window',
-          text: this.lang.link.openInNewWindow,
-          checked: true
+          text: this.lang.link.openInNewWindow
         }).render()).html()
         : '',
     ].join('');
 
     const footer = [
       '<button type="button" class="btn btn-secondary btn-flat" data-dismiss="modal">' + this.lang.common.cancel + '</button>',
-      '<button type="submit" class="btn btn-primary note-btn note-btn-primary note-link-btn" disabled>' + this.lang.common.ok + '</button>',
+      '<button type="submit" class="btn btn-primary note-link-btn" disabled>' + this.lang.common.ok + '</button>',
     ].join('');
 
     this.$dialog = this.ui.dialog({
@@ -109,7 +108,7 @@ export default class LinkDialog {
       let $linkStyle = this.$dialog.find('.note-link-style');
       let $linkRel = this.$dialog.find('.note-link-rel');
       let $linkBtn = this.$dialog.find('.note-link-btn');
-      let $openInNewWindow = this.$dialog.find('#sn-checkbox-open-in-new-window');
+      let $openInNewWindow = this.$dialog.find('#note-sn-checkbox-open-in-new-window');
       let $fileBrowse = this.$dialog.find('.btn-browse');
       let browsePromise;
   
@@ -141,7 +140,14 @@ export default class LinkDialog {
       const isNewWindowChecked = linkInfo.isNewWindow !== undefined
         ? linkInfo.isNewWindow
         : this.options.linkTargetBlank;
-          $openInNewWindow.prop('checked', isNewWindowChecked);
+      
+      if (isNewWindowChecked) {
+        console.log(isNewWindowChecked, linkInfo.isNewWindow, $openInNewWindow);
+        $openInNewWindow.prop('checked', true).attr('checked', 'checked');
+      } 
+      else if ($openInNewWindow.is(':checked')) {
+        $openInNewWindow.prop('checked', false).removeAttr('checked');
+      }
 
       this.ui.onDialogShown(this.$dialog, () => {
         this.context.triggerEvent('dialog.shown');

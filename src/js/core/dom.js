@@ -401,7 +401,8 @@ const setAttr = (node, name, value) => {
  */
 const setAttrs = (node, attrs) => {
   node = getNode(node);
-  if (node && attrs.hasOwnProperty()) {
+  console.log(attrs, node, attrs.hasOwnProperty());
+  if (node) {
     Object.keys(attrs).forEach((key) => {
       const value = attrs[key];
       Type.isNullOrUndefined(value) ? node.removeAttribute(key) : node.setAttribute(key, value);

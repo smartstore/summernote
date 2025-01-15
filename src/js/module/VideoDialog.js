@@ -21,7 +21,7 @@ export default class VideoDialog {
         `<input id="note-dialog-video-url-${this.options.id}" class="note-video-url form-control note-form-control note-input" type="text"/>`,
       '</div>',
     ].join('');
-    const buttonClass = 'btn btn-primary note-btn note-btn-primary note-video-btn';
+    const buttonClass = 'btn btn-primary note-video-btn';
     const footer = `<input type="button" href="#" class="${buttonClass}" value="${this.lang.video.insert}" disabled>`;
 
     this.$dialog = this.ui.dialog({

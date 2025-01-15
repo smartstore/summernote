@@ -22,8 +22,9 @@ export default class Context {
     $.summernote.ui = $.summernote.ui_template(this.options);
     this.ui = $.summernote.ui;
 
-    // Special handling for change event: trigger only all 10 ms.
-    this.triggerChangeEvent = func.throttle(this.triggerChangeEvent.bind(this), 10, { trailing: false });
+    // Special handling for change event: trigger only all 50 ms.
+    //this.triggerChangeEvent = func.throttle(this.triggerChangeEvent.bind(this), 10, { trailing: false });
+    this.triggerChangeEvent = func.debounce(this.triggerChangeEvent.bind(this), 50);
 
     this.initialize();
   }

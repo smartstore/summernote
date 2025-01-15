@@ -69,7 +69,6 @@ export default class Editor {
       this[commands[idx]] = ((sCmd) => {
         return (value) => {
           this.beforeCommand();
-          console.log('execCommand', sCmd, value);
           //document.execCommand(sCmd, false, value);
           this.formatter.toggle(sCmd, value);
           this.afterCommand(true);
@@ -207,7 +206,6 @@ export default class Editor {
      * @param {Object} linkInfo
      */
     this.createLink = this.wrapCommand((linkInfo) => {
-      let rels = [];
       let linkUrl = linkInfo.url;
       const linkText = linkInfo.text;
       const isNewWindow = linkInfo.isNewWindow;
@@ -222,6 +220,19 @@ export default class Editor {
       } 
       else {
         linkUrl = this.checkLinkUrl(linkUrl) || linkUrl;
+      }
+
+      if (isNewWindow && !linkInfo.rel) {
+        const rels = [];
+        if (this.options.linkAddNoReferrer) {
+          rels.push('noreferrer');
+        }
+        if (this.options.linkAddNoOpener) {
+          rels.push('noopener');
+        }
+        if (rels.length) {
+          linkInfo.rel = rels.join(' ');
+        }
       }
 
       let anchors = [];
@@ -259,39 +270,16 @@ export default class Editor {
         }
       }
 
-      $.each(anchors, (idx, a) => {
-        a.setAttribute('href', linkUrl);
-
-        if (linkInfo.rel) {
-          a.rel = linkInfo.rel;
-        }
-
-        if (linkInfo.cssClasss) {
-          a.className = linkInfo.cssClasss;
-        }
-
-        if (linkInfo.cssStyle) {
-          a.style.cssText = linkInfo.cssStyle;
-        }
-
-        if (isNewWindow) {
-          a.target = '_blank';
-          
-          if (!linkInfo.rel) {
-            if (this.options.linkAddNoReferrer) {
-              rels.push('noreferrer');
-            }
-            if (this.options.linkAddNoOpener) {
-              rels.push('noopener');
-            }
-            if (rels.length) {
-              a.rel = rels.join(' ');
-            }
-          }
-        } 
-        else {
-          a.removeAttribute('target');
-        }
+      $.each(anchors, (_, a) => {
+        const attrs = { 
+          'href': linkUrl,
+          'rel': Str.nullEmpty(linkInfo.rel),
+          'class': Str.nullEmpty(linkInfo.cssClasss),
+          'style': Str.nullEmpty(linkInfo.cssStyle),
+          'target': isNewWindow ? '_blank' : null
+        };
+        
+        dom.setAttrs(a, attrs);
       });
 
       this.selection.setRange(range.createFromNodes(anchors));

@@ -61,7 +61,7 @@ export default class ImageDialog {
     ].join('');
     const footer = [
       '<button type="button" class="btn btn-secondary btn-flat" data-dismiss="modal">' + this.lang.common.cancel + '</button>',
-      '<button type="submit" class="btn btn-primary note-btn note-btn-primary note-image-btn" disabled>' + this.lang.common.ok + '</button>'
+      '<button type="submit" class="btn btn-primary note-image-btn" disabled>' + this.lang.common.ok + '</button>'
     ].join('');
 
     this.$dialog = this.ui.dialog({

@@ -115,6 +115,8 @@ const findPosition = (str, term) => {
   return null;
 }
 
+const nullEmpty = (str) => _.isEmpty(str) ? null : str;
+
 export default {
   startsWith,
   endsWith,
@@ -132,5 +134,6 @@ export default {
   startsWithUrlScheme,
   isValidUrl,
   explode,
-  findPosition
+  findPosition,
+  nullEmpty
 }
