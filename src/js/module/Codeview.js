@@ -124,6 +124,7 @@ export default class CodeView {
 
     const CodeMirror = this.CodeMirrorConstructor;
     const editor = this.context.modules.editor;
+    const editorHeight = editor.getHeight();
     
     // Create selection range
     let rng = this.normalizeSelRange();
@@ -141,11 +142,12 @@ export default class CodeView {
     }
 
     this.$codable.val(html);
-    this.$codable.height(this.$editable.height());
+
+    editor.setHeight(editorHeight);
 
     this.context.invoke('toolbar.updateCodeview', true);
     this.context.invoke('airPopover.updateCodeview', true);
-
+    
     this.$editor.addClass('codeview');
     this.$codable.trigger('focus');
 
@@ -169,8 +171,6 @@ export default class CodeView {
         this.context.triggerEvent('change.codeview', cmEditor.getValue(), cmEditor);
       });
 
-      // CodeMirror hasn't Padding.
-      cmEditor.setSize(null, this.$editable.outerHeight());
       this.$codable.data('cmEditor', cmEditor);
 
       // Jump to selection marker
@@ -187,21 +187,6 @@ export default class CodeView {
       this.$codable.on('input', () => {
         this.context.triggerEvent('change.codeview', this.$codable.val(), this.$codable);
       });
-    }
-  }
-
-  removeJumpMarker() {
-    const $editable = this.context.layoutInfo.editable;
-
-    const treeWalker = document.createTreeWalker($editable[0], NodeFilter.SHOW_COMMENT, {
-      acceptNode(node) {
-        return node.nodeValue.trim() === jumpMarker ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-      }
-    });
-    
-    let node;
-    while ((node = treeWalker.nextNode())) {
-      node.parentNode.removeChild(node); // Remove the comment node
     }
   }
 
@@ -227,7 +212,8 @@ export default class CodeView {
     const hasChanged = this.$editable.html() !== value;
 
     this.$editable.html(value);
-    this.$editable.height(this.options.height ? this.$codable.height() : 'auto');
+    // Unnecessary
+    //this.$editable.height(this.options.height ? this.$codable.height() : 'auto');
     this.$editor.removeClass('codeview');
 
     if (hasChanged) {
@@ -238,6 +224,21 @@ export default class CodeView {
 
     this.context.invoke('toolbar.updateCodeview', false);
     this.context.invoke('airPopover.updateCodeview', false);
+  }
+
+  removeJumpMarker() {
+    const $editable = this.context.layoutInfo.editable;
+
+    const treeWalker = document.createTreeWalker($editable[0], NodeFilter.SHOW_COMMENT, {
+      acceptNode(node) {
+        return node.nodeValue.trim() === jumpMarker ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+      }
+    });
+    
+    let node;
+    while ((node = treeWalker.nextNode())) {
+      node.parentNode.removeChild(node); // Remove the comment node
+    }
   }
 
   destroy() {

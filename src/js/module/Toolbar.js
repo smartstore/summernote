@@ -159,4 +159,8 @@ export default class Toolbar {
     }
     this.ui.toggleBtn($btn, false);
   }
+
+  getHeight() {
+    return this.$toolbar.outerHeight();
+  }
 }

@@ -70,12 +70,14 @@ export default class Selection {
         rng = createRootRange(this.editor);
       }
 
-      this.context.triggerEvent('selectionchange', rng);
+      if (!rng.equals(this.bookmark) && this.isValidRange(rng)) {
+        this.context.triggerEvent('selectionchange', rng);
+      }      
 
       return rng;
     };
 
-    const throttledHandler = func.throttle(e => {
+    const debouncedHandler = func.debounce(e => {
       if (e.type === 'blur') {
         this.hasFocus = false;
       }
@@ -87,15 +89,15 @@ export default class Selection {
       else if (e.type !== 'summernote') {
         this.bookmark = createBookmarkFromSelection();
       }
-    }, 200);
+    }, 200, true);
 
     const events = ['keydown', 'keyup', 'mouseup', 'paste', 'focus', 'blur']
       .map(x => x + '.selection')
       .join(' ');
-    editor.$editable.on(events, throttledHandler);
+    editor.$editable.on(events, debouncedHandler);
 
     const $note = this.context.layoutInfo.note;
-    $note.on('summernote.change.selection', throttledHandler);
+    $note.on('summernote.change.selection', debouncedHandler);
   }
 
   destroy() {

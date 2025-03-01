@@ -401,10 +401,10 @@ const setAttr = (node, name, value) => {
  */
 const setAttrs = (node, attrs) => {
   node = getNode(node);
-  console.log(attrs, node, attrs.hasOwnProperty());
   if (node) {
     Object.keys(attrs).forEach((key) => {
       const value = attrs[key];
+      console.log(key, value);
       Type.isNullOrUndefined(value) ? node.removeAttribute(key) : node.setAttribute(key, value);
     });
   }

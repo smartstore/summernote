@@ -86,6 +86,20 @@ body {
   &.note-airframe {
     border-width: 0;
   }
+
+  .note-editing-area {
+    flex-grow: 1;
+  }
+
+  .note-editable, 
+  .note-codable,
+  .CodeMirror {
+    height: 100%;
+  }
+
+  .CodeMirror {
+    border-width: 0;
+  }
 }
 
 
@@ -106,11 +120,15 @@ body {
   padding: 10px;
   overflow: auto;
   word-wrap: break-word;
+  height: auto;
 
   // Reset
   font-weight: normal;
   font-style: normal;
   text-decoration: none;
+
+  --zoom: 1;
+  zoom: var(--zoom);
 
   a {
     text-decoration: underline;
@@ -162,7 +180,12 @@ body {
 // ------------------------------------------
 
 .note-editor.codeview {
-  .note-editable {
+  .note-editable,
+  .note-statusbar-content {
+    display: none;
+  }
+
+  &.fullscreen .note-statusbar {
     display: none;
   }
 
@@ -200,7 +223,11 @@ body {
   position: fixed;
   top: 0;
   left: 0;
+  bottom: 0;
   width: 100% !important;
+  height: 100% !important;
+  min-height: initial !important;
+  max-height: initial !important;
   border-radius: 0 !important;
   border-color: $note-border-color !important;
   z-index: $zindex-tooltip !important;
@@ -212,8 +239,23 @@ body {
     width: 100% !important;
   }
 
+  .note-editing-area {
+    flex-grow: 1;
+  }
+
+  .note-editable, 
+  .note-codable,
+  .CodeMirror {
+    height: 100%;
+  }
+
   .note-resizebar {
-    display: none;
+    cursor: default;
+    pointer-events: none;
+
+    > .note-icon-bar {
+      display: none;
+    }
   }
 }
 
@@ -247,29 +289,77 @@ body {
 // ------------------------------------------
 
 .note-statusbar {
+  position: relative;
   background-color: $note-bg;
   border-top: 1px solid rgba($black, 0.15);
+}
 
-  .note-resizebar {
-    padding-top: 1px;
-    height: 9px;
-    width: 100%;
-    cursor: ns-resize;
+.note-statusbar-content {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  font-size: 13px; 
+  padding: 8px 8px 0 8px; 
+  line-height: 1;
+}
 
-    .note-icon-bar {
-      width: 20px;
-      margin: 1px auto;
-      border-top: 1px solid rgba($black, 0.2);
-    }
+.note-path-item {
+  display: inline-block;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--gray-650);
+  }
+}
+
+.note-tag-glimpse {
+  position: absolute;
+  pointer-events: none;
+  z-index: 9999;
+  background-color: rgba(var(--primary-rgb), 0.2);
+}
+
+.note-resizebar {
+  padding-top: 1px;
+  height: 9px;
+  width: 100%;
+  cursor: ns-resize;
+
+  > .note-icon-bar {
+    width: 20px;
+    margin: 1px auto;
+    border-top: 1px solid rgba($black, 0.2);
+  }
+}
+
+.note-zoomer {
+  margin-top: -4px; 
+  margin-bottom: -4px;
+}
+
+.btn.note-zoom-action {
+  --btn-height: 20px;
+  --btn-active-shadow: none;
+  box-shadow: none !important;
+}
+
+.note-zoom-value {
+  width: 36px;
+  text-align: end;
+  user-select: none;
+}
+
+.note-statusbar.locked {
+  > .note-statusbar-content {
+    display: none;
   }
 
-  &.locked {
-    .note-resizebar {
-      cursor: default;
+  > .note-resizebar {
+    cursor: default;
 
-      .note-icon-bar {
-        display: none;
-      }
+    > .note-icon-bar {
+      display: none;
     }
   }
 }

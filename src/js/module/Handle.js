@@ -60,7 +60,7 @@ export default class Handle {
         const scrollTop = this.$document.scrollTop();
 
         const onMouseMove = (event) => {
-          this.context.invoke('editor.resizeTo', {
+          this.context.invoke('editor.resizeImage', {
             x: event.clientX - posStart.left,
             y: event.clientY - (posStart.top - scrollTop),
           }, $target, !event.shiftKey);

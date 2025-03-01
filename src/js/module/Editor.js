@@ -17,6 +17,7 @@ import Bullet from '../editing/Bullet';
 import Selection from '../editing/Selection';
 import LegacyFormatter from '../fmt/LegacyFormatter';
 import HtmlSanitizer from '../util/HtmlSanitizer';
+import Type from '../core/Type';
 
 const KEY_BOGUS = 'bogus';
 
@@ -43,6 +44,21 @@ export default class Editor {
     this.formatter = new LegacyFormatter();
     this.style = new Style(this.formatter);
     this.selection = new Selection(context);
+
+    this.resizeObserver = new ResizeObserver((entries) => {
+      if (entries.length) {
+        const entry = entries[0];
+        if (entry.target == this.$editor[0]) {
+          const editorHeight = entry.borderBoxSize[0].blockSize;
+          if (editorHeight < 300) {
+            const minHeight = this.getMinHeight();
+            if (editorHeight <= minHeight) {
+              entry.target.style.height = minHeight + 'px';
+            }
+          }
+        }
+      }
+    });
 
     this.context.memo('help.escape', this.lang.help.escape);
     this.context.memo('help.undo', this.lang.help.undo);
@@ -471,22 +487,29 @@ export default class Editor {
       if (this.options.width) {
         this.$editor.outerWidth(this.options.width);
       }
-      if (this.options.height) {
-        this.$editable.outerHeight(this.options.height);
+
+      const getSize = (size) => {
+        return Type.isNumber(size) ? size + 'px' : size;
+      }
+
+      if (this.options.minHeight) {
+        this.$editor.css('min-height', getSize(this.options.minHeight));
       }
       if (this.options.maxHeight) {
-        this.$editable.css('max-height', this.options.maxHeight);
+        this.$editor.css('max-height', getSize(this.options.maxHeight));
       }
-      if (this.options.minHeight) {
-        this.$editable.css('min-height', this.options.minHeight);
+      if (this.options.height) {
+        this.setHeight(this.options.height, true);
       }
     }
 
-    this.history.recordUndo();
+    this.history.recordUndo(); 
+    this.observeResize(); 
   }
 
   destroy() {
     this.selection.destroy();
+    this.resizeObserver.disconnect();
     this.$editable.off();
   }
 
@@ -1104,7 +1127,7 @@ export default class Editor {
    * @param {jQuery} $target - target element
    * @param {Boolean} [bKeepRatio] - keep ratio
    */
-  resizeTo(pos, $target, bKeepRatio) {
+  resizeImage(pos, $target, bKeepRatio) {
     let imageSize;
     if (bKeepRatio) {
       const newRatio = pos.y / pos.x;
@@ -1121,6 +1144,34 @@ export default class Editor {
     }
 
     $target.css(imageSize);
+  }
+
+  getMinHeight() {
+    return this.context.invoke('toolbar.getHeight') + this.context.invoke('statusbar.getHeight');
+  }
+  getHeight() {
+    return this.$editor.outerHeight();
+  }
+  setHeight(height, isInit) {
+    if (Type.isNumber(height)) {
+      height = (this.options.minHeight > 0) ? Math.max(height, this.options.minHeight) : height;
+      height = (this.options.maxHeight > 0) ? Math.min(height, this.options.maxHeight) : height;
+
+      if (!isInit) {
+        const minHeight = this.getMinHeight();
+        height = Math.max(height, minHeight);
+      }
+
+      height = height + 'px';
+    }
+
+    this.$editor.css('height', height);
+  }
+  observeResize() {
+    this.resizeObserver.observe(this.$editor[0]);
+  }
+  unobserveResize() {
+    this.resizeObserver.unobserve(this.$editor[0]);
   }
 
   /**
