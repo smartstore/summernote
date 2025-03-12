@@ -13,7 +13,7 @@ export default class Handle {
     this.events = {
       'summernote.mousedown': (we, e) => {
         if (this.update(e.target, e)) {
-          //e.preventDefault();
+          this.editor.selection.triggerChangeEvent(e.target);
         }
       },
       'summernote.keyup summernote.scroll summernote.change summernote.dialog.shown': (_, e) => {

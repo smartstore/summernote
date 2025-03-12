@@ -221,10 +221,12 @@ export default class CssClass {
       return;
     }
 
-    const controlNode = $(this.selection.selectedControl);
-    const sel = this.selection.nativeSelection;
-    let node = $(sel.focusNode.parentElement, ".note-editable");
-    const caret = sel.type === 'None' || sel.type === 'Caret';
+    const controlNode = this.selection.selectedControl;
+    let node = rng.sc;
+    if (dom.isText(node)) { 
+      node = node.parentNode;
+    }
+    const isCollapsed = rng.collapsed;
 
     const apply = (el) => {
       const $el = $(el);
@@ -260,7 +262,7 @@ export default class CssClass {
 
     this.editor.beforeCommand();
 
-    if (controlNode.length) {
+    if (controlNode) {
       // Most likely IMG is selected
       if (obj.inline) {
         apply(controlNode);
@@ -269,19 +271,19 @@ export default class CssClass {
     else {
       if (!obj.inline) {
         // Apply a block-style only to a block-level element
-        if (isInlineElement(node[0])) {
+        if (isInlineElement(node)) {
           // Traverse parents until a block-level element is found
-          node = $(dom.closest(node, n => !isInlineElement(n)));
+          node = dom.closest(node, n => !isInlineElement(n));
         }
 
-        if (node.length && !dom.isEditableRoot(node[0])) {
+        if (node && !dom.isEditableRoot(node)) {
           apply(node);
         }
       }
-      else if (obj.inline && caret) {
+      else if (obj.inline && isCollapsed) {
         apply(node);
       }
-      else if (sel.rangeCount) {
+      else {
         const spans = this.editor.style.styleNodes(rng).map(apply);
         this.selection.setRange(range.createFromNodes(spans));
       }

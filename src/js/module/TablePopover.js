@@ -19,7 +19,7 @@ export default class TablePopover {
       'summernote.mousedown': (we, e) => {
         this.update(e?.target, e);
       },
-      'summernote.keyup summernote.scroll summernote.change': (we, e) => {
+      'summernote.keyup summernote.change': (we, e) => {
         this.update(e?.target, e);
       },
       'summernote.disable summernote.dialog.shown': () => {
@@ -67,11 +67,6 @@ export default class TablePopover {
 
   update(target, e) {
     if (this.context.isDisabled()) {
-      return false;
-    }
-
-    const isScroll = e?.type == 'scroll';
-    if (isScroll) {
       return false;
     }
 

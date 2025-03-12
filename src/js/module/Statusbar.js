@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import func from '../core/func';
 import lists from '../core/lists';
 import dom from '../core/dom';
 import range from '../core/range';
@@ -6,7 +7,6 @@ import range from '../core/range';
 export default class Statusbar {
   constructor(context) {
     this.context = context;
-    this.editor = context.modules.editor;
     this.$document = $(document);
     this.$statusbar = context.layoutInfo.statusbar;
     this.$resizer = this.$statusbar.find('> .note-resizebar');
@@ -21,10 +21,14 @@ export default class Statusbar {
     this.zoomLevels = [.25, .33, .5, .67, .75, .8, .9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5];
 
     this.events = {
-      'summernote.selectionchange': (e, rng) => {
-        //console.log('selectionchange', rng);
-        this.updateSelectionPath(rng);
-      }
+      'summernote.change summernote.selectionchange': func.debounce((e, rng) => {
+        if (e.namespace == 'selectionchange') {
+          this.updateSelectionPath(rng);
+        }
+        else {
+          this.updateSelectionPath(this.context.invoke('editor.selection.getRange'));
+        }
+      }, 200, true),
     };
   }
 
@@ -38,7 +42,10 @@ export default class Statusbar {
 
     this.$selectionPath.on('mouseenter mouseleave click', '.note-path-item', (e) => {
       // Selects the HTML element that was clicked in bottom selection path
-      const target = $(e.target).data('referencedElement');
+      e.preventDefault();
+      e.stopPropagation();
+
+      const target = $(e.currentTarget).data('referencedElement');
       if (target) {
         if (e.type == 'click') {
           this.removeGlimpse(target);
@@ -77,9 +84,9 @@ export default class Statusbar {
 
       const onStatusbarMove = e => {
         const originalEvent = (e.type == 'mousemove') ? e : e.originalEvent.touches[0];
-        const height = originalEvent.clientY - editorTop;
+        const height = originalEvent.clientY - editorTop + 4;
 
-        this.editor.setHeight(height);
+        this.context.invoke('editor.setHeight', height);
       };
 
       this.$document.on('mousemove touchmove', onStatusbarMove).one('mouseup touchend', () => {
@@ -116,30 +123,44 @@ export default class Statusbar {
   }
 
   updateSelectionPath(rng) {
-    if (rng?.startContainer) {
-      const nodes = dom.parents(rng.startContainer, null, false).reverse();
-      
+    let startNode = dom.isElement(rng) ? rng : rng?.sc;
+    if (startNode) {
+      if (dom.isText(startNode)) {
+        startNode = startNode.parentNode;
+      }
+
+      if (this.$selectionPath.data('selectedNode') === startNode) {
+        // Don't bother rebuilding path if the selected start node hasn't changed.
+        return;
+      }
+
+      this.$selectionPath.html('');
+
+      const nodes = dom.parents(startNode, null, true);
       if (nodes.length) {
-        this.$selectionPath.html('');
-        const lastNode = lists.last(nodes);
+        nodes.reverse();
+
+        // (perf) Remember the last selected node
+        this.$selectionPath.data('selectedNode', startNode);
+
         nodes.forEach(n => {
           if (dom.isElement(n)) {
             let label = n.tagName.toLowerCase();
             if (n.classList.length) {
-              label += `.${n.classList[0]}`;
+              label += `<span class="text-muted">.${n.classList[0]}</span>`;
             }
             const item = $(`<span class="note-path-item">${label}</span>`);
             item.data('referencedElement', n);
             this.$selectionPath.append(item);
   
-            if (n != lastNode) {
+            if (n != startNode) {
               this.$selectionPath.append($('<span class="note-path-item-divider p-1">\u203A</span>'));
             }
           }
         });
       }
       else {
-        this.$selectionPath.html('&nbsp;');
+        this.$selectionPath.html('&nbsp;').removeData('selectedNode');
       }
     }
   }

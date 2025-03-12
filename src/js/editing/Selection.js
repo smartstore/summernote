@@ -1,6 +1,5 @@
 import Type from '../core/Type';
 import func from '../core/func';
-import lists from '../core/lists';
 import dom from '../core/dom';
 import range from '../core/range';
 import Bookmark from './Bookmark';
@@ -71,13 +70,13 @@ export default class Selection {
       }
 
       if (!rng.equals(this.bookmark) && this.isValidRange(rng)) {
-        this.context.triggerEvent('selectionchange', rng);
+        this.triggerChangeEvent(rng);
       }      
 
       return rng;
     };
 
-    const debouncedHandler = func.debounce(e => {
+    const debouncedHandler = func.throttle(e => {
       if (e.type === 'blur') {
         this.hasFocus = false;
       }
@@ -89,7 +88,7 @@ export default class Selection {
       else if (e.type !== 'summernote') {
         this.bookmark = createBookmarkFromSelection();
       }
-    }, 200, true);
+    }, 200, false);
 
     const events = ['keydown', 'keyup', 'mouseup', 'paste', 'focus', 'blur']
       .map(x => x + '.selection')
@@ -264,7 +263,16 @@ export default class Selection {
       }
     }
 
+    this.triggerChangeEvent();
+
     return this;
+  }
+
+  triggerChangeEvent(rng) {
+    rng = rng || this.bookmark || this.selectedRange;
+    if (rng) {
+      this.context.triggerEvent('selectionchange', rng);
+    }
   }
 
   /**

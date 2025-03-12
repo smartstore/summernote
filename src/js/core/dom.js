@@ -404,7 +404,6 @@ const setAttrs = (node, attrs) => {
   if (node) {
     Object.keys(attrs).forEach((key) => {
       const value = attrs[key];
-      console.log(key, value);
       Type.isNullOrUndefined(value) ? node.removeAttribute(key) : node.setAttribute(key, value);
     });
   }
@@ -710,22 +709,27 @@ const select = (node, selector) => {
 };
 
 /**
- * Finds closest parent that matches the given selector.
+ * Finds the closest ancestor of the given node that matches the selector.
  *
- * @param {Function|String} selector - Selector function, string or node.
- * @param {boolean} [includeSelf] - Whether to start bubbling with given `node`. Default is true.
+ * @param {Node} node - The starting DOM node.
+ * @param {Function|string|Node} selector - A selector as a function, CSS selector string, or DOM node.
+ * @param {boolean} [includeSelf=true] - Whether the starting node should be included in the search.
+ * @returns {Node|null} The closest matching node or null if not found.
  */
 const closest = (node, selector, includeSelf = true) => {
-  node = getNode(includeSelf ? node : node.parentNode);
-  if (node) {
-    const pred = matchSelector(selector);
-    while (node) {
-      if (pred(node)) return node;
-      if (isEditableRoot(node)) break;
-      node = node.parentNode;
-    }
+  if (!includeSelf && isEditableRoot(node)) {
+    return null;
   }
 
+  let currentNode = getNode(includeSelf ? node : node.parentNode);
+  if (currentNode) {
+    const pred = matchSelector(selector);
+    while (currentNode) {
+      if (isEditableRoot(currentNode)) break;
+      if (pred(currentNode)) return currentNode;
+      currentNode = currentNode.parentNode;
+    }
+  }
   return null;
 }
 
@@ -736,38 +740,36 @@ const closest = (node, selector, includeSelf = true) => {
  */
 function closestSingleParent(node, selector) {
   node = getNode(node)?.parentNode;
-  if (node) {
-    const pred = matchSelector(selector);
-    while (node) {
-      if (nodeLength(node) !== 1) break;
-      if (pred(node)) return node;
-      if (isEditableRoot(node)) break;
+  const pred = matchSelector(selector);
+  while (node) {
+    if (nodeLength(node) !== 1) break;
+    if (pred(node)) return node;
+    if (isEditableRoot(node)) break;
 
-      node = node.parentNode;
-    }
+    node = node.parentNode;
   }
   return null;
 }
 
 /**
- * Gets array of parent nodes until selector hit (including start and hit node).
+ * Returns an array of ancestor nodes starting from the given node until a node matching the selector is found (inclusive).
  *
- * @param {Function|String} [selector] - Selector function or string.
- * @param {bool} [includeSelf] - Whether to start with `node`. Default is true.
+ * @param {Node} node - The starting DOM node.
+ * @param {Function|string|Node} [selector] - A selector as a function, CSS selector string, or DOM node.
+ * @param {boolean} [includeSelf=true] - Whether the starting node should be included in the result.
+ * @returns {Node[]} An array of ancestor nodes, including the node that matches the selector (if found).
  */
 const parents = (node, selector, includeSelf = true) => {
+  // Use a default function that always returns false if no valid selector is provided.
   const pred = matchSelector(selector, func.fail);
-  const parents = [];
+  const result = [];
 
   closest(node, (el) => {
-    if (!isEditableRoot(el)) {
-      parents.push(el);
-    }
-
+    result.push(el);
     return pred(el);
   }, includeSelf);
 
-  return parents;
+  return result;
 }
 
 /**
@@ -779,7 +781,7 @@ const parents = (node, selector, includeSelf = true) => {
  */
 const parentsWhile = (node, selector = null, rootSelector = null) => {
   const pred = matchSelector(selector, func.ok);
-  const rootPred = matchSelector(rootSelector, isEditableRoot);
+  const rootPred = matchSelector(rootSelector, func.fail);
   const parents = [];
   
   closest(node, (el) => {

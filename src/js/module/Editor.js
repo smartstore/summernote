@@ -56,6 +56,8 @@ export default class Editor {
               entry.target.style.height = minHeight + 'px';
             }
           }
+
+          this.currentPopper?.scheduleUpdate();
         }
       }
     });
@@ -88,6 +90,7 @@ export default class Editor {
           //document.execCommand(sCmd, false, value);
           this.formatter.toggle(sCmd, value);
           this.afterCommand(true);
+          //this.afterCommand();
         };
       })(commands[idx]);
       this.context.memo('help.' + commands[idx], this.lang.help[commands[idx]]);
@@ -760,6 +763,7 @@ export default class Editor {
     this.normalizeContent();
     this.history.recordUndo();
     if (!silent) {
+      //this.selection.triggerChangeEvent();
       this.context.triggerChangeEvent(this.$editable);
     }
   }
@@ -1233,6 +1237,7 @@ export default class Editor {
       popper.scheduleUpdate();
       this.context.triggerEvent('popover.shown', $popover);
       $popover.data('popper', popper).show();
+      this.currentPopper = popper;
     }
   }
 
@@ -1242,6 +1247,7 @@ export default class Editor {
       if (popper) {
         popper.destroy();
         $popover.removeData('popper');  
+        this.currentPopper = null;
       }
   
       $popover.hide();

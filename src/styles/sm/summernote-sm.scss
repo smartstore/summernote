@@ -313,10 +313,14 @@ body {
   }
 }
 
+.note-path-item-divider {
+  cursor: default;
+}
+
 .note-tag-glimpse {
   position: absolute;
   pointer-events: none;
-  z-index: 9999;
+  z-index: $zindex-tooltip - 1;
   background-color: rgba(var(--primary-rgb), 0.2);
 }
 
@@ -473,6 +477,7 @@ body {
   position: absolute;
   display: none;
   border: 1px solid #000;
+  z-index: 1;
 
   &>div {
     position: absolute;
