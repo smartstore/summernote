@@ -1129,25 +1129,32 @@ export default class Editor {
   /**
    * @param {Position} pos
    * @param {jQuery} $target - target element
-   * @param {Boolean} [bKeepRatio] - keep ratio
+   * @param {Boolean} [keepRatio] - keep ratio
    */
-  resizeImage(pos, $target, bKeepRatio) {
-    let imageSize;
-    if (bKeepRatio) {
+  resizeImage(pos, $target, keepRatio) {
+    let imgSize;
+    if (keepRatio) {
       const newRatio = pos.y / pos.x;
       const ratio = $target.data('ratio');
-      imageSize = {
+      imgSize = {
         width: ratio > newRatio ? pos.x : pos.y / ratio,
         height: ratio > newRatio ? pos.x * ratio : pos.y,
       };
-    } else {
-      imageSize = {
+    } 
+    else {
+      imgSize = {
         width: pos.x,
         height: pos.y,
       };
     }
 
-    $target.css(imageSize);
+    const zoomLevel = this.context.invoke('statusbar.getZoomLevel');
+    if (zoomLevel != 1) {
+      imgSize.width = imgSize.width / zoomLevel;
+      imgSize.height = imgSize.height / zoomLevel;
+    }
+
+    $target.css(imgSize);
   }
 
   getMinHeight() {

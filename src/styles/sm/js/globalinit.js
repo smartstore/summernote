@@ -77,6 +77,7 @@ let summernote_image_upload_url;
       }
     },
     toolbar: [
+      ['save', ['save']],
       ['edit', ['undo', 'redo']],
       ['text', ['bold', 'italic', 'underline', 'color', 'moreFontStyles']],
       //['color', ['color']],

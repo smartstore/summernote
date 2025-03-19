@@ -2,7 +2,6 @@ import $ from 'jquery';
 import _ from 'underscore';
 import dom from '../core/dom';
 import range from '../core/range';
-import lists from '../core/lists';
 
 const isInlineElement = (el) => dom.isInline(el);
 
@@ -223,7 +222,8 @@ export default class CssClass {
 
     const controlNode = this.selection.selectedControl;
     let node = rng.sc;
-    if (dom.isText(node)) { 
+    const isElementSelected = dom.isElement(node);
+    if (!isElementSelected) { 
       node = node.parentNode;
     }
     const isCollapsed = rng.collapsed;
@@ -270,7 +270,7 @@ export default class CssClass {
     }
     else {
       if (!obj.inline) {
-        // Apply a block-style only to a block-level element
+        // Apply a block-format only to a block-level element
         if (isInlineElement(node)) {
           // Traverse parents until a block-level element is found
           node = dom.closest(node, n => !isInlineElement(n));
@@ -280,12 +280,12 @@ export default class CssClass {
           apply(node);
         }
       }
-      else if (obj.inline && isCollapsed) {
+      else if (obj.inline && (isCollapsed || isElementSelected)) {
         apply(node);
       }
       else {
         const spans = this.editor.style.styleNodes(rng).map(apply);
-        this.selection.setRange(range.createFromNodes(spans));
+        this.selection.setRange(range.createFromNodes(spans), null, true);
       }
     }
 

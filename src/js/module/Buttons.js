@@ -258,6 +258,15 @@ export default class Buttons {
   }
 
   addToolbarButtons() {
+    this.context.memo('button.save', () => {
+      return this.button({
+        className: 'note-btn-save',
+        contents: this.ui.icon(this.options.icons.disk),
+        tooltip: this.lang.common.save + this.representShortcut('save'),
+        //click: this.context.createInvokeHandlerAndUpdateState('editor.bold'),
+      }).render();
+    });
+
     this.context.memo('button.style', () => {
       return this.ui.buttonGroup([
         this.button({

@@ -302,6 +302,7 @@ $.summernote = $.extend($.summernote, {
         'CTRL+NUM6': 'formatH6',
         'CTRL+ENTER': 'insertHorizontalRule',
         'CTRL+K': 'linkDialog.show',
+        'CTRL+S': 'save',
       },
 
       mac: {
@@ -333,6 +334,7 @@ $.summernote = $.extend($.summernote, {
         'CMD+NUM6': 'formatH6',
         'CMD+ENTER': 'insertHorizontalRule',
         'CMD+K': 'linkDialog.show',
+        'CMD+S': 'save',
       },
     },
     icons: icons

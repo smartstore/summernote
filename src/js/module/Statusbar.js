@@ -23,10 +23,10 @@ export default class Statusbar {
     this.events = {
       'summernote.change summernote.selectionchange': func.debounce((e, rng) => {
         if (e.namespace == 'selectionchange') {
-          this.updateSelectionPath(rng);
+          this.updateSelectionPath(rng, false);
         }
         else {
-          this.updateSelectionPath(this.context.invoke('editor.selection.getRange'));
+          this.updateSelectionPath(this.context.invoke('editor.selection.getRange'), true);
         }
       }, 200, true),
     };
@@ -43,19 +43,16 @@ export default class Statusbar {
     this.$selectionPath.on('mouseenter mouseleave click', '.note-path-item', (e) => {
       // Selects the HTML element that was clicked in bottom selection path
       e.preventDefault();
-      e.stopPropagation();
 
       const target = $(e.currentTarget).data('referencedElement');
       if (target) {
         if (e.type == 'click') {
-          this.removeGlimpse(target);
+          this.removeGlimpse();
           const rng = range.createFromNode(target);
           this.context.invoke('editor.selection.setRange', rng);
-          this.updateSelectionPath(rng);
-          //rng.scrollIntoView(this.$editable);
         }
         else if (e.type == 'mouseleave') {
-          this.removeGlimpse(target);
+          this.removeGlimpse();
         }
         else if (e.type == 'mouseenter') {
           this.glimpseNode(target);
@@ -94,6 +91,10 @@ export default class Statusbar {
       });
     });
   }
+  
+  getZoomLevel() {
+    return this.currentZoomLevel;
+  }
 
   setZoomLevel(value) {
     const $label = this.$zoomer.find('.note-zoom-value');
@@ -122,18 +123,20 @@ export default class Statusbar {
     this.currentZoomLevel = value;
   }
 
-  updateSelectionPath(rng) {
+  updateSelectionPath(rng, force) {
     let startNode = dom.isElement(rng) ? rng : rng?.sc;
     if (startNode) {
-      if (dom.isText(startNode)) {
+      const isTextNode = dom.isText(startNode);
+      if (isTextNode) {
         startNode = startNode.parentNode;
       }
 
-      if (this.$selectionPath.data('selectedNode') === startNode) {
+      if (!force && isTextNode && this.$selectionPath.data('selectedNode') === startNode) {
         // Don't bother rebuilding path if the selected start node hasn't changed.
         return;
       }
 
+      this.removeGlimpse();
       this.$selectionPath.html('');
 
       const nodes = dom.parents(startNode, null, true);
@@ -187,16 +190,14 @@ export default class Statusbar {
     return overlay;
   }
 
-  removeGlimpse(node) {
-    const overlay = node.glimpseOverlay;
-    if (overlay) {
-      node.glimpseOverlay = null;
-      overlay.remove();
-    }
-  }
-
-  getCurrentZoomLevel() {
-    return this.currentZoomLevel;
+  removeGlimpse() {
+    this.$selectionPath.find('> .note-path-item').each((_, node) => {
+      const overlay = $(node).data('referencedElement')?.glimpseOverlay;
+      if (overlay) {
+        node.glimpseOverlay = null;
+        overlay.remove();
+      }
+    });
   }
 
   getHeight() {

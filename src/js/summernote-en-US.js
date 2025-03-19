@@ -170,10 +170,16 @@ $.extend(true, $.summernote.lang, {
   'en-US': {
     common: {
       ok: 'OK',
-      cancel: 'Cancel'
+      cancel: 'Cancel',
+      save: 'Save',
+    },
+    help: {
+      save: 'Save',
     },
     font: {
-      code: 'Code'
+      code: 'Code',
+      small: 'Decrease font size',
+      big: 'Increase font size',
     },
     attrs: {
       cssClass: 'CSS Class',

@@ -202,7 +202,7 @@ export default class Selection {
    * @param {Boolean} [forward] Optional boolean if the selection is forwards or backwards.
    * @returns {Selection} - The `Selection` object for chaining.
    */
-  setRange(rng, forward) {
+  setRange(rng, forward, silent) {
     if (!this.isValidRange(rng)) {
       return this;
     }
@@ -263,7 +263,9 @@ export default class Selection {
       }
     }
 
-    this.triggerChangeEvent();
+    if (!silent) {
+      this.triggerChangeEvent();
+    }  
 
     return this;
   }
