@@ -75,12 +75,13 @@ export default class Editor {
     this.context.memo('help.formatPara', this.lang.help.formatPara);
     this.context.memo('help.insertHorizontalRule', this.lang.help.insertHorizontalRule);
     this.context.memo('help.fontName', this.lang.help.fontName);
+    this.context.memo('help.save', this.lang.help.save);
 
     // Native commands (with execCommand), generate function for execCommand
     const commands = [
       'bold', 'italic', 'underline', 'strikethrough', 'superscript', 'subscript',
       'justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull',
-      'formatBlock', 'removeFormat', 'backColor',
+      'formatBlock', 'removeFormat', 'backColor'
     ];
 
     for (let idx = 0, len = commands.length; idx < len; idx++) {
@@ -120,6 +121,14 @@ export default class Editor {
       const size = this.currentStyle()['font-size'];
       return this.fontStyling('font-size', size + value);
     });
+
+    // this.small = this.wrapCommand((rng) => {
+    //   this.style.styleNodes(this.selection.getRange(), { nodeName: 'SMALL', expandClosestSibling: false, onlyPartialContains: false });
+    // });
+
+    // this.big = this.wrapCommand((rng) => {
+    //   this.style.styleNodes(this.selection.getRange(), { nodeName: 'BIG', expandClosestSibling: true, onlyPartialContains: false });
+    // });
 
     for (let idx = 1; idx <= 6; idx++) {
       this['formatH' + idx] = ((idx) => {
@@ -715,6 +724,19 @@ export default class Editor {
     return this.style.fromNode($node);
   }
 
+  save() {
+    this.context.triggerEvent('before.command', this.$editable);
+
+    // How to save is up to the host, so we don't implement here.
+    const savePromise = $.Deferred((deferredSave) => {
+      this.context.triggerEvent('save', this.context.code(), deferredSave);
+    }).promise();
+
+    savePromise.then(html => {
+      this.context.triggerEvent('saved', html);
+    });
+  }
+
   /**
    * undo
    */
@@ -748,7 +770,7 @@ export default class Editor {
   beforeCommand() {
     this.context.triggerEvent('before.command', this.$editable);
 
-    // Set styleWithCSS before run a command
+    // Set styleWithCSS before running a command
     document.execCommand('styleWithCSS', false, this.options.styleWithCSS);
 
     // keep focus on editable before command execution

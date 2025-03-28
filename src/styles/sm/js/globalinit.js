@@ -74,6 +74,10 @@ let summernote_image_upload_url;
           return window.html_beautify(html, beautifyOpts);
         }
         return html;
+      },
+      onSave(html, deferred) {
+        alert('Saved successfully!');
+        deferred.resolve(html);
       }
     },
     toolbar: [

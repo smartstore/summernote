@@ -33,6 +33,10 @@ export default class Toolbar {
       this.context.invoke('buttons.build', this.$toolbar, this.options.toolbar);
     }
 
+    this.$btnSave = this.$toolbar.find('.note-btn-save');
+    this.$btnUndo = this.$toolbar.find('.note-undo');
+    this.$btnRedo = this.$toolbar.find('.note-redo');
+
     if (this.options.toolbarContainer) {
       this.$toolbar.appendTo(this.options.toolbarContainer);
     }
@@ -43,10 +47,16 @@ export default class Toolbar {
       this.context.invoke('buttons.updateCurrentStyle');
     });
 
+    this.$note.on('summernote.saved', () => {
+      this.$btnSave.addClass('disabled');
+    });
+
     this.$note.on('summernote.change', () => {
+      this.$btnSave.removeClass('disabled');
+
       let history = this.context.modules.editor.history;
-      this.$toolbar.find('.note-undo').toggleClass('disabled', !history.canUndo());
-      this.$toolbar.find('.note-redo').toggleClass('disabled', !history.canRedo());
+      this.$btnUndo.toggleClass('disabled', !history.canUndo());
+      this.$btnRedo.toggleClass('disabled', !history.canRedo());
     });
 
     this.context.invoke('buttons.updateCurrentStyle');

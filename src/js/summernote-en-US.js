@@ -178,8 +178,8 @@ $.extend(true, $.summernote.lang, {
     },
     font: {
       code: 'Code',
-      small: 'Decrease font size',
-      big: 'Increase font size',
+      // small: 'Decrease font size',
+      // big: 'Increase font size',
     },
     attrs: {
       cssClass: 'CSS Class',

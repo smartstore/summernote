@@ -258,15 +258,6 @@ export default class Buttons {
   }
 
   addToolbarButtons() {
-    this.context.memo('button.save', () => {
-      return this.button({
-        className: 'note-btn-save',
-        contents: this.ui.icon(this.options.icons.disk),
-        tooltip: this.lang.common.save + this.representShortcut('save'),
-        //click: this.context.createInvokeHandlerAndUpdateState('editor.bold'),
-      }).render();
-    });
-
     this.context.memo('button.style', () => {
       return this.ui.buttonGroup([
         this.button({
@@ -373,6 +364,20 @@ export default class Buttons {
       tooltip: this.lang.font.subscript,
       click: this.context.createInvokeHandlerAndUpdateState('editor.subscript'),
     });
+
+    // const small = this.button({
+    //   className: 'note-btn-small',
+    //   contents: this.ui.icon(this.options.icons.undo),
+    //   tooltip: this.lang.font.small,
+    //   click: this.context.createInvokeHandlerAndUpdateState('editor.small'),
+    // });
+
+    // const big = this.button({
+    //   className: 'note-btn-big',
+    //   contents: this.ui.icon(this.options.icons.redo),
+    //   tooltip: this.lang.font.big,
+    //   click: this.context.createInvokeHandlerAndUpdateState('editor.big'),
+    // });
     
     // const code = this.button({
     //   className: 'note-btn-inlinecode',
@@ -400,7 +405,7 @@ export default class Buttons {
           css: { 'min-width': 'auto' },
           items: this.ui.toolGroup({
             className: 'note-more-fontstyles',
-            children: [strikethrough, superscript, subscript/*, code*/],
+            children: [strikethrough, superscript, subscript/*, small, big, code*/],
           }).render()
         })
       ]).render();
@@ -712,6 +717,15 @@ export default class Buttons {
         contents: this.ui.icon(this.options.icons.question),
         tooltip: this.lang.options.help,
         click: this.context.createInvokeHandler('helpDialog.show'),
+      }).render();
+    });
+
+    this.context.memo('button.save', () => {
+      return this.button({
+        className: 'note-btn-save disabled',
+        contents: this.ui.icon(this.options.icons.disk),
+        tooltip: this.lang.common.save + this.representShortcut('save'),
+        click: this.context.createInvokeHandler('editor.save'),
       }).render();
     });
   }
