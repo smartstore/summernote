@@ -51,12 +51,14 @@ export default class Toolbar {
       this.$btnSave.addClass('disabled');
     });
 
-    this.$note.on('summernote.change', () => {
+    this.$note.on('summernote.change summernote.change.codeview', (e) => {
       this.$btnSave.removeClass('disabled');
 
-      let history = this.context.modules.editor.history;
-      this.$btnUndo.toggleClass('disabled', !history.canUndo());
-      this.$btnRedo.toggleClass('disabled', !history.canRedo());
+      if (e.namespace == 'change') {
+        let history = this.context.modules.editor.history;
+        this.$btnUndo.toggleClass('disabled', !history.canUndo());
+        this.$btnRedo.toggleClass('disabled', !history.canRedo());
+      }
     });
 
     this.context.invoke('buttons.updateCurrentStyle');

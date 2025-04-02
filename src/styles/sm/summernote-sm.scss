@@ -8,9 +8,9 @@ $note-bg: #8080801d;
 $img-margin-left: 10px;
 $img-margin-right: 10px;
 
-body {
-  --content-offset: 80px;
-}
+// body {
+//   --content-offset: 80px;
+// }
 
 // Wrapper & Preview
 // ------------------------------------------
@@ -708,10 +708,8 @@ body {
   }
 
   .scrollable-menu {
-    --scrollbar-track-color: #fff;
-    --scrollbar-track-hover-color: #fff;
     height: auto;
-    max-height: 340px;
+    max-height: 400px;
     min-width: 280px;
     overflow-x: hidden;
   }
@@ -769,15 +767,15 @@ body {
 }
 
 .btn-group-split {
-    // Split dropdown buttons, e.g. "Color"
-    outline: 1px solid transparent;
-    outline-offset: -1px;
-    border-radius: $btn-border-radius-sm;
+  // Split dropdown buttons, e.g. "Color"
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+  border-radius: $btn-border-radius-sm;
 
-    &:hover, 
-    &.show {
-      outline-color: var(--note-btn-active-border-color);
-    }
+  &:hover, 
+  &.show {
+    outline-color: var(--note-btn-active-border-color);
+  }
 }
 
 
@@ -874,6 +872,42 @@ body {
     padding: 2px;
     border-radius: 3px;
   }
+}
+
+
+// Emojis
+// ------------------------------------------
+
+.note-emoji-list {
+  --note-emoji-size: 40px;
+  --note-emoji-gap: 1px;
+  --note-emoji-cols: 9;
+
+  min-height: 200px;
+  max-height: 300px;
+  width: calc(var(--note-emoji-size) * var(--note-emoji-cols) + (var(--note-emoji-gap) * var(--note-emoji-cols)) + 18px);
+  gap: var(--note-emoji-gap);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.nav-emoji {
+  justify-content: space-between;
+
+  > .nav-link {
+    &:not(.active) {
+      filter: grayscale(1);
+      opacity: 0.65;
+    }
+  }
+}
+
+.note-emoji {
+  font-size: 24px;
+  font-weight: var(--font-weight-normal);
+  border-width: 0;
+  --btn-active-shadow: none;
+  --btn-height: var(--note-emoji-size);
 }
 
 

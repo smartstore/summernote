@@ -73,6 +73,8 @@ const isOnAnchor = makeIsOn(dom.isAnchor);
 const isOnCell = makeIsOn(dom.isCell);
 // Judge whether range is on data node or not
 const isOnData = makeIsOn(dom.isData);
+// Judge whether range is on dl, dt, dd node or not
+const isOnDL = makeIsOn(dom.isDL);
 
 
 /**
@@ -272,16 +274,12 @@ class WrappedRange {
     this.endOffset = endOffset;
     this.collapsed = startContainer === endContainer && startOffset === endOffset;
 
-    // Judge whether range is on editable or not
     this.isOnEditable = isOnEditable;
-    // Judge whether range is on list node or not
     this.isOnList = isOnList;
-    // Judge whether range is on anchor node or not
     this.isOnAnchor = isOnAnchor;
-    // Judge whether range is on cell node or not
     this.isOnCell = isOnCell;
-    // Judge whether range is on data node or not
     this.isOnData = isOnData;
+    this.isOnDL = isOnDL;
   }
 
   updateStart(node, offset) {

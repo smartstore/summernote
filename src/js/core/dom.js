@@ -200,6 +200,7 @@ const isBR = matchNodeName('BR');
 const isImg = matchNodeName('IMG');
 const isFigure = matchNodeName('FIGURE');
 const isTextarea = matchNodeName('TEXTAREA');
+const isDL = matchNodeName('DL');
 
 const isTextareaOrInput = matchNodeNames(['TEXTAREA', 'INPUT', 'SELECT']);
 const isList = matchNodeNames(['UL', 'OL']);
@@ -1247,6 +1248,7 @@ export default {
   isFigure,
   isTextarea,
   isTextareaOrInput,
+  isDL,
   isEmpty,
   isEmptyAnchor,
   isClosestSibling,

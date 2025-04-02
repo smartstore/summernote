@@ -31,6 +31,7 @@ import HelpDialog from './module/HelpDialog';
 //import AirPopover from './module/AirPopover';
 import HintPopover from './module/HintPopover';
 import CssClass from './module/CssClass';
+import Emoji from './module/Emoji';
 
 $.summernote = $.extend($.summernote, {
   version: '0.9.1',
@@ -59,6 +60,7 @@ $.summernote = $.extend($.summernote, {
       'autoReplace': AutoReplace,
       'placeholder': Placeholder,
       'cssclass': CssClass,
+      'emoji': Emoji,
       'tableStyles': TableStyles,
       'buttons': Buttons,
       'toolbar': Toolbar,

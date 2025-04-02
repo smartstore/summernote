@@ -142,7 +142,7 @@ export default class CssClass {
             }
           }),
           this.ui.dropdown({
-            className: 'dropdown-cssclass scrollable-menu',
+            className: 'dropdown-cssclass scrollable-menu scrollbar-thin',
             items: _.keys(this.options.cssclass.formats),
             template: (item) => {
               const obj = this.options.cssclass.formats[item] || {};

@@ -76,7 +76,7 @@ let summernote_image_upload_url;
         return html;
       },
       onSave(html, deferred) {
-        alert('Saved successfully!');
+        console.log(html);
         deferred.resolve(html);
       }
     },
@@ -88,7 +88,7 @@ let summernote_image_upload_url;
       //['color', ['forecolor', 'backcolor']],
       //['font', ['fontname', 'color', 'fontsize']],
       ['para', ['style', 'cssclass', 'ul', 'ol', 'paragraph', 'clear']],
-      ['insert', ['link', 'image', 'video', 'table', 'hr']],
+      ['insert', ['link', 'image', 'video', 'emoji', 'table', 'hr']],
       ['view', ['codeview', 'fullscreen', 'help']]
     ],
     popover: {
@@ -191,6 +191,6 @@ let summernote_image_upload_url;
 
 	// Initialize summernote
 	$(function () {
-    const options = $.extend(true, { height: 500, focus: true }, summernote_global_config);
+    const options = $.extend(true, summernote_global_config, { height: 450, focus: true });
     $('.summernote').summernote(options);
 	});

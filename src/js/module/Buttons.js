@@ -722,7 +722,7 @@ export default class Buttons {
 
     this.context.memo('button.save', () => {
       return this.button({
-        className: 'note-btn-save disabled',
+        className: 'note-btn-save note-codeview-keep disabled',
         contents: this.ui.icon(this.options.icons.disk),
         tooltip: this.lang.common.save + this.representShortcut('save'),
         click: this.context.createInvokeHandler('editor.save'),

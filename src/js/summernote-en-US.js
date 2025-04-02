@@ -172,6 +172,7 @@ $.extend(true, $.summernote.lang, {
       ok: 'OK',
       cancel: 'Cancel',
       save: 'Save',
+      emoji: 'Emoji'
     },
     help: {
       save: 'Save',
