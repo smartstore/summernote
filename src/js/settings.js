@@ -339,6 +339,7 @@ $.summernote = $.extend($.summernote, {
         'CMD+S': 'save',
       },
     },
-    icons: icons
+    icons: icons,
+    emojiCdnUrl: 'https://cdn.jsdelivr.net/npm/emojibase-data@15.0.0',
   },
 });

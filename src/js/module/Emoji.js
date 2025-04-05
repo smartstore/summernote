@@ -2,6 +2,7 @@ import $ from 'jquery';
 import _ from 'underscore';
 import dom from '../core/dom';
 import range from '../core/range';
+import EmojiDb from './EmojiDb';
 
 export default class Emoji {
   constructor(context) {
@@ -9,21 +10,12 @@ export default class Emoji {
 
     this.ui = $.summernote.ui;
     this.$editor = context.layoutInfo.editor;
+    this.$toolbar = context.layoutInfo.toolbar;
     this.options = context.options;
     this.lang = this.options.langInfo;
     this.buttons = context.modules.buttons;
     this.editor = context.modules.editor;
     this.selection = this.editor.selection;
-    this.emojis = {
-      'Gestures & People': ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈', '👿', '👹', '👺', '🤡', '💩', '👻', '💀', '☠️', '👽', '👾', '🤖', '🎃', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾'],
-      'Animals & Nature': ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐽', '🐸', '🐵', '🙈', '🙉', '🙊', '🐒', '🐔', '🐧', '🐦', '🐤', '🐣', '🐥', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🦟', '🦗', '🕷', '🕸', '🦂', '🐢', '🐍', '🦎', '🦖', '🦕', '🐙', '🦑', '🦐', '🦞', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🐊', '🐅', '🐆', '🦓', '🦍', '🦧', '🦣', '🐘', '🦛', '🦏', '🐪', '🐫', '🦒', '🦘', '🦬', '🐃', '🐂', '🐄', '🐎', '🐖', '🐏', '🐑', '🦙', '🐐', '🦌', '🐕', '🐩', '🦮', '🐕‍🦺', '🐈', '🐈‍⬛', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🕊', '🐇', '🦝', '🦨', '🦡', '🦫', '🦦', '🦥', '🐁', '🐀', '🐿', '🦔', '🌵', '🎄', '🌲', '🌳', '🌴', '🌱', '🌿', '☘️', '🍀', '🎍', '🎋', '🍃', '🍂', '🍁', '🍄', '🐚', '🌾', '💐', '🌷', '🌹', '🥀', '🌺', '🌸', '🌼', '🌻'],
-      'Food & Drinks': ['🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑', '🥦', '🥬', '🥒', '🌶', '🫑', '🌽', '🥕', '🫒', '🧄', '🧅', '🥔', '🍠', '🥐', '🥖', '🫓', '🥨', '🥯', '🥞', '🧇', '🧀', '🍖', '🍗', '🥩', '🥓', '🍔', '🍟', '🍕', '🌭', '🥪', '🌮', '🌯', '🫔', '🥙', '🧆', '🥚', '🍳', '🥘', '🍲', '🫕', '🥣', '🥗', '🍿', '🧈', '🧂', '🥫', '🍱', '🍘', '🍙', '🍚', '🍛', '🍜', '🍝', '🍠', '🍢', '🍣', '🍤', '🍥', '🥮', '🍡', '🥟', '🥠', '🥡', '🦀', '🦞', '🦐', '🦑', '🦪', '🍦', '🍧', '🍨', '🍩', '🍪', '🎂', '🍰', '🧁', '🥧', '🍫', '🍬', '🍭', '🍮', '🍯', '🍼', '🥛', '☕️', '🍵', '🍶', '🍾', '🍷', '🍸', '🍹', '🍺', '🍻', '🥂', '🥃', '🥤', '🧃', '🧉', '🧊'],
-      'Activities': ['⚽️', '🏀', '🏈', '⚾️', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸', '🏒', '🏑', '🥍', '🏏', '🪃', '🥅', '⛳️', '🪁', '🏹', '🎣', '🤿', '🥊', '🥋', '🎽', '🛹', '🛼', '🛷', '⛸', '🥌', '🎿', '⛷', '🏂', '🪂', '🏋️', '🏋️‍♂️', '🏋️‍♀️', '🤼', '🤼‍♂️', '🤼‍♀️', '🤸', '🤸‍♂️', '🤸‍♀️', '⛹️', '⛹️‍♂️', '⛹️‍♀️', '🤺', '🤾', '🤾‍♂️', '🤾‍♀️', '🏌️', '🏌️‍♂️', '🏌️‍♀️', '🏇', '🧘', '🧘‍♂️', '🧘‍♀️', '🏄', '🏄‍♂️', '🏄‍♀️', '🏊', '🏊‍♂️', '🏊‍♀️', '🤽', '🤽‍♂️', '🤽‍♀️', '🚣', '🚣‍♂️', '🚣‍♀️', '🧗', '🧗‍♂️', '🧗‍♀️', '🚵', '🚵‍♂️', '🚵‍♀️', '🚴', '🚴‍♂️', '🚴‍♀️', '🏆', '🥇', '🥈', '🥉', '🏅', '🎖', '🏵', '🎗', '🎫', '🎟', '🎪', '🤹', '🤹‍♂️', '🤹‍♀️', '🎭', '🩰', '🎨', '🎬', '🎤', '🎧', '🎼', '🎹', '🥁', '🎷', '🎺', '🎸', '🪕', '🎻', '🎲', '♟', '🎯', '🎳', '🎮', '🎰', '🧩'],
-      'Travel & Places': ['🚔', '🚍', '🚘', '🚖', '🚗', '🚕', '🚙', '🚌', '🚎', '🏎', '🚓', '🚑', '🚒', '🚐', '🚚', '🚛', '🚜', '🛴', '🚲', '🛵', '🏍', '🛺', '🚨', '🚡', '🚠', '🚟', '🚃', '🚋', '🚞', '🚝', '🚄', '🚅', '🚈', '🚂', '🚆', '🚇', '🚊', '🚉', '✈️', '🛫', '🛬', '🛩', '💺', '🛰', '🚀', '🛸', '🚁', '🛶', '⛵️', '🚤', '🛥', '🛳', '⛴', '🚢', '⚓️', '🛟', '🚧', '⛽️', '🚏', '🚦', '🚥', '🗺', '🗿', '🗽', '🗼', '🏰', '🏯', '🏟', '🎡', '🎢', '🎠', '⛲️', '⛱', '🏖', '🏝', '🏜', '🌋', '⛰', '🏔', '🗻', '🏕', '⛺️', '🛖', '🏠', '🏡', '🏘', '🏚', '🏗', '🏭', '🏢', '🏬', '🏣', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩', '💒', '🏛', '⛪️', '🕌', '🛕', '🕍', '⛩', '🕋', '🗾', '🎑', '🏞', '🌅', '🌄', '🌠', '🎇', '🎆', '🌇', '🌆', '🏙', '🌃', '🌌', '🌉', '🌁'],
-      'Objects': ['⌚️', '📱', '📲', '💻', '⌨️', '🖥', '🖨', '🖱', '🖲', '🕹', '🗜', '💽', '💾', '💿', '📀', '📼', '📷', '📸', '📹', '🎥', '📽', '🎞', '📞', '☎️', '📟', '📠', '📺', '📻', '🎙', '🎚', '🎛', '🧭', '⏱', '⏲', '⏰', '🕰', '⌛️', '⏳', '📡', '🔋', '🔌', '💡', '🔦', '🕯', '🪔', '🧯', '🛢', '💸', '💵', '💴', '💶', '💷', '💰', '💳', '💎', '⚖️', '🧰', '🔧', '🔨', '⚒', '🛠', '⛏', '🔩', '⚙️', '🧱', '⛓', '🧲', '🔫', '💣', '🧨', '🪓', '🔪', '🗡', '⚔️', '🛡', '🚬', '⚰️', '⚱️', '🏺', '🔮', '📿', '🧿', '💈', '⚗️', '🔭', '🔬', '🕳', '🛒', '🚪', '🪑', '🛏', '🛋', '🪟', '🪞', '🛍', '🛎', '🧸', '🖼', '🧷', '🧹', '🧺', '🧻', '🧼', '🧽', '🧯', '🛒', '🚽', '🚿', '🛁', '🪠', '🧴', '🧷', '🧹', '🧺', '🧻', '🧼', '🧽', '🧯', '🛒'],
-      'Symbols': ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '☮️', '✝️', '☪️', '🕉', '☸️', '✡️', '🔯', '🕎', '☯️', '☦️', '🛐', '⛎', '♈️', '♉️', '♊️', '♋️', '♌️', '♍️', '♎️', '♏️', '♐️', '♑️', '♒️', '♓️', '🆔', '⚛️', '🉑', '☢️', '☣️', '📴', '📳', '🈶', '🈚️', '🈸', '🈺', '🈷️', '✴️', '🆚', '💮', '🉐', '㊙️', '㊗️', '🈴', '🈵', '🈹', '🈲', '🅰️', '🅱️', '🆎', '🆑', '🅾️', '🆘', '❌', '⭕️', '🛑', '⛔️', '📛', '🚫', '💯', '💢', '♨️', '🚷', '🚯', '🚳', '🚱', '🔞', '📵', '🚭', '❗️', '❕', '❓', '❔', '‼️', '⁉️', '🔅', '🔆', '〽️', '⚠️', '🚸', '🔱', '⚜️', '🔰', '♻️', '✅', '🈯️', '💹', '❇️', '✳️', '❎', '🌐', '💠', 'Ⓜ️', '🌀', '💤', '🏧', '🚾', '♿️', '🅿️', '🈳', '🈂️', '🛂', '🛃', '🛄', '🛅', '🚹', '🚺', '🚼', '🚻', '🚮', '🎦', '📶', '🈁', '🔣', 'ℹ️', '🔤', '🔡', '🔠', '🆖', '🆗', '🆙', '🆒', '🆕', '🆓', '0️⃣', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟', '🔢', '#️⃣', '*️⃣', '⏏️', '▶️', '⏸', '⏯', '⏹', '⏺', '⏭', '⏮', '⏩', '⏪', '⏫', '⏬', '◀️', '🔼', '🔽', '➡️', '⬅️', '⬆️', '⬇️', '↗️', '↘️', '↙️', '↖️', '↕️', '↔️', '↪️', '↩️', '⤴️', '⤵️', '🔀', '🔁', '🔂', '🔄', '🔃', '🎵', '🎶', '➕', '➖', '✖️', '➗', '♾', '💲', '💱', '™️', '©️', '®️', '〰️', '➰', '➿', '🔚', '🔙', '🔛', '🔝', '🔜'],
-      'Flags': ['🏳️', '🏴', '🏴‍☠️', '🏁', '🚩', '🏳️‍🌈', '🏳️‍⚧️', '🇦🇫', '🇦🇽', '🇦🇱', '🇩🇿', '🇦🇸', '🇦🇩', '🇦🇴', '🇦🇮', '🇦🇶', '🇦🇬', '🇦🇷', '🇦🇲', '🇦🇼', '🇦🇺', '🇦🇹', '🇦🇿', '🇧🇸', '🇧🇭', '🇧🇩', '🇧🇧', '🇧🇾', '🇧🇪', '🇧🇿', '🇧🇯', '🇧🇲', '🇧🇹', '🇧🇴', '🇧🇦', '🇧🇼', '🇧🇷', '🇮🇴', '🇻🇬', '🇧🇳', '🇧🇬', '🇧🇫', '🇧🇮', '🇰🇭', '🇨🇲', '🇨🇦', '🇮🇨', '🇨🇻', '🇧🇶', '🇰🇾', '🇨🇫', '🇹🇩', '🇨🇱', '🇨🇳', '🇨🇽', '🇨🇨', '🇨🇴', '🇰🇲', '🇨🇬', '🇨🇩', '🇨🇰', '🇨🇷', '🇨🇮', '🇭🇷', '🇨🇺', '🇨🇼', '🇨🇾', '🇨🇿', '🇩🇰', '🇩🇯', '🇩🇲', '🇩🇴', '🇪🇨', '🇪🇬', '🇸🇻', '🇬🇶', '🇪🇷', '🇪🇪', '🇪🇹', '🇪🇺', '🇫🇰', '🇫🇴', '🇫🇯', '🇫🇮', '🇫🇷', '🇬🇫', '🇵🇫', '🇹🇫', '🇬🇦', '🇬🇲', '🇬🇪', '🇩🇪', '🇬🇭', '🇬🇮', '🇬🇷', '🇬🇱', '🇬🇩', '🇬🇵', '🇬🇺', '🇬🇹', '🇬🇬', '🇬🇼', '🇬🇾', '🇭🇹', '🇭🇳', '🇭🇰', '🇭🇺', '🇮🇸', '🇮🇳', '🇮🇩', '🇮🇷', '🇮🇶', '🇮🇪', '🇮🇲', '🇮🇱', '🇮🇹', '🇯🇲', '🇯🇵', '🎌', '🇯🇪', '🇯🇴', '🇰🇿', '🇰🇪', '🇰🇮', '🇽🇰', '🇰🇼', '🇰🇬', '🇱🇦', '🇱🇻', '🇱🇧', '🇱🇸', '🇱🇷', '🇱🇾', '🇱🇮', '🇱🇹', '🇱🇺', '🇲🇴', '🇲🇰', '🇲🇬', '🇲🇼', '🇲🇾', '🇲🇻', '🇲🇱', '🇲🇹', '🇲🇭', '🇲🇶', '🇲🇷', '🇲🇺', '🇲🇽', '🇫🇲', '🇲🇩', '🇲🇨', '🇲🇳', '🇲🇪', '🇲🇸', '🇲🇦', '🇲🇿', '🇲🇲', '🇳🇦', '🇳🇷', '🇳🇵', '🇳🇱', '🇳🇨', '🇳🇿', '🇳🇮', '🇳🇪', '🇳🇬', '🇳🇺', '🇳🇫', '🇰🇵', '🇲🇵', '🇳🇴', '🇴🇲', '🇵🇰', '🇵🇼', '🇵🇸', '🇵🇦', '🇵🇬', '🇵🇾', '🇵🇪', '🇵🇭', '🇵🇳', '🇵🇱', '🇵🇹', '🇵🇷', '🇶🇦', '🇷🇪', '🇷🇴', '🇷🇺', '🇷🇼', '🇼🇸', '🇸🇲', '🇸🇹', '🇸🇦', '🇸🇳', '🇷🇸', '🇸🇨', '🇸🇱', '🇸🇬', '🇸🇽', '🇸🇰', '🇸🇮', '🇬🇸', '🇸🇧', '🇸🇴', '🇿🇦', '🇰🇷', '🇸🇸', '🇪🇸', '🇱🇰', '🇧🇱', '🇸🇭', '🇰🇳', '🇱🇨', '🇵🇲', '🇻🇨', '🇸🇩', '🇸🇷', '🇸🇿', '🇸🇪', '🇨🇭', '🇸🇾', '🇹🇼', '🇹🇯', '🇹🇿', '🇹🇭', '🇹🇱', '🇹🇬', '🇹🇰', '🇹🇴', '🇹🇹', '🇹🇳', '🇹🇷', '🇹🇲', '🇹🇨', '🇹🇻', '🇻🇮', '🇺🇬', '🇺🇦', '🇦🇪', '🇬🇧', '🇺🇸', '🇺🇾', '🇺🇿', '🇻🇺', '🇻🇦', '🇻🇪', '🇻🇳', '🇼🇫', '🇪🇭', '🇾🇪', '🇿🇲', '🇿🇼']
-  };
   }
 
   initialize() {
@@ -36,102 +28,127 @@ export default class Emoji {
             contents: this.ui.icon(this.options.icons.smiley),
             tooltip: this.lang.common.emoji,
             data: { toggle: 'dropdown' }
+          }),
+          this.ui.dropdown({
+            className: 'dropdown-menu note-dropdown-emoji p-0',
+            data: { initialized: false }
           })
         ],
         callback: ($dropdown) => {
-          this.buildPicker($dropdown);
+          $dropdown.one('show.bs.dropdown', async (e) => { 
+            // Show loading state
+            $dropdown.find('> .dropdown-menu').html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
+
+            const db = await EmojiDb.create(this.context);
+            await this.buildPicker($dropdown, db);
+          });
         }
       }).render();
     });
   }
 
-  buildPicker($dropdown) {
-    $dropdown.find('.dropdown-menu').remove();
-    
-    const $menu = $('<div class="dropdown-menu dropdown-emoji p-0">');
+  async buildPicker($dropdown, db) {
+    const $menu = $dropdown.find('> .dropdown-menu');
 
-    const $categoryNav = $('<div>').addClass('nav nav-tabs nav-tabs-line nav-emoji mb-2');
-    Object.keys(this.emojis).forEach(category => {
-      const $navItem = $('<a>').addClass('nav-link px-2 py-2')
-        .attr({
-          'href': '#',
-          'title': category,
-          'data-category': category
-        })
-        .text(this.emojis[category][0]);
-      
-      $categoryNav.append($navItem);
-    });
+    try {
+      // Build navigation
+      const $nav = $('<div>').addClass('nav nav-tabs nav-tabs-line nav-emoji mb-2');
+      db.getGroups().forEach(category => {
+        const $navItem = $('<a>').addClass('nav-link px-2 py-2')
+          .attr({
+            'href': '#',
+            'title': category.name,
+            'data-category': category.id
+          })
+          .text(category.icon);
+        $nav.append($navItem);
+      });
 
-    const $searchBox = $('<form>').addClass('mx-2');
-    const $searchInput = $('<input>').addClass('form-control form-control-sm bg-secondary')
-      .attr('placeholder', 'Search emojis...')
-      .attr('type', 'text');
-    $searchBox.append($searchInput);
+      // Build search box
+      const $searchBox = $('<form>').addClass('note-emoji-searchbox');
+      const $searchInput = $('<input>').addClass('form-control form-control-sm note-emoji-searchterm bg-secondary')
+        .attr('placeholder', 'Search emojis...')
+        .attr('type', 'text');
+      $searchBox.append($searchInput);
 
-    const $emojiContainer = $('<div>').addClass('note-emoji-list scrollbar-thin d-flex flex-wrap m-2 pr-2 mr-0');
+      // Add container for emojis
+      const $emojiContainer = $('<div>').addClass('note-emoji-list scrollbar-thin d-flex flex-wrap');
 
-    $menu.append($categoryNav);
-    $menu.append($searchBox);
-    $menu.append($emojiContainer);
-    $dropdown.append($menu);
+      // Compose HTML
+      $menu.empty()
+        .append($nav)
+        .append($searchBox)
+        .append($emojiContainer);
 
-    $menu.parent().on('shown.bs.dropdown', () => {
+      // Event handlers
+      $dropdown.on('shown.bs.dropdown', () => {
+        $searchInput.trigger('focus');
+      });
+  
+      $menu.on('click', (e) => {
+        // Prevent dropdown close
+        e.stopPropagation();
+      });
+
+      $nav.on('click', '.nav-link', (e) => {
+        e.preventDefault();
+        $nav.find('.nav-link').removeClass('active');
+        $(e.currentTarget).addClass('active');
+        this.showCategoryEmojis(db, $(e.currentTarget).data('category'), $emojiContainer);
+      });
+
+      $searchInput.on('keydown keyup mousedown mouseup click', (e) => {
+        e.stopPropagation();
+      });
+
+      $searchInput.on('input', () => {
+        this.filterEmojis(db, $searchInput.val().toLowerCase(), $emojiContainer);
+      });
+
+      $emojiContainer.on('click', '.note-emoji', (e) => {
+        const emoji = $(e.currentTarget).text();
+        this.insertEmoji(emoji);
+      });
+
+      // Initial state
+      $nav.find('> .nav-link').first().addClass('active').trigger('click');
       $searchInput.trigger('focus');
-    });
-
-    $menu.on('click', (e) => {
-      // Prevent dropdown close
-      e.stopPropagation();
-    });
-
-    $menu.on('click', '.nav-link', (e) => {
-      e.preventDefault();
-      $menu.find('.nav-link').removeClass('active');
-      $(e.currentTarget).addClass('active');
-      this.showEmojis($(e.currentTarget).data('category'), $emojiContainer);
-    });
-
-    $menu.on('click', '.note-emoji', (e) => {
-      const emoji = $(e.currentTarget).text();
-      this.insertEmoji(emoji);
-    });
-
-    $searchInput.on('keydown keyup mousedown mouseup click', (e) => {
-      e.stopPropagation();
-    });
-
-    $searchInput.on('input', () => {
-      this.filterEmojis($searchInput.val().toLowerCase(), $emojiContainer);
-    });
-
-    $menu.find('.nav-link').first().addClass('active');
-    this.showEmojis(Object.keys(this.emojis)[0], $emojiContainer);
+    }
+    catch (ex) {
+      $menu.html(`<div class="text-danger p-2">Failed to load emojis: ${ex}</div>`);
+    }
   }
 
-  showEmojis(category, $container) {
+  showCategoryEmojis(db, category, $container) {
     $container.empty();
-    this.emojis[category].forEach(emoji => this.renderEmoji(emoji, $container));
+    db.getEmojis(category).forEach(emoji => this.renderEmoji(emoji, $container));
     $container.scrollTop(0); // Reset scroll position
   }
 
-  filterEmojis(searchTerm, $container) {
+  filterEmojis(db, term, $container) {
     $container.empty();
-    Object.keys(this.emojis).forEach(category => {
-      this.emojis[category].forEach(emoji => {
-        if (emoji.toLowerCase().includes(searchTerm)) {
-          this.renderEmoji(emoji, $container);
-        }
-      });
+
+    if (!term.trim()) {
+      const activeCategory = $container.closest('.note-dropdown-emoji').find('.nav-link.active').data('category');
+      this.showCategoryEmojis(db, activeCategory, $container);
+      return;
+    }
+    
+    db.findEmojis(term).forEach(emoji => {
+      this.renderEmoji(emoji, $container);
     });
+
     $container.scrollTop(0); // Reset scroll position
   }
 
   renderEmoji(emoji, $container) {
+    // TODO: Double Emojis ausblenden oder anders darstellen
+    // TODO: Such Handling besser machen (ab 2 Buchstaben)
+
     const $emoji = $('<button>').addClass('note-emoji btn btn-clear-dark btn-icon btn-sm')
-      .attr('title', emoji)
+      .attr('title', emoji.label)
       .attr('type', 'button')
-      .text(emoji);
+      .text(emoji.emoji);
   
     $container.append($emoji);
   }
