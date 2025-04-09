@@ -149,6 +149,8 @@ export default class EmojiDb {
         }
       }
 
+      emoji.combined = this.isCombinedEmoji(emoji.emoji);
+
       emoji.shortcodes?.forEach(code => {
         this.#emojiMap.set(`:${code}:`, emoji);
       });
@@ -171,6 +173,17 @@ export default class EmojiDb {
       emoji.tags?.some(tag => tag.includes(term)) ||
       emoji.shortcodes?.some(code => code.includes(term))
     );
+  }
+
+  isCombinedEmoji(emoji) {
+    try {
+      const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' });
+      const segments = [...segmenter.segment(emoji)];
+      return segments.length === 1 && emoji.includes('\u200D');
+    }
+    catch {
+      return emoji.includes('\u200D');
+    }
   }
 
   getEmoji(emojiOrCode) {

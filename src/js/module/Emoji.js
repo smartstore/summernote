@@ -1,6 +1,5 @@
 import $ from 'jquery';
-import _ from 'underscore';
-import dom from '../core/dom';
+import func from '../core/func';
 import range from '../core/range';
 import EmojiDb from './EmojiDb';
 
@@ -53,14 +52,15 @@ export default class Emoji {
     try {
       // Build navigation
       const $nav = $('<div>').addClass('nav nav-tabs nav-tabs-line nav-emoji mb-2');
-      db.getGroups().forEach(category => {
-        const $navItem = $('<a>').addClass('nav-link px-2 py-2')
+      this.$nav = $nav;
+      db.getGroups().forEach(group => {
+        const $navItem = $('<a>').addClass('nav-link p-2')
           .attr({
             'href': '#',
-            'title': category.name,
-            'data-category': category.id
+            'title': group.name,
+            'data-group': group.id
           })
-          .text(category.icon);
+          .text(group.icon);
         $nav.append($navItem);
       });
 
@@ -92,17 +92,28 @@ export default class Emoji {
 
       $nav.on('click', '.nav-link', (e) => {
         e.preventDefault();
+        const $link = $(e.currentTarget);
+        if ($link.hasClass('active')) {
+          return; // Already active, do nothing
+        }
+
         $nav.find('.nav-link').removeClass('active');
-        $(e.currentTarget).addClass('active');
-        this.showCategoryEmojis(db, $(e.currentTarget).data('category'), $emojiContainer);
+        $link.addClass('active');
+
+        const group = $link.data('group');
+        if (group == -10) {
+          // Search mode
+          this.searchEmojis(db, this.lastSearchTerm, $emojiContainer);
+        }
+        else {
+          // Normal group mode
+          this.activateGroup(db, group, $emojiContainer);
+        }
       });
 
       $searchInput.on('keydown keyup mousedown mouseup click', (e) => {
+        // BS dropdown "eats" these events otherwise.
         e.stopPropagation();
-      });
-
-      $searchInput.on('input', () => {
-        this.filterEmojis(db, $searchInput.val().toLowerCase(), $emojiContainer);
       });
 
       $emojiContainer.on('click', '.note-emoji', (e) => {
@@ -110,8 +121,19 @@ export default class Emoji {
         this.insertEmoji(emoji);
       });
 
+      // Search
+      const debouncedSearch = func.debounce((term) => {
+        this.searchEmojis(db, term, $emojiContainer);
+      }, 180, false);
+
+      $searchInput.on('input', (e) => {
+        const term = e.target.value.toLowerCase().trim();
+        debouncedSearch(term);
+      });
+
       // Initial state
-      $nav.find('> .nav-link').first().addClass('active').trigger('click');
+      const $firstLink = $nav.find('> .nav-link').first().addClass('active');
+      this.activateGroup(db, $firstLink.data('group'), $emojiContainer);
       $searchInput.trigger('focus');
     }
     catch (ex) {
@@ -119,33 +141,53 @@ export default class Emoji {
     }
   }
 
-  showCategoryEmojis(db, category, $container) {
+  activateGroup(db, group, $container) {
     $container.empty();
-    db.getEmojis(category).forEach(emoji => this.renderEmoji(emoji, $container));
+    this.$nav.find(`> .nav-link[data-group=${group}]`).addClass('active');
+    db.getEmojis(group).forEach(emoji => this.renderEmoji(emoji, $container));
+    this.lastActiveGroup = group; // Store last active group
     $container.scrollTop(0); // Reset scroll position
   }
 
-  filterEmojis(db, term, $container) {
+  searchEmojis(db, term, $container) {
     $container.empty();
 
-    if (!term.trim()) {
-      const activeCategory = $container.closest('.note-dropdown-emoji').find('.nav-link.active').data('category');
-      this.showCategoryEmojis(db, activeCategory, $container);
+    if (!this.lastSearchTerm) {
+      // Entering search mode
+      this.$nav.find('> .nav-link.active').removeClass('active');
+      this.$nav.prepend('<a class="nav-link nav-link-search p-2 active" href="#" title="Search" data-group="-10">🔍️</a>');
+    }
+
+    this.lastSearchTerm = term; // Store last search term
+
+    if (term.length === 0) {
+      // Leaving search mode
+      this.$nav.find('.nav-link-search').remove();
+      // Restore last active group
+      this.activateGroup(db, this.lastActiveGroup, $container);
       return;
     }
-    
-    db.findEmojis(term).forEach(emoji => {
-      this.renderEmoji(emoji, $container);
-    });
+    else {
+      // Re-entering search mode
+      this.$nav.find('> .nav-link.active').removeClass('active');
+      this.$nav.find('.nav-link-search').addClass('active');
+      if (term.length === 1) {
+        // Show hint for single character input
+        $container.html('<div class="text-center w-100">Type at least 2 characters...</div>');
+      }
+      else {
+        db.findEmojis(term).forEach(emoji => {
+          this.renderEmoji(emoji, $container);
+        });
+      }
+    }
 
     $container.scrollTop(0); // Reset scroll position
   }
 
   renderEmoji(emoji, $container) {
-    // TODO: Double Emojis ausblenden oder anders darstellen
-    // TODO: Such Handling besser machen (ab 2 Buchstaben)
-
     const $emoji = $('<button>').addClass('note-emoji btn btn-clear-dark btn-icon btn-sm')
+      .toggleClass('combined', emoji.combined)
       .attr('title', emoji.label)
       .attr('type', 'button')
       .text(emoji.emoji);

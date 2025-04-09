@@ -21,7 +21,7 @@ export default class TableStyles {
       const button = this.ui.buttonGroup([
         this.ui.button({
           className: "dropdown-toggle",
-          contents: this.ui.dropdownButtonContents(this.ui.icon(this.options.icons.magic), this.options),
+          contents: this.ui.dropdownButtonContents(this.ui.icon(this.options.icons.css), this.options),
           tooltip: this.lang.tableStyles.tooltip,
           click: (e) => this.updateTableMenuState($(e.currentTarget)),
           attrs: {
