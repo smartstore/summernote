@@ -2,7 +2,6 @@ import $ from 'jquery';
 import Str from '../core/Str';
 import env from '../core/env';
 import key from '../core/key';
-import func from '../core/func';
 import lists from '../core/lists';
 import dom from '../core/dom';
 import range from '../core/range';

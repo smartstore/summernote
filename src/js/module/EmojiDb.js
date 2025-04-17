@@ -72,7 +72,7 @@ export default class EmojiDb {
       if (this.#instance) return finalize();
     }
 
-    const lang = context.options.lang.split('-')[0].toLowerCase();
+    const lang = 'de'; // context.options.lang.split('-')[0].toLowerCase();
     const locale = supportedLocales.includes(lang) ? lang : 'en';
     const baseUrl = context.options.emojiCdnUrl.endsWith('/') ? context.options.emojiCdnUrl.slice(0, -1) : context.options.emojiCdnUrl;
 
@@ -267,6 +267,14 @@ export default class EmojiDb {
       emoji.label.toLowerCase().includes(term) ||
       emoji.tags?.some(tag => tag.includes(term)) ||
       emoji.shortcodes?.some(code => code.includes(term))
+    );
+
+    return mapSkinToneOption(emojis, skinTone);
+  }
+
+  findEmojisByShortcode(shortcode, skinTone) {
+    const emojis = this.#data.filter(emoji =>
+      emoji.shortcodes?.some(code => code.includes(shortcode))
     );
 
     return mapSkinToneOption(emojis, skinTone);
