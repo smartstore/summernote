@@ -40,13 +40,16 @@ export default class InlineEmoji {
       }
     });
 
-    // Hide when clicking elsewhere
-    $(document).on('click', (e) => {
+    const closePicker = (e) => {
       if (!this.$picker) return;
       if (!$(e.target).closest('.note-emoji-suggestions').length) {
         this.destroyPicker();
-      }
-    });
+      }     
+    }
+
+    // Hide when clicking elsewhere
+    $(document).on('click', closePicker);
+    this.$note.on('summernote.blur', (_, e) => closePicker(e));
   }
 
   async loadEmojiDb () {
@@ -58,19 +61,18 @@ export default class InlineEmoji {
 
   handleKeyNav(e) {
     if (!this.$picker) return;
-    const items = this.$picker.find('.dropdown-item');
-    const current = items.filter('.active');
-    let index = items.index(current);
+    const $items = this.$picker.find('> .dropdown-item');
+    const $current = $items.filter('.active');
+    let index = $items.index($current);
 
     switch (e.keyCode) {
       case 38: index = Math.max(0, index - 1); break; // Up
-      case 40: index = Math.min(items.length - 1, index + 1); break; // Down
-      case 13: if (current.length) this.insertEmoji(current.data('emoji')); return; // Enter
+      case 40: index = Math.min($items.length - 1, index + 1); break; // Down
+      case 13: if ($current.length) this.insertEmoji($current.data('emoji')); return; // Enter
       case 27: return this.destroyPicker(); // Escape
     }
 
-    items.removeClass('active');
-    items.eq(index).addClass('active');
+    $items.removeClass('active').eq(index).addClass('active');
   };
 
   async checkForTrigger() {
@@ -87,22 +89,24 @@ export default class InlineEmoji {
     const textBefore = node.textContent.substring(0, offset);
     
     // Match the last uncompleted :shortcode pattern
-    const matches = textBefore.match(/:([^\s:]*)$/);
+    const matches = textBefore.match(/([^\s:]*)(:([^\s:]*))$/);
     
     if (matches) {
-      const fullMatch = matches[0]; // includes colon and all chars
-      const query = matches[1]; // only chars after colon
+      const beforeColon = matches[1]; // text before colon
+      const fullMatch = matches[2]; // includes colon and query
+      const query = matches[3]; // only chars after colon
       
       // Verify:
       // 1. There's actually a query (not just ":")
       // 2. It's not part of a URL (like "http://")
-      if (query.length > 0 && !textBefore.match(/:\/\/\S*$/)) {
+      // 3. The character before colon is NOT alphanumeric
+      if (/*query.length > 0 &&*/
+        !textBefore.match(/:\/\/\S*$/) && 
+        !beforeColon.match(/[a-z0-9]$/i)) {
         const colonPos = textBefore.length - fullMatch.length;
       
         // Create precise range starting at colon
-        this.queryRange = document.createRange();
-        this.queryRange.setStart(node, colonPos);
-        this.queryRange.setEnd(node, offset);
+        this.queryRange = range.create(node, colonPos, node, offset);
 
         return await this.showPicker(query);
       }
@@ -113,84 +117,85 @@ export default class InlineEmoji {
 
   async showPicker(query) {
     const getMatchingShortcode = (emoji) => emoji.shortcodes.find(code => code.includes(query));
-
-    await this.loadEmojiDb();
-
-    const emojis = this.db.findEmojisByShortcode(query);
     const $picker = this.createPicker().empty();
 
-    if (emojis.length > 0) {
-      emojis.slice(0, 8).forEach(emoji => {
-        const label = getMatchingShortcode(emoji);
-        $(`
-          <a href="#" class="dropdown-item" data-emoji="${emoji.emoji}">
-            <span class="mr-2">${emoji.emoji}</span>
-            <span class="text-truncate" style="max-width: 250px" title="${label}">${label}</span>
-          </a>
-        `).appendTo($picker);
-      });
+    if (query.length >= 2) {
+      await this.loadEmojiDb();
+      const emojis = this.db.findEmojisByShortcode(query);
 
-      $picker.children().first().addClass('active');
-
-      // Initialize or update Popper
-      if (!this.popper) {
-        if (this.queryRange && !this.marker) {
-          // Create marker span before range to properly position the dropdown
-          this.marker = document.createElement('span');
-          this.marker.className = 'note-marker note-emoji-marker';
-          this.marker.textContent = '\u200B'; // Zero-width space
-          this.queryRange.insertNode(this.marker);
-        }
-
-        this.popper = new Popper(this.marker, $picker[0], {
-          placement: 'bottom-start',
-          removeOnDestroy: true,
-          modifiers: {
-            preventOverflow: { boundariesElement: 'viewport' }
-          }
+      if (emojis.length > 0) {
+        emojis.slice(0, 8).forEach(emoji => {
+          const label = getMatchingShortcode(emoji);
+          $(`
+            <a href="#" class="dropdown-item dropdown-item-suggestion" data-emoji="${emoji.emoji}">
+              <span class="mr-2">${emoji.emoji}</span>
+              <span class="text-truncate" style="max-width: 250px" title="${label}">${label}</span>
+            </a>
+          `).appendTo($picker);
         });
-      } 
+      }
       else {
-        this.popper.scheduleUpdate();
+        return this.destroyPicker();
+      }
+    }
+    else {
+      $(`<a href="#" class="dropdown-item disabled" disabled>😉 Type at least two characters...</a>`).appendTo($picker);
+    }
+
+    $picker.children().first().addClass('active');
+
+    // Initialize or update Popper
+    if (!this.popper) {
+      if (this.queryRange && !this.marker) {
+        // Create marker span before range to properly position the dropdown
+        this.marker = document.createElement('span');
+        this.marker.className = 'note-marker note-emoji-marker';
+        this.marker.textContent = '\u200B'; // Zero-width space
+        this.queryRange.getNativeRange().insertNode(this.marker);
       }
 
-      $picker.show();
-      return true;
+      this.popper = new Popper(this.marker, $picker[0], {
+        placement: 'bottom-start',
+        removeOnDestroy: true,
+        modifiers: {
+          preventOverflow: { boundariesElement: 'viewport' }
+        }
+      });
     } 
     else {
-      return this.destroyPicker();
+      this.popper.scheduleUpdate();
     }
+
+    $picker.show();
+    return true;
   }
 
   insertEmoji(emoji) {
     if (!this.queryRange) return false;
 
-    this.queryRange.deleteContents(); // Remove the shortcode query
+    this.editor.beforeCommand();
 
-    // Insert emoji as new text node
-    const textNode = document.createTextNode(emoji);
-    this.queryRange.insertNode(textNode);
-
-    // // Normalize to merge adjacent text nodes
-    // if (dom.isText(this.queryRange.startContainer)) {
-    //   this.queryRange.startContainer.parentNode.normalize();
-    // }
-
-    // let rng = range.createFromNativeRange(this.queryRange);
-    this.editor.focus();
-    this.selection.setRange(range.createFromNodeAfter(textNode));
+    this.queryRange.pasteText(emoji); // Insert emoji as text
+    this.selection.setRange(this.queryRange);
 
     this.destroyPicker();
+    this.db?.addRecentEmoji(emoji);
+    this.editor.afterCommand();
   }
 
   createPicker() {
     if (!this.$picker) {
       this.$picker = $(`
         <div class="note-emoji-suggestions dropdown-menu" style="z-index: 9999"></div>
-      `).appendTo('body').hide().on('click', '.dropdown-item', (e) => {
+      `).appendTo('body').hide().on('mousedown click', '.dropdown-item-suggestion', (e) => {
         e.preventDefault();
-        const emoji = $(e.currentTarget).data('emoji');
-        this.insertEmoji(emoji);
+        if (e.type === 'mousedown') {
+          e.stopPropagation(); // Prevent mousedown from closing the picker
+        }
+        else {
+          const emoji = $(e.currentTarget).data('emoji');
+          this.insertEmoji(emoji);
+        }
       });
     }
 

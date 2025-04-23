@@ -53,16 +53,16 @@ $.summernote = $.extend($.summernote, {
       'statusbar': Statusbar,
       'fullscreen': Fullscreen,
       'handle': Handle,
-      // FIXME: HintPopover must be front of autolink
+      // FIXME: HintPopover & InlineEmoji must be front of autolink
       //  - Script error about range when Enter key is pressed on hint popover
       'hintPopover': HintPopover,
+      'inlineEmoji': InlineEmoji,
       'autoLink': AutoLink,
       'autoSync': AutoSync,
       'autoReplace': AutoReplace,
       'placeholder': Placeholder,
       'cssclass': CssClass,
       'emoji': Emoji,
-      'inlineEmoji': InlineEmoji,
       'tableStyles': TableStyles,
       'buttons': Buttons,
       'toolbar': Toolbar,

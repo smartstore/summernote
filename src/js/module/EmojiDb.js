@@ -72,7 +72,7 @@ export default class EmojiDb {
       if (this.#instance) return finalize();
     }
 
-    const lang = 'de'; // context.options.lang.split('-')[0].toLowerCase();
+    const lang = context.options.lang.split('-')[0].toLowerCase();
     const locale = supportedLocales.includes(lang) ? lang : 'en';
     const baseUrl = context.options.emojiCdnUrl.endsWith('/') ? context.options.emojiCdnUrl.slice(0, -1) : context.options.emojiCdnUrl;
 

@@ -1023,7 +1023,7 @@ class WrappedRange {
   }
 
   /**
-   * Insert html at current cursor
+   * Insert html at current range
    */
   pasteHTML(markup) {
     markup = ((markup || '') + '').trim(markup);
@@ -1049,6 +1049,34 @@ class WrappedRange {
     }
 
     return childNodes;
+  }
+
+  /**
+   * Insert text at current range
+   */
+  pasteText(text) { 
+    const rng = getNativeRange(this);
+
+    rng.deleteContents(); // Remove the current selection content
+
+    // Insert text as new text node
+    const textNode = document.createTextNode(text);
+    rng.insertNode(textNode);
+
+    const len = textNode.length;
+
+    // Normalize to merge adjacent text nodes
+    if (dom.isText(rng.startContainer)) {
+      rng.startContainer.parentNode.normalize();
+    }
+
+    this.startContainer = textNode;
+    this.startOffset = len;
+    this.endContainer = textNode;
+    this.endOffset = len;
+    this.collapsed = true;
+
+    return this;
   }
 
   /**
