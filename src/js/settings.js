@@ -31,7 +31,7 @@ import HelpDialog from './module/HelpDialog';
 //import AirPopover from './module/AirPopover';
 import HintPopover from './module/HintPopover';
 import CssClass from './module/CssClass';
-import Emoji from './module/Emoji';
+import Emoji from './module/Emoji2';
 import InlineEmoji from './module/InlineEmoji';
 
 $.summernote = $.extend($.summernote, {

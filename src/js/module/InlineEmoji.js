@@ -177,9 +177,9 @@ export default class InlineEmoji {
 
     this.queryRange.pasteText(emoji); // Insert emoji as text
     this.selection.setRange(this.queryRange);
-
     this.destroyPicker();
     this.db?.addRecentEmoji(emoji);
+    
     this.editor.afterCommand();
   }
 

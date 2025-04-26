@@ -59,8 +59,8 @@ export default class Selection {
     this.hasFocus = editor.hasFocus();
     //this.testMode = false;
 
-    const createBookmarkFromSelection = () => {
-      const sel = this.nativeSelection;
+    const createBookmarkFromSelection = (e) => {
+      let sel = this.nativeSelection;
       let rng;
       if (sel.rangeCount > 0) {
         rng = range.createFromNativeRange(sel.getRangeAt(0));
@@ -71,29 +71,24 @@ export default class Selection {
 
       if (!rng.equals(this.bookmark) && this.isValidRange(rng)) {
         this.triggerChangeEvent(rng);
-      }      
-
+      }
+      
       return rng;
     };
 
     const debouncedHandler = func.throttle(e => {
-      if (e.type === 'blur') {
-        this.hasFocus = false;
-      }
-
-      if (e.type === 'focus') {
-        this.hasFocus = true;
-        this.bookmark = createBookmarkFromSelection();
-      }
-      else if (e.type !== 'summernote') {
-        this.bookmark = createBookmarkFromSelection();
+      if (e.type !== 'summernote') {
+        this.bookmark = createBookmarkFromSelection(e);
       }
     }, 200, false);
 
-    const events = ['keydown', 'keyup', 'mouseup', 'paste', 'focus', 'blur']
+    const events = ['keydown', 'keyup', 'mouseup', 'paste']
       .map(x => x + '.selection')
       .join(' ');
-    editor.$editable.on(events, debouncedHandler);
+    editor.$editable
+      .on('blur.selection', () => { this.hasFocus = false; })
+      .on(events, debouncedHandler)
+      .on('focus.selection', (e) => { this.hasFocus = true; this.bookmark = this.bookmark || createBookmarkFromSelection(e);  }) ;
 
     const $note = this.context.layoutInfo.note;
     $note.on('summernote.change.selection', debouncedHandler);

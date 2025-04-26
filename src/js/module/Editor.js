@@ -176,12 +176,23 @@ export default class Editor {
      * Inserts text
      * @param {String} text
      */
-    this.insertText = this.wrapCommand((text) => {
+    this.insertText = this.wrapCommand((text, native) => {
       if (this.isLimited(text.length)) {
         return;
       }
-      const rng = this.selection.getRange();
-      const textNode = rng.insertNode(dom.createText(text));
+
+      let textNode;
+      if (native) {
+        const rng = this.getLastRange().getNativeRange();
+        rng.deleteContents();
+        textNode = dom.createText(text);
+        rng.insertNode(textNode);
+      }
+      else {
+        const rng = this.getLastRange();
+        textNode = rng.insertNode(dom.createText(text));
+      }
+
       this.selection.setRange(range.create(textNode, dom.nodeLength(textNode)));
     });
 
@@ -1246,7 +1257,7 @@ export default class Editor {
     this.$editable[0].normalize();
   }
 
-  showPopover($popover, target, placement = 'top') {
+  showPopover($popover, target, placement = 'top', boundariesElement = null) {
     if ($popover?.length) {
 
       let popper = $popover.data('popper');
@@ -1258,27 +1269,32 @@ export default class Editor {
         modifiers: {
           computeStyle: { gpuAcceleration: false },
           arrow: { element: '.arrow' },
-          preventOverflow: { boundariesElement: this.$editable[0] }
+          preventOverflow: { boundariesElement: boundariesElement || this.$editable[0] }
         }
       });
 
       popper.scheduleUpdate();
-      this.context.triggerEvent('popover.shown', $popover);
       $popover.data('popper', popper).show();
       this.currentPopper = popper;
+      this.context.triggerEvent('popover.shown', $popover);
     }
   }
 
   hidePopover($popover) {
     if ($popover?.length) {
-      const popper = $popover.data('popper');
+      let raiseEvent = false;
+      let popper = $popover.data('popper');
       if (popper) {
         popper.destroy();
         $popover.removeData('popper');  
         this.currentPopper = null;
+        raiseEvent = true;
       }
   
       $popover.hide();
+      if (raiseEvent) {
+        this.context.triggerEvent('popover.hidden', $popover);
+      }
     }
   }
 }
