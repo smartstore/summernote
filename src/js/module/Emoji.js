@@ -1,53 +1,101 @@
 import $ from 'jquery';
 import func from '../core/func';
+import dom from '../core/dom';
+import range from '../core/range';
+import Type from '../core/Type';
 import EmojiDb from './EmojiDb';
 
 export default class Emoji {
   constructor(context) {
     this.context = context;
-
     this.ui = $.summernote.ui;
-    this.$editor = context.layoutInfo.editor;
-    this.$toolbar = context.layoutInfo.toolbar;
+    this.$note = context.layoutInfo.note;
     this.options = context.options;
     this.lang = this.options.langInfo;
-    this.buttons = context.modules.buttons;
     this.editor = context.modules.editor;
     this.selection = this.editor.selection;
+
+    this.$btn = null;
+    this.marker = null;
     this.$popover = null;
   }
 
   initialize() {
     this.context.memo('button.emoji', () => {
-      return this.ui.buttonGroup({
-        className: 'btn-group-emoji dropdown',
-        children: [
-          this.ui.button({
-            className: 'note-btn-emoji dropdown-toggle no-chevron',
-            contents: this.ui.icon(this.options.icons.smiley),
-            tooltip: this.lang.common.emoji,
-            data: { toggle: 'dropdown' }
-          }),
-          this.ui.dropdown({
-            className: 'dropdown-menu note-dropdown-emoji p-0',
-            data: { initialized: false }
-          })
-        ],
-        callback: ($dropdown) => {
-          $dropdown.one('show.bs.dropdown', async (e) => { 
-            // Show loading state
-            $dropdown.find('> .dropdown-menu').html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
+      return this.ui.button({
+        className: 'note-btn-emoji',
+        contents: this.ui.icon(this.options.icons.smiley),
+        tooltip: this.lang.common.emoji,
+        data: { initialized: false },
+        callback: ($btn) => {
+          this.$btn = $btn;
 
-            const db = await EmojiDb.create(this.context);
-            await this.buildPicker($dropdown, db);
+          $btn.on('click', async (e) => {
+            if (!this.$popover) {
+              // Create popover if it doesn't exist
+              this.$popover = await this.initializePopover();
+            }
+
+            if ($btn.hasClass('active')) {
+              this.closePopover(e);
+            } else {
+              this.showPopover();
+            }
           });
         }
       }).render();
     });
   }
 
-  async buildPicker($dropdown, db) {
-    const $menu = $dropdown.find('> .dropdown-menu');
+  showPopover() {
+    if (this.selection.selectedControl) return; // Prevent opening if a control is selected
+    this.$btn.addClass('active');
+              
+    // Create marker span before range to properly position the dropdown
+    const rng = this.editor.getLastRange();
+    this.marker = document.createElement('span');
+    this.marker.className = 'note-marker note-emoji-marker';
+    this.marker.textContent = '\u200B'; // Zero-width space
+    rng.getNativeRange().insertNode(this.marker);
+
+    this.editor.showPopover(this.$popover, this.marker, 'bottom', 'viewport'); 
+  }
+
+  closePopover(e) {
+    if (!this.$popover) return;
+    if (Type.isNullOrUndefined(e) || !$(e.target).closest('.note-emoji-popover').length) {
+      this.$btn.removeClass('active');
+      this.editor.hidePopover(this.$popover);
+      this.marker?.remove();
+      this.marker = null;
+    } 
+  }
+
+  async initializePopover() {
+    const $popover = this.ui.popover({
+      className: 'note-emoji-popover',
+    }).render()
+      .appendTo(this.options.container)
+      .on('mousedown', e => e.preventDefault());
+
+    // Show loading state
+    $popover
+      .find('> .popover-content')
+      .removeClass('note-toolbar')
+      .addClass('popover-content-emoji')
+      .html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
+
+    const db = await EmojiDb.create(this.context);
+    await this.buildPicker($popover, db);
+
+    // Hide when clicking elsewhere
+    $(document).on('mousedown', (e) => this.closePopover(e));
+
+    return $popover;
+  }
+
+  async buildPicker($popover, db) {
+    const $menu = $popover.find('> .popover-content');
 
     try {
       // Build navigation
@@ -110,12 +158,12 @@ export default class Emoji {
         .append($emojiContainer);
 
       // Event handlers
-      $dropdown
-        .on('shown.bs.dropdown', () => {
-          $searchInput.trigger('focus');
+      this.$note
+        .on('summernote.popover.shown', (_, $p) => {
+          if ($p == this.$popover) $searchInput.trigger('focus');
         })
-        .on('hidden.bs.dropdown', () => {
-          this.context.invoke('editor.selection.restoreBookmark');
+        .on('summernote.popover.hidden', (_, $p) => {
+          if ($p == this.$popover) this.editor.selection.restoreBookmark();
         });
   
       $menu.on('click', (e) => {
@@ -278,11 +326,13 @@ export default class Emoji {
   }
 
   insertEmoji(db, $btn) {
-    this.context.invoke('editor.insertText', $btn.text());
+    this.editor.selection.restoreBookmark();
+    this.editor.insertText($btn.text(), true);
     db.addRecentEmoji($btn.data('emoji-base') || $btn.text(), $btn.data('tone'));
   }
 
   destroy() {
-    // ???
+    this.$popover?.remove();
+    this.$popover = null;
   }
 }
