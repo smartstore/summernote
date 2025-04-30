@@ -433,13 +433,18 @@ $img-margin-right: 10px;
 }
 
 
-// Placeholder
+// Placeholder & Selection
 // ------------------------------------------
 
 .note-placeholder {
   position: absolute;
   display: none;
   color: var(--gray-600);
+}
+
+.note-selection {
+  background-color: var(--primary-bg-subtle);
+  color: var(--body-color);
 }
 
 
@@ -888,7 +893,7 @@ $img-margin-right: 10px;
     display: flex;
     flex-flow: column; 
     overflow:  hidden;
-    height: 400px;
+    height: 348px;
     width: calc(var(--note-emoji-size) * var(--note-emoji-cols) + (var(--note-emoji-gap) * var(--note-emoji-cols)) + (var(--note-emoji-padding) * 2) + 13px);
   }
 }

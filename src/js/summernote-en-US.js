@@ -172,15 +172,19 @@ $.extend(true, $.summernote.lang, {
       ok: 'OK',
       cancel: 'Cancel',
       save: 'Save',
-      emoji: 'Emoji'
+      search: 'Search'
+    },
+    emoji: {
+      emoji: 'Emoji',
+      search: 'Search emojis...',
+      typeTwo: 'Type at least two characters...',
+      recent: 'Recently used'
     },
     help: {
       save: 'Save',
     },
     font: {
       code: 'Code',
-      // small: 'Decrease font size',
-      // big: 'Increase font size',
     },
     attrs: {
       cssClass: 'CSS Class',
