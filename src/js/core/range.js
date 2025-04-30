@@ -1248,6 +1248,36 @@ class WrappedRange {
       },
     };
   }
+
+  createFakeSelection() {
+    const rng = this.normalize().splitText();
+    const nodes = rng.nodes(dom.isNonEmptyText);
+
+    let startNode, endNode;
+
+    let i = 1;
+    lists.each(nodes, node => {
+        var span = dom.wrap(node, 'SPAN');
+        span.classList.add('note-marker');
+        span.classList.add('note-selection');
+
+        if (i == 1) {
+            startNode = span;
+        }
+        if (i == nodes.length) {
+            endNode = span;
+        }
+            
+        i++;
+    });
+
+    if (startNode) {
+      rng.setStartBefore(startNode);
+      rng.setEndAfter(endNode || startNode);
+    }
+
+    return rng;
+  }
 }
 
 /**

@@ -139,7 +139,7 @@ export default class InlineEmoji {
       }
     }
     else {
-      $(`<a href="#" class="dropdown-item disabled" disabled>😉 Type at least two characters...</a>`).appendTo($picker);
+      $(`<a href="#" class="dropdown-item disabled" disabled>😉 ${this.lang.emoji.typeTwo}</a>`).appendTo($picker);
     }
 
     $picker.children().first().addClass('active');

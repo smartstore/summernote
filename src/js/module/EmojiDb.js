@@ -1,6 +1,6 @@
 import Type from '../core/Type';
 
-const maxRecent = 70;
+const maxRecent = 60;
 const supportedLocales = ['da', 'de', 'en', 'es', 'et', 'fi', 'fr', 'hu', 'it', 'ja', 'ko', 'lt', 'ms', 'nb', 'nl', 'pl', 'pt', 'ru', 'th', 'uk', 'zh'];
 const combinedEmojisMap = new Map([
   '🧑‍🦰', '🧑‍🦱', '🧑‍🦳', '🧑‍🦲', '🧑‍⚕️', '🧑‍🏭', '🧑‍💼', '🧑‍🔬', '🧑‍💻', '🧑‍🎤', '🧑‍🎨', '🧑‍✈️',

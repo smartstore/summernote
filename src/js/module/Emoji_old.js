@@ -250,7 +250,7 @@ export default class Emoji {
       this.$nav.find('.nav-link-search').addClass('active');
       if (term.length === 1) {
         // Show hint for single character input
-        $container.html('<div class="text-center w-100">Type at least 2 characters...</div>');
+        $container.html('<div class="text-center w-100">' + this.lang.emoji.typeTwo + '</div>');
       }
       else {
         db.findEmojis(term, this.currentSkinTone).forEach(emoji => {

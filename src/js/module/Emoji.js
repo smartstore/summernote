@@ -1,7 +1,5 @@
 import $ from 'jquery';
 import func from '../core/func';
-import dom from '../core/dom';
-import range from '../core/range';
 import Type from '../core/Type';
 import EmojiDb from './EmojiDb';
 
@@ -25,7 +23,7 @@ export default class Emoji {
       return this.ui.button({
         className: 'note-btn-emoji',
         contents: this.ui.icon(this.options.icons.smiley),
-        tooltip: this.lang.common.emoji,
+        tooltip: this.lang.emoji.emoji,
         data: { initialized: false },
         callback: ($btn) => {
           this.$btn = $btn;
@@ -107,7 +105,7 @@ export default class Emoji {
         const $navItem = $('<a>').addClass('nav-link p-2')
           .attr({
             'href': '#',
-            'title': 'Recently used',
+            'title': this.lang.emoji.recent,
             'data-group': -1
           })
           .text('🕒');
@@ -129,7 +127,7 @@ export default class Emoji {
       // Build search input
       const $searchBox = $('<form>').addClass('note-emoji-searchbox d-flex align-items-center gap-3');
       const $searchInput = $('<input>').addClass('form-control form-control-sm note-emoji-searchterm bg-secondary')
-        .attr('placeholder', 'Search emojis...')
+        .attr('placeholder', this.lang.emoji.search)
         .attr('type', 'text');
 
       // Build skin tone chooser
@@ -278,7 +276,7 @@ export default class Emoji {
     if (!this.lastSearchTerm) {
       // Entering search mode
       this.$nav.find('> .nav-link.active').removeClass('active');
-      this.$nav.prepend('<a class="nav-link nav-link-search p-2 active" href="#" title="Search" data-group="-10">🔍️</a>');
+      this.$nav.prepend(`<a class="nav-link nav-link-search p-2 active" href="#" title="${this.lang.common.search}" data-group="-10">🔍️</a>`);
     }
 
     this.lastSearchTerm = term; // Store last search term
@@ -298,7 +296,7 @@ export default class Emoji {
       this.$nav.find('.nav-link-search').addClass('active');
       if (term.length === 1) {
         // Show hint for single character input
-        $container.html('<div class="text-center w-100">Type at least 2 characters...</div>');
+        $container.html('<div class="text-center w-100">' + this.lang.emoji.typeTwo + '</div>');
       }
       else {
         db.findEmojis(term, this.currentSkinTone).forEach(emoji => {
