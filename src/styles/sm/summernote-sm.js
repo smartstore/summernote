@@ -2,6 +2,7 @@ import $ from 'jquery';
 import '@/js/settings.js';
 import renderer from '@/js/renderer';
 import './summernote-sm.scss';
+import { arrow } from '@popperjs/core';
 //import { summernote_global_config } from './js/globalinit';
 
 const editor = renderer.create('<div class="note-editor note-frame card"></div>');
@@ -237,6 +238,12 @@ const ui = function(editorOptions) {
             container: options.container || editorOptions.container,
             trigger: 'hover',
             placement: 'bottom',
+            popperConfig: { 
+              modifiers: { 
+                computeStyle: { gpuAcceleration: false },
+                arrow: { element: '.arrow' },
+              } 
+            },
           }).on('click', (e) => {
             $(e.currentTarget).tooltip('hide');
           });

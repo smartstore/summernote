@@ -131,12 +131,7 @@ export default class CssClass {
           this.ui.button({
             className: 'dropdown-toggle',
             contents: this.ui.icon("fab fa-css3"), // TODO
-            callback: (btn) => {
-              btn.data("placement", "bottom")
-                .data("trigger", 'hover')
-                .attr("title", this.lang.attrs.cssClass)
-                .tooltip();
-            },
+            tooltip: this.lang.attrs.cssClass,
             data: {
               toggle: 'dropdown'
             }

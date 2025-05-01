@@ -29,16 +29,25 @@ export default class Emoji {
           this.$btn = $btn;
 
           $btn.on('click', async (e) => {
+            e.preventDefault();
+
             if (!this.$popover) {
               // Create popover if it doesn't exist
-              this.$popover = await this.initializePopover();
+              this.$popover = this.createPopover();
+              // Show early to visualize progress
+              this.showPopover();
+              // Initialize and build popover content
+              await this.initializePopover(this.$popover);
+            }
+            else {
+              if ($btn.hasClass('active')) {
+                this.closePopover(e);
+              } else {
+                this.showPopover();
+              }
             }
 
-            if ($btn.hasClass('active')) {
-              this.closePopover(e);
-            } else {
-              this.showPopover();
-            }
+            return false;
           });
         }
       }).render();
@@ -69,7 +78,7 @@ export default class Emoji {
     } 
   }
 
-  async initializePopover() {
+  createPopover() {
     const $popover = this.ui.popover({
       className: 'note-emoji-popover',
     }).render()
@@ -83,13 +92,15 @@ export default class Emoji {
       .addClass('popover-content-emoji')
       .html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
 
-    const db = await EmojiDb.create(this.context);
-    await this.buildPicker($popover, db);
-
     // Hide when clicking elsewhere
     $(document).on('mousedown', (e) => this.closePopover(e));
 
     return $popover;
+  }
+
+  async initializePopover($popover) {
+    const db = await EmojiDb.create(this.context);
+    await this.buildPicker($popover, db);
   }
 
   async buildPicker($popover, db) {
@@ -158,7 +169,7 @@ export default class Emoji {
       // Event handlers
       this.$note
         .on('summernote.popover.shown', (_, $p) => {
-          if ($p == this.$popover) $searchInput.trigger('focus');
+          if ($p == this.$popover) setTimeout(() => $searchInput.trigger('focus'), 0);
         })
         .on('summernote.popover.hidden', (_, $p) => {
           if ($p == this.$popover) this.editor.selection.restoreBookmark();
@@ -243,7 +254,7 @@ export default class Emoji {
       // Initial state
       const $firstLink = $nav.find('> .nav-link').first().addClass('active');
       this.activateGroup(db, $firstLink.data('group'), $emojiContainer);
-      $searchInput.trigger('focus');
+      //$searchInput.trigger('focus');
     }
     catch (ex) {
       $menu.html(`<div class="text-danger p-2">Failed to load emojis: ${ex}</div>`);
@@ -325,7 +336,7 @@ export default class Emoji {
 
   insertEmoji(db, $btn) {
     this.editor.selection.restoreBookmark();
-    this.editor.insertText($btn.text(), true);
+    this.editor.insertText($btn.text(), false);
     db.addRecentEmoji($btn.data('emoji-base') || $btn.text(), $btn.data('tone'));
   }
 

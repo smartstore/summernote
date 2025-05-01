@@ -128,7 +128,7 @@ export default class InlineEmoji {
           const label = getMatchingShortcode(emoji);
           $(`
             <a href="#" class="dropdown-item dropdown-item-suggestion" data-emoji="${emoji.emoji}">
-              <span class="mr-2">${emoji.emoji}</span>
+              <span class="fa-fw">${emoji.emoji}</span>
               <span class="text-truncate" style="max-width: 250px" title="${label}">${label}</span>
             </a>
           `).appendTo($picker);
