@@ -107,6 +107,15 @@ export default class Editor {
     //   }
     // });
 
+    // this.removeFormat = this.wrapCommand((value) => {
+    //   this.formatter.toggle('removeFormat', value);
+    //   let rng = this.selection.getRange();
+    //   if (!rng.collapsed) { 
+    //     let html = this.getLastRange().extractContents();
+    //     console.log(html);
+    //   }
+    // });
+
     this.fontName = this.wrapCommand((value) => {
       return this.fontStyling('font-family', env.validFontName(value));
     });
@@ -670,14 +679,12 @@ export default class Editor {
     this.selection.restoreBookmark();
   }
 
-  html(sanitize) {
+  html(prettify) {
     this.cleanupDom();
 
     let html = this.$editable.html();
-    // TODO: How to deal with both opts sanitize & prettify?
-    const sanitizeOption = Obj.valueOrDefault(this.options.sanitizeHtml, this.options.prettifyHtml);
-    if (Obj.valueOrDefault(sanitize, sanitizeOption)) {
-      html = HtmlSanitizer.sanitizeHtml(this.context, html);
+    if (Obj.valueOrDefault(prettify, this.options.prettifyHtml)) {
+      html = HtmlSanitizer.prettify(this.context, html);
     }
 
     return html;

@@ -2,6 +2,7 @@ import dom from '../core/dom';
 import key from '../core/key';
 import range from '../core/range';
 import Str from '../core/Str';
+import HtmlSanitizer from '../util/HtmlSanitizer';
 
 const jumpMarker = '__note-jm__';
 const jumpMarkerComment = '<!--' + jumpMarker + '-->';
@@ -76,27 +77,13 @@ export default class CodeView {
    * @returns {*}
    */
   purify(value) {
-    if (this.options.codeviewFilter) {
-      // filter code view regex
-      value = value.replace(this.options.codeviewFilterRegex, '');
-      // allow specific iframe tag
-      if (this.options.codeviewIframeFilter) {
-        const whitelist = this.options.codeviewIframeWhitelistSrc.concat(this.options.codeviewIframeWhitelistSrcBase);
-        value = value.replace(/(<iframe.*?>.*?(?:<\/iframe>)?)/gi, function(tag) {
-          // remove if src attribute is duplicated
-          if (/<.+src(?==?('|"|\s)?)[\s\S]+src(?=('|"|\s)?)[^>]*?>/i.test(tag)) {
-            return '';
-          }
-          for (const src of whitelist) {
-            // pass if src is trusted
-            if ((new RegExp('src="(https?:)?\/\/' + src.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&') + '\/(.+)"')).test(tag)) {
-              return tag;
-            }
-          }
-          return '';
-        });
+    if (this.options.purifyHtml?.enabled) {
+      const flags = this.options.purifyHtml?.flags['codeview'] || [];
+      if (flags.length) {
+        value = HtmlSanitizer.purify(this.context, value, flags).innerHTML;
       }
     }
+
     return value;
   }
 
@@ -204,11 +191,7 @@ export default class CodeView {
       cmEditor.toTextArea();
     }
 
-    let value = dom.value(this.$codable, this.options.prettifyHtml) || dom.emptyPara;
-    if (this.options.purifyCustomCode) {
-      value = this.purify(value);
-    }
-    
+    const value = this.purify(dom.value(this.$codable, this.options.prettifyHtml) || dom.emptyPara);
     const hasChanged = this.$editable.html() !== value;
 
     this.$editable.html(value);

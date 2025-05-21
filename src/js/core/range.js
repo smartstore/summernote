@@ -1028,8 +1028,26 @@ class WrappedRange {
   pasteHTML(markup) {
     markup = ((markup || '') + '').trim(markup);
     
-    const contentsContainer = dom.create('div', null, markup);
-    let childNodes = lists.from(contentsContainer.childNodes);
+    const tempRoot = dom.create('div', null, markup);
+    const allElements = tempRoot.getElementsByTagName('*');
+    for (let i = 0; i < allElements.length; i++) {
+      let element = allElements[i];
+      
+      // Remove style attributes
+      if (element.hasAttribute('style')) {
+        element.removeAttribute('style');
+      }
+      
+      // Remove event and data- attributes
+      let attributes = element.attributes;
+      for (let a = attributes.length - 1; a >= 0; a--) {
+        if (attributes[a].name.startsWith('data-') || attributes[a].name.startsWith('on')) {
+          element.removeAttribute(attributes[a].name);
+        }
+      }
+    }
+
+    let childNodes = lists.from(tempRoot.childNodes);
 
     // const rng = this.wrapBodyInlineWithPara().deleteContents();
     const rng = this;

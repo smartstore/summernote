@@ -12,6 +12,14 @@ $img-margin-right: 10px;
 //   --content-offset: 80px;
 // }
 
+// UTILS (delete after copy)
+// ------------------------------------------
+
+:where(ol, ul) > li > p:last-child {
+  margin-bottom: 0;
+}
+
+
 // Wrapper & Preview
 // ------------------------------------------
 
@@ -158,11 +166,11 @@ $img-margin-right: 10px;
     margin-left: $img-margin-left;
   }
 
-  // Alignment does not work with or without sequences
-  ul li,
-  ol li {
-    list-style-position: inside;
-  }
+  // // Alignment does not work with or without sequences
+  // ul li,
+  // ol li {
+  //   list-style-position: inside;
+  // }
 
   table:not(.table-bordered):not([border]),
   table:not(.table-bordered)[border='0'] {
@@ -471,6 +479,11 @@ $img-margin-right: 10px;
 
   .modal-footer>.btn {
     min-width: 80px;
+    > svg { 
+      height: 16px;
+      color: currentColor;
+      fill: currentColor;
+    }
   }
 }
 

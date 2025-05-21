@@ -69,8 +69,8 @@ let summernote_image_upload_url;
           sendFile(files[0], this);
         }   
       },
-      onSanitizeHtml(html, opts) {
-        if (opts.prettify && window.html_beautify) {
+      onPrettifyHtml(html) {
+        if (window.html_beautify) {
           return window.html_beautify(html, beautifyOpts);
         }
         return html;

@@ -142,7 +142,6 @@ export default class LinkDialog {
         : this.options.linkTargetBlank;
       
       if (isNewWindowChecked) {
-        console.log(isNewWindowChecked, linkInfo.isNewWindow, $openInNewWindow);
         $openInNewWindow.prop('checked', true).attr('checked', 'checked');
       } 
       else if ($openInNewWindow.is(':checked')) {
@@ -179,7 +178,7 @@ export default class LinkDialog {
             .then(url => {
               $linkUrl.val(url).trigger('change').trigger('input');
             })
-            .always(() =>{
+            .always(() => {
               setInputFocus();
             });
         });
@@ -203,6 +202,7 @@ export default class LinkDialog {
             rel: $linkRel.val(),
             isNewWindow: $openInNewWindow.is(':checked')
           });
+
           this.ui.hideDialog(this.$dialog);
         });
       });

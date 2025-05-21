@@ -151,7 +151,6 @@ $.summernote = $.extend($.summernote, {
     // TODO: need to be documented
     recordEveryKeystroke: false,
     historyLimit: 200,
-    sanitizeHtml: true,
     prettifyHtml: true,
 
     // TODO: need to be documented
@@ -242,7 +241,8 @@ $.summernote = $.extend($.summernote, {
       onImageLinkInsert: null,
       onImageUpload: null,
       onImageUploadError: null,
-      onSanitizeHtml: null,
+      onPrettifyHtml: null,
+      onPurifyHtml: null,
       onInit: null,
       onKeydown: null,
       onKeyup: null,
@@ -258,7 +258,6 @@ $.summernote = $.extend($.summernote, {
       lineNumbers: true,
     },
 
-    purifyCustomCode: false,
     codeviewFilter: true,
     codeviewFilterRegex: /<\/*(?:applet|b(?:ase|gsound|link)|embed|frame(?:set)?|ilayer|l(?:ayer|ink)|meta|object|s(?:cript|tyle)|t(?:itle|extarea)|xml)[^>]*?>/gi,
     codeviewIframeFilter: true,
@@ -275,6 +274,38 @@ $.summernote = $.extend($.summernote, {
       'jumpingbean.tv',
       'v.qq.com',
     ],
+
+    purifyHtml: {
+      enabled: true,
+      flags: {
+        'codeview': ['tag', 'iframe'],
+        'paste': ['tag', 'iframe', 'attr'],
+      },
+      forbidTags: ['script', 'style', 'link', 'meta', 'applet', 'embed', 'object', 'frame', 'frameset', 'ilayer', 'layer', 'title', 'xml'],
+      forbidAttrs: [
+        'start',
+        'end',
+        // Event handlers, e.g. onclick, onload, onmouseover, etc.
+        /^on[a-z]+$/i,
+        // data-* attributes
+        /^data-[a-z0-9-]+$/i
+      ],
+      allowEmptyAttrs: ['href', 'src', 'alt', 'title', 'disabled', 'checked', 'selected', 'readonly', 'open'],
+      formatAttrs: ['style', 'class', 'bgcolor', 'background', 'color', 'face', 'size', 'border', 'noshade', 'frameborder'],
+      trustIFrameHosts: [],
+      trustIFrameHostsBase: [
+        'www.youtube.com',
+        'www.youtube-nocookie.com',
+        'www.facebook.com',
+        'vine.co',
+        'instagram.com',
+        'player.vimeo.com',
+        'www.dailymotion.com',
+        'player.youku.com',
+        'jumpingbean.tv',
+        'v.qq.com',
+      ],
+    },
 
     keyMap: {
       pc: {

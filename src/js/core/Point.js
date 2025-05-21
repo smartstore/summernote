@@ -299,18 +299,21 @@ const splitNode = (point, options) => {
 
   // split #text
   if (dom.isText(point.node)) {
-    //console.log('SplitNode isText', point);
     return point.node.splitText(point.offset);
-  } else {
-    //console.log('SplitNode NoText', point.node.nodeName);
+  } 
+  else {
     const childNode = point.node.childNodes[point.offset];
     let childNodes = dom.nextSiblings(childNode);
+    
     // Remove empty nodes
-    //console.log('--- childNodes before', childNodes.length);
     //childNodes = lists.filter(childNodes, func.not(dom.isEmpty));
-    //console.log('--- childNodes after', childNodes.length);
 
-    const clone = dom.insertAfter(point.node, point.node.cloneNode(false));
+    let refNode = point.node;
+    if (dom.isPurePara(point.node) && dom.isLi(point.node.parentElement)) {
+      refNode = point.node.parentElement;
+    }
+
+    const clone = dom.insertAfter(refNode, refNode.cloneNode(false));
     dom.appendChildNodes(clone, childNodes);
 
     if (!skipPaddingBlankHTML) {
@@ -347,7 +350,7 @@ const splitTree = (root, point, options) => {
   const rootPred = dom.matchSelector(root);
   let parents = dom.parents(point.node, rootPred);
   //console.log('splitTree', root.nodeName, point.node.nodeName, parents.length);
-
+  
   if (!parents.length) {
     return null;
   } else if (parents.length === 1) {
