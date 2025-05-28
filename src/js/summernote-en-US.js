@@ -205,6 +205,12 @@ $.extend(true, $.summernote.lang, {
       tooltip: "Table style",
       stylesExclusive: ["Basic", "Bordered"],
       stylesInclusive: ["Striped", "Condensed", "Hoverable"]
+    },
+    paste: {
+      title: 'Paste Formatting Options',
+      description: 'Choose to keep or remove formatting in the pasted content.',
+      keepFormat: 'Keep formatting',
+      removeFormat: 'Remove formatting'
     }
   }
 });

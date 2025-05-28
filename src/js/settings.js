@@ -258,42 +258,39 @@ $.summernote = $.extend($.summernote, {
       lineNumbers: true,
     },
 
-    codeviewFilter: true,
-    codeviewFilterRegex: /<\/*(?:applet|b(?:ase|gsound|link)|embed|frame(?:set)?|ilayer|l(?:ayer|ink)|meta|object|s(?:cript|tyle)|t(?:itle|extarea)|xml)[^>]*?>/gi,
-    codeviewIframeFilter: true,
-    codeviewIframeWhitelistSrc: [],
-    codeviewIframeWhitelistSrcBase: [
-      'www.youtube.com',
-      'www.youtube-nocookie.com',
-      'www.facebook.com',
-      'vine.co',
-      'instagram.com',
-      'player.vimeo.com',
-      'www.dailymotion.com',
-      'player.youku.com',
-      'jumpingbean.tv',
-      'v.qq.com',
-    ],
-
     purifyHtml: {
       enabled: true,
       flags: {
-        'codeview': ['tag', 'iframe'],
-        'paste': ['tag', 'iframe', 'attr'],
+        'codeview': ['node', 'src'],
+        'paste': ['node', 'src', 'attr'],
       },
-      forbidTags: ['script', 'style', 'link', 'meta', 'applet', 'embed', 'object', 'frame', 'frameset', 'ilayer', 'layer', 'title', 'xml'],
+      forbidNodes: [
+        // Remove common toxic tags
+        ['script', 'style', 'link', 'meta', 'applet', 'embed', 'object', 'frame', 'frameset', 'ilayer', 'layer', 'title', 'xml'],
+        // Remove comments
+        (n) => dom.isComment(n),
+        // Remove MS-specific tags (o:*, v:*, etc.)
+        (n) => { const pre = n.tagName?.toLowerCase()?.substr(0, 2); return pre === 'o:' || pre === 'v:'; },
+      ],
       forbidAttrs: [
-        'start',
-        'end',
-        // Event handlers, e.g. onclick, onload, onmouseover, etc.
-        /^on[a-z]+$/i,
-        // data-* attributes
-        /^data-[a-z0-9-]+$/i
+        /^start|end/i, // DeepSeek
+        /^on[a-z]+$/i, // Event handlers, e.g. onclick, onload, onmouseover, etc.
+        /^data-[\w-]+$/i, // data-*
+        /^xmlns:[\w.-]+$/i, // xmlns:*
+        /^xml:[\w.-]+$/i, // xml:*
+        /^o:[\w.-]+$/i, // o:*
+        // (a) => a.name === 'class' && /\bMso[\w-]*\b/.test(a.value), // MS Word: class="*Mso*"
+        // (a) => a.name === 'style' && /\bmso-[\w-]*/i.test(a.value), // MS Word: style="*mso-*"
       ],
       allowEmptyAttrs: ['href', 'src', 'alt', 'title', 'disabled', 'checked', 'selected', 'readonly', 'open'],
-      formatAttrs: ['style', 'class', 'bgcolor', 'background', 'color', 'face', 'size', 'border', 'noshade', 'frameborder'],
-      trustIFrameHosts: [],
-      trustIFrameHostsBase: [
+      formatAttrs: [
+        'style', 'class', 'bgcolor', 'background', 'color', 'face', 'size', 'border', 'noshade', 
+        'frameborder', 'align', 'valign', 'width', 'height', 'cellpadding', 'cellspacing'
+      ],
+      // // Tags to unwrap if they are attribute-less after purification
+      // unwrapTags: ['span', 'font'],
+      trustHosts: [],
+      trustHostsBase: [
         'www.youtube.com',
         'www.youtube-nocookie.com',
         'www.facebook.com',

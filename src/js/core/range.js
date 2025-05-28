@@ -75,6 +75,8 @@ const isOnCell = makeIsOn(dom.isCell);
 const isOnData = makeIsOn(dom.isData);
 // Judge whether range is on dl, dt, dd node or not
 const isOnDL = makeIsOn(dom.isDL);
+// Judge whether range is on pre
+const isOnPre = makeIsOn(dom.isPre);
 
 
 /**
@@ -280,6 +282,7 @@ class WrappedRange {
     this.isOnCell = isOnCell;
     this.isOnData = isOnData;
     this.isOnDL = isOnDL;
+    this.isOnPre = isOnPre;
   }
 
   updateStart(node, offset) {
@@ -482,7 +485,7 @@ class WrappedRange {
    * Insert node at current cursor
    *
    * @param {Node} node
-   * @param {Boolean} [doNotInsertPara] - Default is false, removes added <p> that's added if true
+   * @param {Boolean} [doNotInsertPara] - Default is false, removes inserted P tag if true
    * @return {Node}
    */
     insertNode(node, doNotInsertPara = false) {
@@ -1025,28 +1028,10 @@ class WrappedRange {
   /**
    * Insert html at current range
    */
-  pasteHTML(markup) {
+  pasteHTML_old(markup) {
     markup = ((markup || '') + '').trim(markup);
     
-    const tempRoot = dom.create('div', null, markup);
-    const allElements = tempRoot.getElementsByTagName('*');
-    for (let i = 0; i < allElements.length; i++) {
-      let element = allElements[i];
-      
-      // Remove style attributes
-      if (element.hasAttribute('style')) {
-        element.removeAttribute('style');
-      }
-      
-      // Remove event and data- attributes
-      let attributes = element.attributes;
-      for (let a = attributes.length - 1; a >= 0; a--) {
-        if (attributes[a].name.startsWith('data-') || attributes[a].name.startsWith('on')) {
-          element.removeAttribute(attributes[a].name);
-        }
-      }
-    }
-
+    let tempRoot = dom.create('div', null, markup);
     let childNodes = lists.from(tempRoot.childNodes);
 
     // const rng = this.wrapBodyInlineWithPara().deleteContents();
@@ -1067,6 +1052,57 @@ class WrappedRange {
     }
 
     return childNodes;
+  }
+
+  /**
+   * Pastes HTML or a DOM element at the current range.
+   *
+   * @return {WrappedRange} - A new `WrappedRange` instance with the cursor positioned after the pasted content.
+   */
+  pasteHTML(htmlOrElement) {
+    if (Type.isString(htmlOrElement)) {
+      htmlOrElement = ((htmlOrElement || '') + '').trim();
+    }
+
+    let rng = this; //.getNativeRange();
+    let fragment = htmlOrElement;
+
+    if (!dom.isDocumentFragment(fragment)) {
+      if (Type.isString(fragment)) {
+        fragment = rng.createContextualFragment(fragment);
+      }
+      else if (dom.isElement(fragment)) {
+        //fragment = dom.createFragment(htmlOrElement);
+      }
+      else {
+        throw new Error('Invalid HTML or Node provided for pasteHTML. Param should be a string, a DOM Element or a DocumentFragment.');
+      }
+    }
+
+    let childNodes = Array.from(fragment.childNodes);
+    let lastChild = fragment.lastChild;
+    if (rng.so >= 0) {
+      childNodes = childNodes.reverse();
+    }
+
+    if (!rng.collapsed) { 
+      // Remove the current selection content
+      // rng.setStartBefore(rng.startContainer);
+      rng = rng.wrapBodyInlineWithPara().deleteContents();
+    }
+
+    // Insert the fragment's child nodes at the current range
+    childNodes.forEach((node) => {
+      rng.insertNode(node, !dom.isInline(node));
+    });
+
+    // Position cursor after the pasted content.
+    if (lastChild) {
+      return createFromNodeAfter(lastChild);
+    }
+    else {
+      return createFromNodeAfter(rng.endContainer);
+    }
   }
 
   /**

@@ -1825,9 +1825,9 @@ caniuse-api@^3.0.0:
     lodash.uniq "^4.5.0"
 
 caniuse-lite@^1.0.0, caniuse-lite@^1.0.30001646, caniuse-lite@^1.0.30001663:
-  version "1.0.30001669"
-  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001669.tgz"
-  integrity sha512-DlWzFDJqstqtIVx1zeSpIMLjunf5SmwOw0N2Ck/QSQdS8PLS4+9HrLaYei4w8BIAL7IB/UEDu889d8vhCTPA0w==
+  version "1.0.30001718"
+  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001718.tgz"
+  integrity sha512-AflseV1ahcSunK53NfEs9gFWgOEmzr0f+kaMFA4xiLZlr9Hzt7HxcSpIFcnNCUkz6R6dWKa54rUz3HUmI3nVcw==
 
 chai@^4.3.10:
   version "4.5.0"
@@ -2550,11 +2550,6 @@ emoji-unicode@^2.0.0:
   version "2.0.1"
   resolved "https://registry.npmjs.org/emoji-unicode/-/emoji-unicode-2.0.1.tgz"
   integrity sha512-jjswgV5nR3KDqtC9ugzEOYQaBLLQP5hqaH2tiTBaq9maYpMnmvl9T+ogY3u2bN6O5NAP0Ddh9D+Meo7sfW/1uw==
-
-emojibase@^16.0.0:
-  version "16.0.0"
-  resolved "https://registry.npmjs.org/emojibase/-/emojibase-16.0.0.tgz"
-  integrity sha512-Nw2m7JLIO4Ou2X/yZPRNscHQXVbbr6SErjkJ7EooG7MbR3yDZszCv9KTizsXFc7yZl0n3WF+qUKIC/Lw6H9xaQ==
 
 emojis-list@^3.0.0:
   version "3.0.0"

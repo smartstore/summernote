@@ -410,7 +410,7 @@ export default class Selection {
    *
    * @method setContent
    * @param {String} content HTML contents to set.
-   * @return {Node[]} The inserted nodes.
+   * @return {WrappedRange} - A new `WrappedRange` instance with the cursor positioned after the pasted content.
    */
   pasteContent(content) {
     // TODO: Make this better: SetSelectionContent.setContent()
@@ -418,10 +418,11 @@ export default class Selection {
       return;
     }
 
-    content = this.context.invoke('codeview.purify', content.trim());
+    //content = this.context.invoke('codeview.purify', content.trim());
 
-    const rng = this.getRange();
-    return rng.pasteHTML(content);
+    const rng = this.getRange().pasteHTML(content);
+    this.setRange(rng);
+    return rng;
   }
 
   /**

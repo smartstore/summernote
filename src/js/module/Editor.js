@@ -210,7 +210,7 @@ export default class Editor {
      * @param {String} markup
      */
     this.pasteHTML = this.wrapCommand((markup) => {
-      this.selection.pasteContent(markup);
+      return this.selection.pasteContent(markup);
     });
 
     /**

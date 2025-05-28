@@ -338,27 +338,16 @@ const create = (nodeName, attrs = null, html = null) => {
   return node;
 };
 
-const createFragment = (html = null) => {
-  const container = document.createElement('div');
-  const frag = document.createDocumentFragment();
+const createFragment = (htmlOrElement = null) => {
+  const container = isElement(htmlOrElement) ? htmlOrElement : create('div', null, htmlOrElement);
+  const fragment = document.createDocumentFragment();
 
-  // Append the container to the fragment so as to remove it from
-  // the current document context
-  frag.appendChild(container);
-
-  if (html) {
-    container.innerHTML = html;
+  // Move each child into the fragment
+  while (container.firstChild) {
+    fragment.appendChild(container.firstChild);
   }
 
-  let node;
-  while ((node = container.firstChild)) {
-    frag.appendChild(node);
-  }
-
-  // Remove the container now that all the children have been transferred
-  frag.removeChild(container);
-
-  return frag;
+  return fragment;
 };
 
 

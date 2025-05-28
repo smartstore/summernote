@@ -191,7 +191,8 @@ export default class CodeView {
       cmEditor.toTextArea();
     }
 
-    const value = this.purify(dom.value(this.$codable, this.options.prettifyHtml) || dom.emptyPara);
+    //const value = this.purify(dom.value(this.$codable, this.options.prettifyHtml) || dom.emptyPara);
+    const value = dom.value(this.$codable, false) || dom.emptyPara;
     const hasChanged = this.$editable.html() !== value;
 
     this.$editable.html(value);

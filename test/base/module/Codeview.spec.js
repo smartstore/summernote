@@ -29,8 +29,7 @@ describe('Codeview', () => {
   beforeEach(() => {
     $('body').empty(); // important !
     options = $.extend({}, $.summernote.options);
-    options.codeviewFilter = true;
-
+    options.purifyHtml.enabled = true;
     var $note = $('<div><p>hello</p></div>').appendTo('body');
     context = new Context($note, options);
     codeview = new Codeview(context);
@@ -91,7 +90,7 @@ describe('Codeview', () => {
 
   it('should purify can be customized', () => {
     codeview.options = options;
-    codeview.options.codeviewIframeFilter = false;
+    codeview.options.purifyHtml.flags.codeview = ['node'];
     expect(
       codeview.purify(
         '<iframe frameborder="0" src="//www.fake-youtube.com/embed/CXgsA98krxA" width="640" height="360" class="note-video-clip">',
@@ -100,7 +99,7 @@ describe('Codeview', () => {
       '<iframe frameborder="0" src="//www.fake-youtube.com/embed/CXgsA98krxA" width="640" height="360" class="note-video-clip">',
     );
     codeview.options = options;
-    codeview.options.codeviewFilterRegex = /\d+/;
+    codeview.options.purifyHtml.forbidNodes = [];
     expect(codeview.purify('<script>alert("summernote");</script>')).to.equalsIgnoreCase(
       '<script>alert("summernote");</script>',
     );
