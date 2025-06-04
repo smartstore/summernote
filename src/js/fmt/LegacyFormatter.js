@@ -1,5 +1,8 @@
+import HtmlSanitizer from '../util/HtmlSanitizer';
+
 export default class LegacyFormatter {
-  constructor() {
+  constructor(context) {
+    this.context = context;
   }
 
   /**
@@ -46,7 +49,14 @@ export default class LegacyFormatter {
    * @param {Node} node Optional node to apply the format to or remove from. Defaults to current selection.
    */
   toggle(name, vars = null, node = null) {
-    return document.execCommand(name, false, vars);
+    const result = document.execCommand(name, false, vars);
+
+    if (name == 'removeFormat') {
+      // If the command is 'removeFormat', we need to "post" purify the selection
+      HtmlSanitizer.purifyRange(this.context, this.context.invoke('editor.selection.getRange'), ['format']);
+    }
+
+    return result;
   }
 
   /**

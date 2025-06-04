@@ -1,33 +1,3 @@
-import Type from '../core/Type';
-import HtmlSanitizer from '../util/HtmlSanitizer';
-
-/**
- * Extracts content between <!--StartFragment--> and <!--EndFragment--> comments,
- * or returns the original string if markers are not found.
- * @param {string} html - HTML string to process
- * @returns {string} Extracted fragment or original string
- */
-const extractFragmentContent = (html) => {
-  if (!html) return '';
-  
-  const startMarker = '<!--StartFragment-->';
-  const endMarker = '<!--EndFragment-->';
-  
-  const startIndex = html.indexOf(startMarker);
-  const endIndex = html.indexOf(endMarker);
-  
-  // If both markers exist and are properly ordered
-  if (startIndex !== -1 && endIndex !== -1 && startIndex < endIndex) {
-    return html.slice(
-      startIndex + startMarker.length,
-      endIndex
-    ).trim();
-  }
-  
-  // Return original string if markers aren't found
-  return html;
-}
-
 export default class Clipboard {
   constructor(context) {
     this.context = context;
@@ -73,83 +43,76 @@ export default class Clipboard {
       return;
     }
 
-    const clipboardData = e.originalEvent.clipboardData;
-    const selection = this.editor.selection;
+    const data = e.originalEvent.clipboardData;
+    if (this.paste(data)) {
+      // Prevent default paste behavior if paste was handled
+      e.preventDefault();
+    }
+  }
 
-    if (clipboardData?.items?.length) {
-      const clipboardText = clipboardData.getData('Text');
+  paste(data, focus = false) {
+    if (!data?.items?.length) return;
 
-      if (clipboardData.files.length > 0 && this.options.allowClipboardImagePasting) {
-        // Paste img file
-        this.context.invoke('editor.insertImagesOrCallback', clipboardData.files);
-        e.preventDefault();
+    let preventDefault = false;
+    let clipboardText = data.getData('Text');
+
+    if (data.files.length > 0 && this.options.allowClipboardImagePasting) {
+      // Paste img file
+      preventDefault = true;
+      if (focus) {
+        // Focus editable area if needed
+        this.$editable.trigger('focus');
       }
-      else if (clipboardText.length > 0 && this.context.invoke('editor.isLimited', clipboardText.length)) {
-        // Paste text with maxTextLength check
-        e.preventDefault();
-      }
-      else if (clipboardText.length > 0) {
-        // Check available types
-        const types = clipboardData.types || [];
+      this.context.invoke('editor.insertImagesOrCallback', data.files);
+      // Call editor.afterCommand after proceeding default event handler
+      setTimeout(() => this.context.invoke('editor.afterCommand'), 10);
+    }
+    else if (clipboardText.length) {
+      // Check available types
+      const types = data.types || [];
 
-        // Determine content type
-        const hasText = types.includes('text/plain');
-        const hasRTF = types.includes('text/rtf');
-        const hasHTML = types.includes('text/html') || clipboardData.getData('text/html');
+      // Determine content type
+      const hasText = types.includes('text/plain');
+      const hasRTF = types.includes('text/rtf');
+      const hasHTML = types.includes('text/html') || data.getData('text/html');
+      
+      if (hasHTML) {        
+        // Paste HTML
+        if (this.options.purifyHtml?.enabled) {
+          preventDefault = true;
+          let html = data.getData('text/html');
+          this.showPasteDialog().then((action) => {
+            let flags = this.options.purifyHtml.flags['paste'] || [];
+            let removeFormatting = action === 'remove';
+            if (removeFormatting) {
+              flags = [... flags, 'format'];
+            }
+
+            this.editor.pasteHTML(html, flags);
+          }).fail(() => {
+            this.context.invoke('editor.selection.restoreBookmark');
+          });
+        }
+      }
+      else if (!hasRTF && hasText) {
+        // Paste text
+        preventDefault = true;
+
+        let rng = this.editor.selection.getRange();
+        let text = clipboardText;
         
-        if (hasHTML) {
-          // Paste HTML
-          if (this.options.purifyHtml?.enabled) {
-            e.preventDefault();
-            let html = extractFragmentContent(clipboardData.getData('text/html'));
-
-            this.showPasteDialog(html).then((action) => {
-              let flags = this.options.purifyHtml.flags['paste'];
-              let removeFormatting = action === 'remove';
-              if (removeFormatting) {
-                flags = [... flags, 'format'];
-              }
-
-              try {
-                html = HtmlSanitizer.purify(this.context, html, flags).innerHTML;
-              }
-              catch (err) {
-                console.error('Error purifying HTML (using original HTML):', err);
-              }  
-
-              document.execCommand('insertHTML', false, html);
-              //selection.getRange().pasteHTML_old(html);
-              //const rng = selection.getRange().pasteHTML(html);
-              //selection.setRange(rng);
-              //this.editor.pasteHTML(html);
-            }).fail(() => {
-              this.context.invoke('editor.selection.restoreBookmark');
-            });
-          }
+        if (!rng.isOnPre()) {
+          // If the selection is NOT inside a <pre> tag, we should replace newlines with <br>
+          text = text
+            .replace(/\n/g, '<br>')
+            .replace(/  /g, ' &nbsp;');
         }
-        else if (!hasRTF && hasText) {
-          // Paste text
-          e.preventDefault();
 
-          let rng = selection.getRange();
-          let text = clipboardText;
-          
-          if (!rng.isOnPre()) {
-            // If the selection is NOT inside a <pre> tag, we should replace newlines with <br>
-            text = text
-              .replace(/\n/g, '<br>')
-              .replace(/  /g, ' &nbsp;');
-          }
-
-          document.execCommand('insertHTML', false, text);
-        }
+        this.editor.pasteHTML(text);
       }
     }
 
-    // Call editor.afterCommand after proceeding default event handler
-    setTimeout(() => {
-      this.context.invoke('editor.afterCommand');
-    }, 10);
+    return preventDefault;
   }
 
   showPasteDialog() {

@@ -84,31 +84,13 @@ export default class Dropzone {
     });
 
     // attach dropImage
-    this.$dropzone.on('drop', (event) => {
-      const dataTransfer = event.originalEvent.dataTransfer;
-
-      // stop the browser from opening the dropped content
-      event.preventDefault();
-
-      if (dataTransfer && dataTransfer.files && dataTransfer.files.length) {
-        this.$editable.trigger('focus');
-        this.context.invoke('editor.insertImagesOrCallback', dataTransfer.files);
-      } else {
-        $.each(dataTransfer.types, (idx, type) => {
-          // skip moz-specific types
-          if (type.toLowerCase().indexOf('_moz_') > -1) {
-            return;
-          }
-          const content = dataTransfer.getData(type);
-
-          if (type.toLowerCase().indexOf('text') > -1) {
-            this.context.invoke('editor.pasteHTML', content);
-          } else {
-            $(content).each((idx, item) => {
-              this.context.invoke('editor.insertNode', item);
-            });
-          }
-        });
+    this.$dropzone.on('drop', (e) => {
+      const data = e.originalEvent.dataTransfer;
+      // Invoke Clipboard.paste
+      const preventDefault = this.context.invoke('clipboard.paste', data, true);
+      if (preventDefault) {
+        // Prevent default drop/paste behavior if paste was handled
+        e.preventDefault();
       }
     }).on('dragover', false); // prevent default dragover event
   }

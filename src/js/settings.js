@@ -287,8 +287,8 @@ $.summernote = $.extend($.summernote, {
         'style', 'class', 'bgcolor', 'background', 'color', 'face', 'size', 'border', 'noshade', 
         'frameborder', 'align', 'valign', 'width', 'height', 'cellpadding', 'cellspacing'
       ],
-      // // Tags to unwrap if they are attribute-less after purification
-      // unwrapTags: ['span', 'font'],
+      // Tags to unwrap if they are attribute-less after purification
+      unwrapTags: ['span', 'font'],
       trustHosts: [],
       trustHostsBase: [
         'www.youtube.com',

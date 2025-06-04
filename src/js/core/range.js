@@ -1026,35 +1026,6 @@ class WrappedRange {
   }
 
   /**
-   * Insert html at current range
-   */
-  pasteHTML_old(markup) {
-    markup = ((markup || '') + '').trim(markup);
-    
-    let tempRoot = dom.create('div', null, markup);
-    let childNodes = lists.from(tempRoot.childNodes);
-
-    // const rng = this.wrapBodyInlineWithPara().deleteContents();
-    const rng = this;
-    let reversed = false;
-
-    if (rng.so >= 0) {
-      childNodes = childNodes.reverse();
-      reversed = true;
-    }
-
-    childNodes = childNodes.map(function(childNode) {
-      return rng.insertNode(childNode, !dom.isInline(childNode));
-    });
-
-    if (reversed) {
-      childNodes = childNodes.reverse();
-    }
-
-    return childNodes;
-  }
-
-  /**
    * Pastes HTML or a DOM element at the current range.
    *
    * @return {WrappedRange} - A new `WrappedRange` instance with the cursor positioned after the pasted content.

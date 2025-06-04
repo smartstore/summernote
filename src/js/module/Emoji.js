@@ -1,5 +1,7 @@
 import $ from 'jquery';
 import func from '../core/func';
+import dom from '../core/dom';
+import range from '../core/range';
 import Type from '../core/Type';
 import EmojiDb from './EmojiDb';
 
@@ -57,13 +59,24 @@ export default class Emoji {
   showPopover() {
     if (this.selection.selectedControl) return; // Prevent opening if a control is selected
     this.$btn.addClass('active');
-              
+
+    // Clone the current range
+    const originalRange = this.editor.getLastRange().getNativeRange().cloneRange();
+
+    // Collapse a second Range at the start of the original
+    const insertRange = originalRange.cloneRange();
+    insertRange.collapse(true);
+
     // Create marker span before range to properly position the dropdown
-    const rng = this.editor.getLastRange();
     this.marker = document.createElement('span');
     this.marker.className = 'note-marker note-emoji-marker';
     this.marker.textContent = '\u200B'; // Zero-width space
-    rng.getNativeRange().insertNode(this.marker);
+
+    // Insert the marker at the start of the current selection
+    insertRange.insertNode(this.marker);
+
+    // Restore native Selection
+    this.editor.selection.setRange(originalRange);
 
     this.editor.showPopover(this.$popover, this.marker, 'bottom', 'viewport'); 
   }
@@ -254,7 +267,7 @@ export default class Emoji {
       // Initial state
       const $firstLink = $nav.find('> .nav-link').first().addClass('active');
       this.activateGroup(db, $firstLink.data('group'), $emojiContainer);
-      //$searchInput.trigger('focus');
+      $searchInput.trigger('focus');
     }
     catch (ex) {
       $menu.html(`<div class="text-danger p-2">Failed to load emojis: ${ex}</div>`);
@@ -335,8 +348,13 @@ export default class Emoji {
   }
 
   insertEmoji(db, $btn) {
-    this.editor.selection.restoreBookmark();
-    this.editor.insertText($btn.text(), false);
+    const rng = this.editor.lastRange.getNativeRange();
+    rng.deleteContents();
+    let textNode = dom.createText($btn.text());
+    rng.insertNode(textNode);
+
+    this.editor.setLastRange(range.create(textNode, dom.nodeLength(textNode)));
+
     db.addRecentEmoji($btn.data('emoji-base') || $btn.text(), $btn.data('tone'));
   }
 

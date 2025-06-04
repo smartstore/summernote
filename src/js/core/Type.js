@@ -25,6 +25,7 @@ const isSymbol = obj => _.isSymbol(obj);
 const isTypedArray = obj => _.isTypedArray(obj);
 const isUndefined = obj => _.isUndefined(obj);
 const isJquery = obj => obj instanceof $;
+const isRange = obj => obj?.startContainer || obj instanceof Range;
 
 export default {
   isArguments,
@@ -50,5 +51,6 @@ export default {
   isSymbol,
   isTypedArray,
   isUndefined,
-  isJquery
+  isJquery,
+  isRange
 }

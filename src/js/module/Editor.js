@@ -15,6 +15,7 @@ import Table from '../editing/Table';
 import Bullet from '../editing/Bullet';
 import Selection from '../editing/Selection';
 import LegacyFormatter from '../fmt/LegacyFormatter';
+import InsertContent from '../fmt/InsertContent';
 import HtmlSanitizer from '../util/HtmlSanitizer';
 import Type from '../core/Type';
 
@@ -40,7 +41,7 @@ export default class Editor {
     this.bullet = new Bullet(context);
     this.typing = new Typing(context, this.bullet);
     this.history = new History(context);
-    this.formatter = new LegacyFormatter();
+    this.formatter = new LegacyFormatter(context);
     this.style = new Style(this.formatter);
     this.selection = new Selection(context);
 
@@ -205,12 +206,44 @@ export default class Editor {
       this.selection.setRange(range.create(textNode, dom.nodeLength(textNode)));
     });
 
-    /**
-     * paste HTML
-     * @param {String} markup
-     */
-    this.pasteHTML = this.wrapCommand((markup) => {
-      return this.selection.pasteContent(markup);
+  /**
+   * Pastes given HTML content to the the current selection. If any contents is selected it will be replaced
+   * with the contents passed in to this function. If there is no selection the contents will be inserted
+   * where the caret is placed in the editor/page.
+   *
+   * @method pasteHTML
+   * @param {String} html HTML contents to set.
+   * @param {Array} purifyFlags Purification flags.
+   * @param {Range} rng Optional range.
+   */
+    this.pasteHTML = this.wrapCommand((html, purifyFlags = [], rng = null) => {
+      if (!html || this.isLimited(html.length)) {
+        return;
+      }
+
+      let element;
+      let purify = purifyFlags?.length && this.options.purifyHtml?.enabled;
+      if (purify) {
+        // Purify input HTML
+        try {
+          element = HtmlSanitizer.purify(this.context, html, purifyFlags);
+        }
+        catch (err) {
+          console.error('Error purifying HTML (using original HTML):', err);
+        } 
+      }
+
+      if (!element) {
+        element = dom.create('div', null, html);
+      }
+      
+      // Perform insert
+      const result = InsertContent.insertHtml(element, this, rng);
+
+      if (Type.isRange(result)) {
+        // If the result is a valid range, set it
+        this.selection.setRange(result);
+      }
     });
 
     /**

@@ -72,7 +72,7 @@ export default class Selection {
       if (!rng.equals(this.bookmark) && this.isValidRange(rng)) {
         this.triggerChangeEvent(rng);
       }
-      
+
       return rng;
     };
 
@@ -82,11 +82,14 @@ export default class Selection {
       }
     }, 200, false);
 
-    const events = ['keydown', 'keyup', 'mouseup', 'paste']
+    const events = ['keydown', 'keyup', 'paste']
       .map(x => x + '.selection')
       .join(' ');
     editor.$editable
       .on('blur.selection', () => { this.hasFocus = false; })
+      .on('mousedown.selection', () => { 
+        $(document).one('mouseup.selection', debouncedHandler);
+      })
       .on(events, debouncedHandler)
       .on('focus.selection', (e) => { this.hasFocus = true; this.bookmark = this.bookmark || createBookmarkFromSelection(e);  }) ;
 
@@ -273,18 +276,6 @@ export default class Selection {
   }
 
   /**
-   * Sets the current selection to the specified DOM element.
-   *
-   * @method setNode
-   * @param {Element} elm Element to set as the contents of the selection.
-   * @return {Element} Returns the element that got passed in.
-   */
-  setNode(elm) {
-    // TODO: Implement Selection.setNode()
-    return elm;
-  }
-
-  /**
    * Returns the currently selected element or the common ancestor element for both start and end of the selection.
    *
    * @method getNode
@@ -401,28 +392,6 @@ export default class Selection {
     var container = rng.commonAncestorContainer.parentNode.cloneNode(false);
     container.appendChild(rng.cloneContents());
     return container.innerHTML;
-  }
-
-  /**
-   * Pastes given text or HTML content to the the current selection. If any contents is selected it will be replaced
-   * with the contents passed in to this function. If there is no selection the contents will be inserted
-   * where the caret is placed in the editor/page.
-   *
-   * @method setContent
-   * @param {String} content HTML contents to set.
-   * @return {WrappedRange} - A new `WrappedRange` instance with the cursor positioned after the pasted content.
-   */
-  pasteContent(content) {
-    // TODO: Make this better: SetSelectionContent.setContent()
-    if (!content || this.editor.isLimited(content.length)) {
-      return;
-    }
-
-    //content = this.context.invoke('codeview.purify', content.trim());
-
-    const rng = this.getRange().pasteHTML(content);
-    this.setRange(rng);
-    return rng;
   }
 
   /**
@@ -546,19 +515,6 @@ export default class Selection {
       this.setRange(rng);
     }
     return node;
-  }
-
-  /**
-   * Sets the current selection to the specified DOM element.
-   *
-   * @method setNode
-   * @param {Element} elm Element to set as the contents of the selection.
-   * @return {Element} Returns the element that got passed in.
-   */
-  setNode(elm) {
-    const content = dom.outerHtml(elm);
-    this.pasteContent(content);
-    return elm;
   }
 
   /**

@@ -176,25 +176,22 @@ const removeAttributesByRules = (element, attrOptions) => {
   return attrsToRemove;
 }
 
+const createAttributeOptions = (purifyOptions, flags) => {
+  return {
+    purifyAttrs: flags.includes('attr'),
+    removeFormatting: flags.includes('format'),
+    forbidAttrs: purifyOptions.forbidAttrs || [],
+    formatAttrs: new Map((purifyOptions.formatAttrs || []).map(x => [x, false])),
+    allowEmptyAttrs: new Map((purifyOptions.allowEmptyAttrs || []).map(x => [x, false])),
+    unwrapTags: purifyOptions.unwrapTags || []
+  };
+}
+
 const purifyInternal = (rootNode, options, flags) => {
   if (!Type.isArray(flags)) flags = [];
   const purifyNodes = flags.includes('node');
-  const purifyAttrs = flags.includes('attr');
   const purifySrc = flags.includes('src');
-  const removeFormatting = flags.includes('format');
-
-  const forbidAttrs = options.forbidAttrs || [];
-  const formatAttrs = new Map((options.formatAttrs || []).map(x => [x, false]));
-  const allowEmptyAttrs = new Map((options.allowEmptyAttrs || []).map(x => [x, false]));
-  const unwrapTags = options.unwrapTags || [];
-
-  const attrOptions = { 
-    purifyAttrs,
-    removeFormatting,
-    forbidAttrs,
-    formatAttrs,
-    allowEmptyAttrs
-  };
+  const attrOptions = createAttributeOptions(options, flags);
   
   const trustedHosts = purifySrc ? (options.trustHosts || []).concat(options.trustHostsBase || []) : [];
   const nodeRules = purifyNodes ? options.forbidNodes || [] : [];
@@ -209,12 +206,11 @@ const purifyInternal = (rootNode, options, flags) => {
       }
     }
 
-    if ((purifyAttrs || removeFormatting) && dom.isElement(acceptedNode)) {
+    if ((attrOptions.purifyAttrs || attrOptions.removeFormatting) && dom.isElement(acceptedNode)) {
       const removedAttrs = removeAttributesByRules(acceptedNode, attrOptions);
-      if (removedAttrs.length && acceptedNode.attributes.length === 0 && dom.isTag(acceptedNode, unwrapTags)) {
-        // // If all attributes are removed (and ONLY then), unwrap the node
-        // console.debug('Unwrapping node:', acceptedNode);
-        // nodesToUnwrap.push(acceptedNode);
+      if (removedAttrs.length && acceptedNode.attributes.length === 0 && dom.isTag(acceptedNode, attrOptions.unwrapTags)) {
+        // If all attributes are removed (and ONLY then), unwrap the node
+        nodesToUnwrap.push(acceptedNode);
       }
     }
 
@@ -232,12 +228,11 @@ const purifyInternal = (rootNode, options, flags) => {
 }
 
 const purify = (context, htmlOrNode, flags) => {
-  if (Type.isString(flags)) {
-    // Never pass original array
-    flags = [... context.options.purifyHtml?.flags[flags] || []];
-  }
-  else if (!Type.isArray(flags)) {
-    flags = [];
+  flags = normalizeFlags(context, flags);
+
+  if (Type.isString(htmlOrNode)) {
+    // If htmlOrNode is a string, extract the fragment content
+    htmlOrNode = extractFragmentContent(htmlOrNode);
   }
 
   const fn = context.options.callbacks.onPurifyHtml;
@@ -249,7 +244,64 @@ const purify = (context, htmlOrNode, flags) => {
     const options = context.options.purifyHtml || {};
     return purifyInternal(tempRoot, options, flags);
   }
-};
+}
+
+const purifyRange = (context, rng, flags) => {
+  flags = normalizeFlags(context, flags);
+
+  const fn = context.options.callbacks.onPurifyRange;
+  if (Type.isFunction(fn)) {
+    return fn.call(context, rng, flags);
+  } 
+  else {
+    const nodes = rng.nodes(dom.isElement);
+    if (nodes.length) {
+      const attrOptions = createAttributeOptions(context.options.purifyHtml, flags);
+      nodes.forEach(node => {
+        removeAttributesByRules(node, attrOptions);
+      });
+    }
+  }
+}
+
+const normalizeFlags = (context, flags) => { 
+  if (Type.isString(flags)) {
+    // Never pass original array
+    flags = [... context.options.purifyHtml?.flags[flags] || []];
+  }
+  else if (!Type.isArray(flags)) {
+    flags = [];
+  }
+
+  return flags;
+}
+
+/**
+ * Extracts content between <!--StartFragment--> and <!--EndFragment--> comments,
+ * or returns the original string if markers are not found.
+ * @param {string} html - HTML string to process
+ * @returns {string} Extracted fragment or original string
+ */
+const extractFragmentContent = (html) => {
+  if (!html) return '';
+  
+  const startMarker = '<!--StartFragment-->';
+  const endMarker = '<!--EndFragment-->';
+  
+  const startIndex = html.indexOf(startMarker);
+  const endIndex = html.indexOf(endMarker);
+  
+  // If both markers exist and are properly ordered
+  if (startIndex !== -1 && endIndex !== -1 && startIndex < endIndex) {
+    return html.slice(
+      startIndex + startMarker.length,
+      endIndex
+    ).trim();
+  }
+  
+  // Return original string if markers aren't found
+  return html;
+}
 
 
 
@@ -263,7 +315,7 @@ const prettifyInternal = (html) => {
     return match + ((isEndOfInlineContainer || isBlockNode) ? '\n' : '');
   });
   return html.trim();
-};
+}
 
 const prettify = (context, html) => {
   const fn = context.options.callbacks.onPrettifyHtml;
@@ -273,9 +325,10 @@ const prettify = (context, html) => {
   else {
     return prettifyInternal(html);
   }
-};
+}
 
 export default {
   prettify,
-  purify
+  purify,
+  purifyRange
 }

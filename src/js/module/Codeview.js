@@ -77,13 +77,14 @@ export default class CodeView {
    * @returns {*}
    */
   purify(value) {
-    if (this.options.purifyHtml?.enabled) {
-      const flags = this.options.purifyHtml?.flags['codeview'] || [];
-      if (flags.length) {
-        value = HtmlSanitizer.purify(this.context, value, flags).innerHTML;
-      }
-    }
+    // if (this.options.purifyHtml?.enabled) {
+    //   const flags = this.options.purifyHtml?.flags['codeview'] || [];
+    //   if (flags.length) {
+    //     value = HtmlSanitizer.purify(this.context, value, flags).innerHTML;
+    //   }
+    // }
 
+    // INFO: We don't call code purification anymore because we purify on editor paste now.
     return value;
   }
 
@@ -191,8 +192,8 @@ export default class CodeView {
       cmEditor.toTextArea();
     }
 
-    //const value = this.purify(dom.value(this.$codable, this.options.prettifyHtml) || dom.emptyPara);
-    const value = dom.value(this.$codable, false) || dom.emptyPara;
+    const value = this.purify(dom.value(this.$codable, false) || dom.emptyPara);
+    //const value = dom.value(this.$codable, false) || dom.emptyPara;
     const hasChanged = this.$editable.html() !== value;
 
     this.$editable.html(value);
