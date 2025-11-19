@@ -18,7 +18,12 @@ export default class VideoDialog {
     const body = [
       '<div class="form-group note-form-group row-fluid">',
         `<label for="note-dialog-video-url-${this.options.id}" class="note-form-label">${this.lang.video.url} <small class="text-muted">${this.lang.video.providers}</small></label>`,
-        `<input id="note-dialog-video-url-${this.options.id}" class="note-video-url form-control note-form-control note-input" type="text"/>`,
+        '<div class="input-group">',
+        `		<input id="note-dialog-video-url-${this.options.id}" class="note-video-url form-control note-form-control note-input" type="text"/>`,
+            this.options.callbacks.onFileBrowse 
+              ? `<div class="input-group-append"><button class="btn btn-secondary btn-browse" type="button">${this.lang.link.browse}...</button></div>`
+              : '',
+        '	</div>',
       '</div>',
     ].join('');
     const buttonClass = 'btn btn-primary note-video-btn';
@@ -79,13 +84,13 @@ export default class VideoDialog {
     const qqRegExp2 = /\/\/v\.qq\.com\/x?\/?(page|cover).*?\/([^\/]+)\.html\??.*/;
     const qqMatch2 = url.match(qqRegExp2);
 
-    const mp4RegExp = /^.+.(mp4|m4v)$/;
+    const mp4RegExp = /^.+\.(mp4|m4v)(\?.*)?$/;
     const mp4Match = url.match(mp4RegExp);
 
-    const oggRegExp = /^.+.(ogg|ogv)$/;
+    const oggRegExp = /^.+\.(ogg|ogv)(\?.*)?$/;
     const oggMatch = url.match(oggRegExp);
 
-    const webmRegExp = /^.+.(webm)$/;
+    const webmRegExp = /^.+\.(webm)(\?.*)?$/;
     const webmMatch = url.match(webmRegExp);
 
     const fbRegExp = /(?:www\.|\/\/)facebook\.com\/([^\/]+)\/videos\/([0-9]+)/;
@@ -146,7 +151,7 @@ export default class VideoDialog {
     } else if (peerTubeMatch && peerTubeMatch[0].length){
       var begin = 0;
       if (peerTubeMatch[2] !== 'undefined') begin = peerTubeMatch[2];
-      var end =0;
+      var end = 0;
       if (peerTubeMatch[3] !== 'undefined') end = peerTubeMatch[3];
       var loop = 0;
       if (peerTubeMatch[4] !== 'undefined') loop = peerTubeMatch[4];
@@ -169,8 +174,7 @@ export default class VideoDialog {
         .attr('src', 'https://v.qq.com/txp/iframe/player.html?vid=' + vid + '&amp;auto=0');
     } else if (mp4Match || oggMatch || webmMatch) {
       $video = $('<video controls>')
-        .attr('src', url)
-        .attr('width', '640').attr('height', '360');
+        .attr('src', url);
     } else if (fbMatch && fbMatch[0].length) {
       $video = $('<iframe>')
         .attr('frameborder', 0)
@@ -217,6 +221,8 @@ export default class VideoDialog {
     return $.Deferred((deferred) => {
       const $videoUrl = this.$dialog.find('.note-video-url');
       const $videoBtn = this.$dialog.find('.note-video-btn');
+      const $videoBrowse = this.$dialog.find('.btn-browse');
+      let browsePromise;
 
       this.ui.onDialogShown(this.$dialog, () => {
         this.context.triggerEvent('dialog.shown');
@@ -225,24 +231,48 @@ export default class VideoDialog {
           this.ui.toggleBtn($videoBtn, $videoUrl.val());
         });
 
-        if (!env.isSupportTouch) {
-          $videoUrl.trigger('focus');
+        function setInputFocus() {
+          if (!env.isSupportTouch) {
+            $videoUrl.trigger('focus');
+          }
         }
+        setInputFocus();
+
+        $videoBrowse.on('click.videoDialog', e => {
+          e.preventDefault();
+
+          browsePromise = $.Deferred((deferredBrowse) => {
+            this.context.triggerEvent('file.browse', e, 'video', deferredBrowse);
+          }).promise();
+
+          browsePromise
+            .then(url => {
+              $videoUrl.val(url).trigger('change').trigger('input');
+            })
+            .always(() =>{
+              setInputFocus();
+            });
+        });
+
+        this.bindEnterKey($videoUrl, $videoBtn);
 
         $videoBtn.on('click', (event) => {
           event.preventDefault();
           deferred.resolve($videoUrl.val());
-        });
-
-        this.bindEnterKey($videoUrl, $videoBtn);
+        });  
       });
 
       this.ui.onDialogHidden(this.$dialog, () => {
         $videoUrl.off();
         $videoBtn.off();
+        $videoBrowse.off();
 
         if (deferred.state() === 'pending') {
           deferred.reject();
+        }
+
+        if (browsePromise && browsePromise.state() === 'pending') {
+          browsePromise.reject();
         }
       });
 

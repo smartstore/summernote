@@ -15,6 +15,7 @@ export default class ImageDialog {
 
     this.context.memo('button.imageAttributes', () => {
       var button = this.ui.button({
+        className: 'note-image-attributes',
         contents: this.ui.icon(this.options.icons.pencil),
         tooltip: this.lang.image.imageProps,
         click: () => {

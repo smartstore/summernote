@@ -92,11 +92,11 @@ const safeLastIndexOf = (str, term, index) =>
  * @method findPosition
  * @param {String} str
  * @param {String} term Search term
- * @return {Object|null} `null` if search term was not found or zero-based { line: #line, column: #col }.
+ * @return {Object|null} `null` if search term was not found, or zero-based { line: #line, column: #col }.
  */
 const findPosition = (str, term) => {
   const textIndex = str.indexOf(term);
-  if (textIndex > 0) {
+  if (textIndex > -1) {
     const lineBreakBefore = safeLastIndexOf(str, '\n', textIndex - 1);
     const column = textIndex - lineBreakBefore - 1;
   

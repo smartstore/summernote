@@ -57,16 +57,39 @@ export default class ImagePopover {
   }
 
   update(target, e) {
-    if (dom.isImg(target)) {
+    const isImage = dom.isImg(target);
+    const isMedia = !isImage && dom.isMedia(target);
+    
+    if (isImage || isMedia) {
       const $target = $(target);
       const $btnUnlink = this.$popover.find('.note-unlink');
+      let isLinkedImage = false;
+
       if ($btnUnlink.length) {
-        const isLinkedImage = $target.parent().is('a');
+        isLinkedImage = $target.parent().is('a');
         // Toggle the unlink button visibility depending on current selection
         $btnUnlink.toggle(isLinkedImage);
-      }  
+      }
 
-      this.editor.showPopover(this.$popover, target);
+      const $btnAttrs = this.$popover.find('.note-image-attributes');
+      if ($btnAttrs.length) {
+        // Toggle the attrs button visibility depending on current selection
+        $btnAttrs.toggle(isImage);
+      } 
+
+      if (!isLinkedImage) {
+        const $btnLink = this.$popover.find('.note-link');
+        if ($btnLink.length) {
+          // Toggle the link button visibility depending on current selection
+          $btnLink.toggle(isImage);
+        } 
+      }
+
+      setTimeout(() => {
+        this.editor.showPopover(this.$popover, target);
+      }, isImage ? 0 : 50);
+
+      
     } 
     else {
       this.hide();

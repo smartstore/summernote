@@ -2,7 +2,6 @@ import dom from '../core/dom';
 import key from '../core/key';
 import range from '../core/range';
 import Str from '../core/Str';
-import HtmlSanitizer from '../util/HtmlSanitizer';
 
 const jumpMarker = '__note-jm__';
 const jumpMarkerComment = '<!--' + jumpMarker + '-->';

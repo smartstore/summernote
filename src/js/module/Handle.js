@@ -60,7 +60,7 @@ export default class Handle {
         const scrollTop = this.$document.scrollTop();
 
         const onMouseMove = (event) => {
-          this.context.invoke('editor.resizeImage', {
+          this.context.invoke('editor.resizeControl', {
             x: event.clientX - posStart.left,
             y: event.clientY - (posStart.top - scrollTop),
           }, $target, !event.shiftKey);
@@ -106,35 +106,41 @@ export default class Handle {
     }
 
     const isImage = dom.isImg(target);
+    const isMedia = !isImage && dom.isMedia(target);
+
     const $selection = this.$handle.find('.note-control-selection');
 
     if (!isScroll) {
       this.context.invoke('imagePopover.update', target, e);
     }   
 
-    if (isImage) {
-      const $image = $(target);
+    if (isImage || isMedia) {
+      const $control = $(target);
 
       const areaRect = this.$editingArea[0].getBoundingClientRect();
-      const imageRect = target.getBoundingClientRect();
+      const controlRect = target.getBoundingClientRect();
 
       $selection.css({
         display: 'block',
-        left: imageRect.left - areaRect.left,
-        top: imageRect.top - areaRect.top,
-        width: imageRect.width,
-        height: imageRect.height,
-      }).data('target', $image); // save current image element.
+        left: controlRect.left - areaRect.left,
+        top: controlRect.top - areaRect.top,
+        width: controlRect.width,
+        height: controlRect.height,
+      }).data('target', $control); // save current image element.
 
-      const origImageObj = new Image();
-      origImageObj.src = $image.attr('src');
+      let sizingText = Math.ceil(controlRect.width) + 'x' + Math.ceil(controlRect.height);
 
-      let sizingText = Math.ceil(imageRect.width) + 'x' + Math.ceil(imageRect.height);
-      if (origImageObj.width > 0 && origImageObj.height > 0) {
-        sizingText += ' (' + this.lang.image.original + ': ' + origImageObj.width + 'x' + origImageObj.height + ')';
+      if (isImage) {
+        const origImageObj = new Image();
+        origImageObj.src = $control.attr('src');
+
+        if (origImageObj.width > 0 && origImageObj.height > 0) {
+          sizingText += ' (' + this.lang.image.original + ': ' + origImageObj.width + 'x' + origImageObj.height + ')';
+        }
       }
+
       const $info = $selection.find('.note-control-selection-info').text(sizingText);
-      const exceeds = $info.outerWidth() > imageRect.width - 10 || $info.outerHeight() > imageRect.height - 10;
+      const exceeds = $info.outerWidth() > controlRect.width - 10 || $info.outerHeight() > controlRect.height - 10;
 
       $info.toggle(!exceeds);
       this.context.invoke('editor.saveTarget', target);

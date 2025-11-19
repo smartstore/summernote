@@ -48,8 +48,13 @@ export default class Editor {
     this.resizeObserver = new ResizeObserver((entries) => {
       if (entries.length) {
         const entry = entries[0];
+        console.log(entry);
         if (entry.target == this.$editor[0]) {
           const editorHeight = entry.borderBoxSize[0].blockSize;
+          if (editorHeight == 0) {
+            // Indicates that editor is hidden, e.g. after another tab was clicked
+            return;
+          }
           if (editorHeight < 300) {
             const minHeight = this.getMinHeight();
             if (editorHeight <= minHeight) {
@@ -1203,18 +1208,18 @@ export default class Editor {
    * @param {jQuery} $target - target element
    * @param {Boolean} [keepRatio] - keep ratio
    */
-  resizeImage(pos, $target, keepRatio) {
-    let imgSize;
+  resizeControl(pos, $target, keepRatio) {
+    let controlSize;
     if (keepRatio) {
       const newRatio = pos.y / pos.x;
       const ratio = $target.data('ratio');
-      imgSize = {
+      controlSize = {
         width: ratio > newRatio ? pos.x : pos.y / ratio,
         height: ratio > newRatio ? pos.x * ratio : pos.y,
       };
     } 
     else {
-      imgSize = {
+      controlSize = {
         width: pos.x,
         height: pos.y,
       };
@@ -1222,11 +1227,14 @@ export default class Editor {
 
     const zoomLevel = this.context.invoke('statusbar.getZoomLevel');
     if (zoomLevel != 1) {
-      imgSize.width = imgSize.width / zoomLevel;
-      imgSize.height = imgSize.height / zoomLevel;
+      controlSize.width = controlSize.width / zoomLevel;
+      controlSize.height = controlSize.height / zoomLevel;
     }
 
-    $target.css(imgSize);
+    controlSize.width = Math.floor(controlSize.width);
+    controlSize.height = Math.floor(controlSize.height);
+
+    $target.css(controlSize);
   }
 
   getMinHeight() {
@@ -1315,6 +1323,7 @@ export default class Editor {
 
       popper.scheduleUpdate();
       $popover.data('popper', popper).show();
+
       this.currentPopper = popper;
       this.context.triggerEvent('popover.shown', $popover);
     }

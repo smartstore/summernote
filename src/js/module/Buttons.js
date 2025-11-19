@@ -646,6 +646,7 @@ export default class Buttons {
 
     this.context.memo('button.link', () => {
       return this.button({
+        className: 'note-link',
         contents: this.ui.icon(this.options.icons.link),
         tooltip: this.lang.link.link + this.representShortcut('linkDialog.show'),
         click: this.context.createInvokeHandler('linkDialog.show'),
