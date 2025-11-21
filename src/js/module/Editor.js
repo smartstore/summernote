@@ -48,7 +48,7 @@ export default class Editor {
     this.resizeObserver = new ResizeObserver((entries) => {
       if (entries.length) {
         const entry = entries[0];
-        console.log(entry);
+
         if (entry.target == this.$editor[0]) {
           const editorHeight = entry.borderBoxSize[0].blockSize;
           if (editorHeight == 0) {

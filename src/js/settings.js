@@ -12,6 +12,7 @@ import Codeview from './module/Codeview';
 import Statusbar from './module/Statusbar';
 import Fullscreen from './module/Fullscreen';
 import Handle from './module/Handle';
+import EditorResizer from './module/EditorResizer';
 import AutoLink from './module/AutoLink';
 import AutoSync from './module/AutoSync';
 import AutoReplace from './module/AutoReplace';
@@ -53,6 +54,7 @@ $.summernote = $.extend($.summernote, {
       'statusbar': Statusbar,
       'fullscreen': Fullscreen,
       'handle': Handle,
+      'editorResizer': EditorResizer,
       // FIXME: HintPopover & InlineEmoji must be front of autolink
       //  - Script error about range when Enter key is pressed on hint popover
       'hintPopover': HintPopover,
@@ -129,6 +131,9 @@ $.summernote = $.extend($.summernote, {
     // air mode: inline editor
     airMode: false,
     overrideContextMenu: false, // TBD
+
+    // Resize options
+    disableHorizontalResize: false,
 
     width: null,
     height: null,

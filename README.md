@@ -17,6 +17,7 @@ Summernote has a few special features:
 - **Compatible with Bootstrap**: Bootstrap 3, 4, and 5.
 - **Rich ecosystem**: A wide array of [plugins and connectors](https://github.com/summernote/awesome-summernote) are available, enhancing functionality and integration options.
 - **Easy image handling**: Images are automatically embedded in the content using base64 encoding, eliminating the need for separate image management
+- **Horizontal Editor Resize**: Drag the small handle on the left edge to change the editor width (min. 400px). Remaining space is applied as symmetric left/right margin. Disable via option `disableResizeHorizontal: true`.
 
 ## How to Use
 
