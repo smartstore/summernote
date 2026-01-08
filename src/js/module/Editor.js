@@ -63,6 +63,9 @@ export default class Editor {
           }
 
           this.currentPopper?.scheduleUpdate();
+
+          // Notify other modules that height has changed
+          this.context.triggerEvent('editor.resized', entry);
         }
       }
     });
@@ -649,10 +652,10 @@ export default class Editor {
 
     if (url) {
       if (Str.isValidEmail(url)) {
-        return 'mailto://' + url;
+        return 'mailto:' + url;
       } 
       else if (Str.isValidTel(url)) {
-        return 'tel://' + url;
+        return 'tel:' + url;
       } 
       else if (!Str.startsWithUrlScheme(url)) {
         // Grab only first part
