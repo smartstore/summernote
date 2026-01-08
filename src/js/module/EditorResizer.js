@@ -16,8 +16,15 @@ export default class EditorResizer {
     this.dragging = false;
 
     this.events = {
-      'summernote.disable summernote.codeview.toggled': () => this.hide(),
-      'summernote.focusout': () => { if (!this.dragging) this.hide(); },
+      'summernote.disable summernote.codeview.toggled': () => { 
+        this.hide() 
+      },
+      'summernote.fullscreen.toggled summernote.editor.resized': () => { 
+        this.updateHandlePosition() 
+      },
+      'summernote.focusout': () => { 
+        if (!this.dragging) this.hide(); 
+      },
     };
   }
 
@@ -26,29 +33,10 @@ export default class EditorResizer {
   }
 
   initialize() {
-    if (this.$editingArea.css('position') === 'static') {
-      this.$editingArea.css('position', 'relative');
-    }
-
-    // Styles are defined in SCSS (theme files); no inline injection required.
-
     this.$handle = $('<div class="note-hresize-handle" aria-label="Resize editor width" role="separator" aria-orientation="vertical" tabindex="0"></div>').appendTo(this.$editingArea);
 
     this.$handle.on('pointerdown', (e) => this.startPointerDrag(e));
     this.$handle.on('dblclick', () => this.resetWidth());
-
-    this.resizeObserver = new ResizeObserver(() => this.updateHandlePosition());
-    this.resizeObserver.observe(this.$editable[0]);
-
-    // Observe fullscreen class changes to fix centering after toggle
-    this.fullscreenObserver = new MutationObserver((muts) => {
-      for (const m of muts) {
-        if (m.attributeName === 'class') {
-          this.updateHandlePosition();
-        }
-      }
-    });
-    this.fullscreenObserver.observe(this.$editor[0], { attributes: true });
 
     this.updateHandlePosition();
   }
@@ -56,25 +44,26 @@ export default class EditorResizer {
   startPointerDrag(e) {
     e.preventDefault();
     e.stopPropagation();
+
     this.dragging = true;
     this.$editor.addClass('resizing');
 
-    const editableEl = this.$editable[0];
-    const handleEl = this.$handle[0];
+    const editable = this.$editable[0];
+    const handle = this.$handle[0];
     let parentWidth = this.$editingArea.width();
-    const zoom = this.getZoom();
-    const handleWidth = handleEl.offsetWidth;
-    const areaEl = this.$editingArea[0];
-    const areaStyle = getComputedStyle(areaEl);
+    const zoom = this.context.invoke('statusbar.getZoomLevel');
+    const area = this.$editingArea[0];
+    const areaStyle = getComputedStyle(area);
     const padLeft = parseFloat(areaStyle.paddingLeft) || 0;
-    let areaRect = areaEl.getBoundingClientRect();
-    const handleRect = handleEl.getBoundingClientRect();
+    let areaRect = area.getBoundingClientRect();
+    const handleRect = handle.getBoundingClientRect();
+    const editorRect = editable.getBoundingClientRect();
     // Pointer offset inside handle (visible px), to keep cursor centered on handle while dragging
     const grabOffset = e.clientX - handleRect.left;
     // Boundaries for handle-left so width stays within [minWidth, parentWidth]
     const minVisible = this.minWidth; // visible px
-    const minLeftCss = Math.max(0, padLeft - handleWidth);
-    let maxLeftCss = padLeft + (parentWidth - minVisible) / 2 - handleWidth;
+    const minLeftCss = padLeft; // overlay: start at padding-left (no extra space)
+    let maxLeftCss = padLeft + (parentWidth - minVisible) / 2;
     if (maxLeftCss < minLeftCss) maxLeftCss = minLeftCss;
 
     // Direct (unbatched) updates for minimal perceived latency
@@ -84,105 +73,76 @@ export default class EditorResizer {
       const pw = this.$editingArea.width();
       if (pw !== parentWidth) {
         parentWidth = pw;
-        maxLeftCss = padLeft + (parentWidth - minVisible) / 2 - handleWidth;
+        maxLeftCss = padLeft + (parentWidth - minVisible) / 2;
         if (maxLeftCss < minLeftCss) maxLeftCss = minLeftCss;
       }
-      areaRect = areaEl.getBoundingClientRect();
+      areaRect = area.getBoundingClientRect();
       // Desired handle-left in CSS px relative to editing-area
       const pointerXInArea = evt.clientX - areaRect.left;
       let newLeftCss = pointerXInArea - grabOffset;
       if (newLeftCss < minLeftCss) newLeftCss = minLeftCss;
       else if (newLeftCss > maxLeftCss) newLeftCss = maxLeftCss;
       // Derive visible width from handle-left, then convert to CSS width by dividing by zoom
-      const marginVisible = newLeftCss - padLeft + handleWidth;
+      const marginVisible = newLeftCss - padLeft; // handle overlays, margin = distance from padding
       let newVisibleWidth = parentWidth - 2 * marginVisible;
       if (newVisibleWidth < minVisible) newVisibleWidth = minVisible;
       else if (newVisibleWidth > parentWidth) newVisibleWidth = parentWidth;
       const newCssWidth = newVisibleWidth / zoom;
-      // If handle is fully left, treat as reset (remove inline styles)
-      if (newLeftCss <= 0) {
-        editableEl.style.width = '';
-        editableEl.style.marginLeft = '';
-        editableEl.style.marginRight = '';
-        editableEl.style.marginInline = '';
-        handleEl.style.left = '0px';
-        handleEl.style.top = editableEl.offsetTop + 'px';
-        handleEl.style.height = this._getVisibleHeight(editableEl) + 'px';
+      // If handle is fully left (at padding), treat as reset (remove inline styles)
+      if (newLeftCss <= padLeft) {
+        editable.style.width = '';
+        handle.style.left = '0px';
+        handle.style.top = editable.offsetTop + 'px';
+        handle.style.height = editorRect.height + 'px';
         return;
       }
       // Apply width (CSS px)
-      editableEl.style.width = newCssWidth + 'px';
-      // Place handle exactly under the cursor using computed left
-      handleEl.style.left = newLeftCss + 'px';
-      handleEl.style.top = editableEl.offsetTop + 'px';
+      editable.style.width = newCssWidth + 'px';
+      // Place handle exactly under the cursor using computed left (overlay)
+      handle.style.left = newLeftCss + 'px';
+      handle.style.top = editable.offsetTop + 'px';
       // Height must reflect zoomed (visible) height
-      handleEl.style.height = this._getVisibleHeight(editableEl) + 'px';
+      handle.style.height = editorRect.height + 'px';
     };
 
     const onEnd = () => {
       this.dragging = false;
       this.$editor.removeClass('resizing');
-      handleEl.releasePointerCapture(e.pointerId);
+      handle.releasePointerCapture(e.pointerId);
       window.removeEventListener('pointermove', onMove, true);
       window.removeEventListener('pointerup', onEnd, true);
-      $('body').removeClass('note-hresize-cursor');
+      $('body').css('cursor', '');
     };
 
-    handleEl.setPointerCapture(e.pointerId);
+    handle.setPointerCapture(e.pointerId);
     window.addEventListener('pointermove', onMove, true);
     window.addEventListener('pointerup', onEnd, true);
-    this._addKeyboardSupport();
-    $('body').addClass('note-hresize-cursor');
-  }
-
-  applyWidth(width, parentWidth) {
-    this.$editable.css('width', width + 'px');
+    $('body').css('cursor', 'col-resize');
   }
 
   resetWidth() {
-    this.$editable.css({ width: '', marginLeft: '', marginRight: '', marginInline: '' });
+    this.$editable.css({ width: '' });
     this.updateHandlePosition();
   }
 
   updateHandlePosition() {
-    const editableEl = this.$editable[0];
-    const handleWidth = this.$handle.outerWidth();
+    const editable = this.$editable[0];
+    //const handleWidth = this.$handle.outerWidth();
     const parentWidth = this.$editingArea.width();
-    const currentWidth = this._getVisibleWidth(editableEl);
+    const editorRect = editable.getBoundingClientRect();
+    const currentWidth = editorRect.width;
     // Use CSS centering; compute theoretical margin for handle docking
     const margin = (parentWidth - currentWidth) / 2;
     const areaStyle = getComputedStyle(this.$editingArea[0]);
     const padLeft = parseFloat(areaStyle.paddingLeft) || 0;
-    const left = padLeft + margin - handleWidth;
-    const top = editableEl.offsetTop;
-    const height = this._getVisibleHeight(editableEl);
+    // Overlay: handle sits directly on left edge of .note-editable
+    const left = padLeft + margin;
+    const top = editable.offsetTop;
+    const height = editorRect.height;
     this.$handle.css({ 
       left: (left < 0 ? 0 : left) + 'px', 
       top: top + 'px', 
       height: Math.floor(height) + 'px' 
-    });
-  }
-
-  _addKeyboardSupport() {
-    this.$handle.on('keydown.horizontalresize', (evt) => {
-      if (evt.key !== 'ArrowLeft' && evt.key !== 'ArrowRight') return;
-      evt.preventDefault();
-      const parentWidth = this.$editingArea.width();
-      const zoom = this.getZoom();
-      const stepVisible = evt.shiftKey ? 40 : 15;
-      const stepCss = stepVisible / zoom;
-      const editableEl = this.$editable[0];
-      let curCssWidth = parseFloat(editableEl.style.width);
-      if (!isFinite(curCssWidth)) {
-        // Derive from visible width if not explicitly set
-        curCssWidth = this._getVisibleWidth(editableEl) / zoom;
-      }
-      curCssWidth += (evt.key === 'ArrowLeft' ? stepCss : -stepCss); // Left expands, Right shrinks
-      const minCssWidth = this.minWidth / zoom;
-      const maxCssWidth = parentWidth / zoom;
-      curCssWidth = Math.max(minCssWidth, Math.min(curCssWidth, maxCssWidth));
-      this.applyWidth(curCssWidth, parentWidth);
-      this.updateHandlePosition();
     });
   }
 
@@ -191,29 +151,8 @@ export default class EditorResizer {
   }
 
   destroy() {
-    this.resizeObserver?.disconnect();
-    this.fullscreenObserver?.disconnect();
-    this.$handle?.off('keydown.horizontalresize');
     this.$handle?.off('pointerdown');
     this.$handle?.remove();
-    $('body').removeClass('note-hresize-cursor');
-  }
-
-  getZoom() {
-    const editableEl = this.$editable[0];
-    const cs = getComputedStyle(editableEl);
-    const varZoom = cs.getPropertyValue('--zoom').trim();
-    const directZoom = cs.zoom && String(cs.zoom).trim();
-    const parsed = parseFloat(varZoom || directZoom);
-    return isFinite(parsed) && parsed > 0 ? parsed : 1;
-  }
-
-  _getVisibleWidth(el) {
-    // Use boundingClientRect to reflect any zoom scaling
-    return el.getBoundingClientRect().width;
-  }
-
-  _getVisibleHeight(el) {
-    return el.getBoundingClientRect().height;
+    $('body').css('cursor', '');
   }
 }

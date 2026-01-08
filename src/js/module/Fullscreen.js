@@ -24,6 +24,9 @@ export default class Fullscreen {
     this.context.invoke('toolbar.updateFullscreen', isFullscreen);
 
     this.context.invoke('editor.' + (isFullscreen ? 'unobserveResize' : 'observeResize'));
+
+    // Notify other modules (e.g. EditorResizer) that fullscreen has changed
+    this.context.triggerEvent('fullscreen.toggled', isFullscreen);
   }
 
   isFullscreen() {
