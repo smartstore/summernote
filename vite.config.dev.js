@@ -7,16 +7,6 @@ const config = defineConfig({
       '@': '/src',
     },
   },
-  server: {
-    proxy: {
-      '/examples/font': {
-        target: 'http://localhost:5174',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/examples\/font/, '/font')
-      },
-    },
-  },
-
   plugins: [
       externalGlobals({
         jquery: '$'

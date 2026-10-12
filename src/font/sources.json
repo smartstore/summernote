@@ -1,0 +1,352 @@
+[
+  {
+    "glyph": "align",
+    "concept": "text-align-left",
+    "source": "text-align-left"
+  },
+  {
+    "glyph": "align-center",
+    "concept": "text-align-center",
+    "source": "text-align-center"
+  },
+  {
+    "glyph": "align-justify",
+    "concept": "text-align-justify",
+    "source": "text-align-justify"
+  },
+  {
+    "glyph": "align-left",
+    "concept": "text-align-left",
+    "source": "text-align-left"
+  },
+  {
+    "glyph": "align-right",
+    "concept": "text-align-right",
+    "source": "text-align-right"
+  },
+  {
+    "glyph": "row-below",
+    "concept": "table-row-below",
+    "source": "row-insert"
+  },
+  {
+    "glyph": "col-before",
+    "concept": "table-column-before",
+    "source": "column-insert?flip=x"
+  },
+  {
+    "glyph": "col-after",
+    "concept": "table-column-after",
+    "source": "column-insert"
+  },
+  {
+    "glyph": "row-above",
+    "concept": "table-row-above",
+    "source": "row-insert?flip=y"
+  },
+  {
+    "glyph": "row-remove",
+    "concept": "table-row-remove",
+    "source": "row-delete"
+  },
+  {
+    "glyph": "col-remove",
+    "concept": "table-column-remove",
+    "source": "column-delete"
+  },
+  {
+    "glyph": "align-indent",
+    "concept": "text-indent",
+    "source": "text-indent"
+  },
+  {
+    "glyph": "align-outdent",
+    "concept": "text-outdent",
+    "source": "text-indent?flip=x"
+  },
+  {
+    "glyph": "arrows-alt",
+    "concept": "maximize",
+    "source": "full-screen"
+  },
+  {
+    "glyph": "bold",
+    "concept": "bold",
+    "source": "bold?stroke-scale=1.5"
+  },
+  {
+    "glyph": "caret",
+    "concept": "chevron-down",
+    "source": "chevron-down?stroke-scale=1.25"
+  },
+  {
+    "glyph": "circle",
+    "concept": "circle-outline",
+    "source": "sys:circle-outline!/default"
+  },
+  {
+    "glyph": "close",
+    "concept": "close",
+    "source": "cancel-01"
+  },
+  {
+    "glyph": "code",
+    "concept": "code",
+    "source": "code"
+  },
+  {
+    "glyph": "eraser",
+    "concept": "eraser",
+    "source": "remove-formatting"
+  },
+  {
+    "glyph": "float-left",
+    "concept": "image-float-left",
+    "source": "text-firstline-right"
+  },
+  {
+    "glyph": "float-right",
+    "concept": "image-float-right",
+    "source": "text-firstline-left"
+  },
+  {
+    "glyph": "font",
+    "concept": "font",
+    "source": "text-font"
+  },
+  {
+    "glyph": "frame",
+    "concept": "editor-frame",
+    "source": "browser"
+  },
+  {
+    "glyph": "italic",
+    "concept": "italic",
+    "source": "text-italic"
+  },
+  {
+    "glyph": "link",
+    "concept": "link",
+    "source": "link"
+  },
+  {
+    "glyph": "chain-broken",
+    "concept": "unlink",
+    "source": "link-off"
+  },
+  {
+    "glyph": "magic",
+    "concept": "text-style",
+    "source": "heading"
+  },
+  {
+    "glyph": "menu-check",
+    "concept": "check",
+    "source": "check?stroke-scale=1.5"
+  },
+  {
+    "glyph": "minus",
+    "concept": "minus",
+    "source": "minus?stroke-scale=1.5"
+  },
+  {
+    "glyph": "orderedlist",
+    "concept": "list-ordered",
+    "source": "left-to-right-list-number"
+  },
+  {
+    "glyph": "pencil",
+    "concept": "pen",
+    "source": "edit-02"
+  },
+  {
+    "glyph": "picture",
+    "concept": "image",
+    "source": "image-02"
+  },
+  {
+    "glyph": "question",
+    "concept": "question-circle",
+    "source": "circle-question-mark"
+  },
+  {
+    "glyph": "redo",
+    "concept": "redo",
+    "source": "redo-02"
+  },
+  {
+    "glyph": "rollback",
+    "concept": "image-actual-size",
+    "source": "image-actual-size"
+  },
+  {
+    "glyph": "square",
+    "concept": "square-outline",
+    "source": "sys:square-outline!/default"
+  },
+  {
+    "glyph": "strikethrough",
+    "concept": "strikethrough",
+    "source": "text-strikethrough"
+  },
+  {
+    "glyph": "subscript",
+    "concept": "subscript",
+    "source": "text-subscript"
+  },
+  {
+    "glyph": "superscript",
+    "concept": "superscript",
+    "source": "text-superscript"
+  },
+  {
+    "glyph": "table",
+    "concept": "table",
+    "source": "table"
+  },
+  {
+    "glyph": "text-height",
+    "concept": "line-height",
+    "source": "paragraph-spacing"
+  },
+  {
+    "glyph": "trash",
+    "concept": "trash",
+    "source": "delete-02"
+  },
+  {
+    "glyph": "underline",
+    "concept": "underline",
+    "source": "text-underline"
+  },
+  {
+    "glyph": "undo",
+    "concept": "undo",
+    "source": "undo-02"
+  },
+  {
+    "glyph": "unorderedlist",
+    "concept": "list-unordered",
+    "source": "layout-list"
+  },
+  {
+    "glyph": "video",
+    "concept": "video",
+    "source": "film-01"
+  },
+  {
+    "glyph": "arrows-h",
+    "concept": "flip-h",
+    "source": "flip-horizontal-01"
+  },
+  {
+    "glyph": "arrows-v",
+    "concept": "flip-v",
+    "source": "flip-vertical-01"
+  },
+  {
+    "glyph": "float-none",
+    "concept": "image-float-none",
+    "source": "system:image-float-none"
+  },
+  {
+    "glyph": "arrow-circle-down",
+    "concept": "arrow-down-circle",
+    "source": "circle-arrow-down-02"
+  },
+  {
+    "glyph": "arrow-circle-up",
+    "concept": "arrow-up-circle",
+    "source": "circle-arrow-up-02"
+  },
+  {
+    "glyph": "arrow-circle-left",
+    "concept": "hi:circle-arrow-left-02",
+    "source": "hi:circle-arrow-left-02"
+  },
+  {
+    "glyph": "arrow-circle-right",
+    "concept": "hi:circle-arrow-right-02",
+    "source": "hi:circle-arrow-right-02"
+  },
+  {
+    "glyph": "para",
+    "concept": "paragraph",
+    "source": "paragraph"
+  },
+  {
+    "glyph": "special-character",
+    "concept": "special-character",
+    "source": "omega"
+  },
+  {
+    "glyph": "color-reset",
+    "concept": "droplet-off",
+    "source": "droplet-off"
+  },
+  {
+    "glyph": "color-picker",
+    "concept": "dropper",
+    "source": "dropper"
+  },
+  {
+    "glyph": "arrows-alt-collapse",
+    "concept": "minimize",
+    "source": "minimize"
+  },
+  {
+    "glyph": "inline-code",
+    "concept": "code",
+    "source": "code"
+  },
+  {
+    "glyph": "paintbrush",
+    "concept": "paint-brush",
+    "source": "bi:pencil-fill"
+  },
+  {
+    "glyph": "css",
+    "concept": "css-3",
+    "source": "css-3"
+  },
+  {
+    "glyph": "ellipsis",
+    "concept": "ellipsis",
+    "source": "ellipsis"
+  },
+  {
+    "glyph": "spell-check",
+    "concept": "spell-check",
+    "source": "spell-check"
+  },
+  {
+    "glyph": "gear",
+    "concept": "gears",
+    "source": "gears"
+  },
+  {
+    "glyph": "fill",
+    "concept": "paint-bucket",
+    "source": "paint-bucket"
+  },
+  {
+    "glyph": "face",
+    "concept": "smile",
+    "source": "smile"
+  },
+  {
+    "glyph": "layout",
+    "concept": "editor-layout",
+    "source": "layout-2-column"
+  },
+  {
+    "glyph": "smiley",
+    "concept": "smile",
+    "source": "smile"
+  },
+  {
+    "glyph": "disk",
+    "concept": "disk",
+    "source": "Smartstore save override (monochrome)"
+  }
+]

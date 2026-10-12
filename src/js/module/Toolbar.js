@@ -142,7 +142,10 @@ export default class Toolbar {
   }
 
   updateFullscreen(isFullscreen) {
-    this.ui.toggleBtnActive(this.$toolbar.find('.btn-fullscreen'), isFullscreen);
+    const $button = this.$toolbar.find('.btn-fullscreen');
+    const icons = this.options.icons;
+    $button.html(this.ui.icon(isFullscreen ? (icons.arrowsAltCollapse || icons.arrowsAlt) : icons.arrowsAlt));
+    this.ui.toggleBtnActive($button, isFullscreen);
 
     this.changeContainer(isFullscreen);
   }

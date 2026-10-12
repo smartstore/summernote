@@ -1,5 +1,6 @@
 /// <reference path="../../../../shared/references.scss" />
-//@import 'summernote-icons.scss'; // Obsolete, we now use inline SVG icons for the missing ones
+$sni-font-path: "/font/";
+@import '../summernote/font.scss';
 @import "scss/variables.scss";
 
 $note-border-color: $input-border-color;
@@ -771,6 +772,11 @@ $img-margin-right: 10px;
     fill: currentColor;
   }
 
+  >i[class^="note-icon-"],
+  >i[class*=" note-icon-"] {
+    display: inline-flex;
+    line-height: 1;
+  }
   >svg {
     height: 16px;
   }

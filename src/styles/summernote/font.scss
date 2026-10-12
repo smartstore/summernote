@@ -1,6 +1,7 @@
 // Variables
 
 $sni-css-prefix: note-icon !default;
+$sni-font-path: "./font/" !default;
 
 // Path
 
@@ -9,7 +10,7 @@ $sni-css-prefix: note-icon !default;
   font-style: normal;
   font-weight: 400;
   font-display: auto;
-  src: url("./font/summernote.eot?#iefix") format("embedded-opentype"), url("./font/summernote.woff2") format("woff2"), url("./font/summernote.woff") format("woff"), url("./font/summernote.ttf") format("truetype");}
+  src: url("#{$sni-font-path}summernote.eot?v=ca2348cac610#iefix") format("embedded-opentype"), url("#{$sni-font-path}summernote.woff2?v=ca2348cac610") format("woff2"), url("#{$sni-font-path}summernote.woff?v=ca2348cac610") format("woff"), url("#{$sni-font-path}summernote.ttf?v=ca2348cac610") format("truetype");}
 
 // Core
 
@@ -18,6 +19,8 @@ $sni-css-prefix: note-icon !default;
   display: inline-block;
   font-family: "summernote";
   font-style: normal;
+  font-weight: 400;
+  font-synthesis: none;
   font-size: inherit;
   text-decoration: inherit;
   text-rendering: auto;
@@ -124,6 +127,10 @@ $sni-css-prefix: note-icon !default;
   content: "\ea0c";
 }
 
+.note-icon-arrows-alt-collapse::before {
+  content: "\ea3c";
+}
+
 .note-icon-arrows-h::before {
   content: "\ea0d";
 }
@@ -168,8 +175,36 @@ $sni-css-prefix: note-icon !default;
   content: "\ea17";
 }
 
+.note-icon-color-picker::before {
+  content: "\ea3b";
+}
+
+.note-icon-color-reset::before {
+  content: "\ea3a";
+}
+
+.note-icon-css::before {
+  content: "\ea3f";
+}
+
+.note-icon-disk::before {
+  content: "\ea47";
+}
+
+.note-icon-ellipsis::before {
+  content: "\ea40";
+}
+
 .note-icon-eraser::before {
   content: "\ea18";
+}
+
+.note-icon-face::before {
+  content: "\ea44";
+}
+
+.note-icon-fill::before {
+  content: "\ea43";
 }
 
 .note-icon-float-left::before {
@@ -192,8 +227,20 @@ $sni-css-prefix: note-icon !default;
   content: "\ea1d";
 }
 
+.note-icon-gear::before {
+  content: "\ea42";
+}
+
+.note-icon-inline-code::before {
+  content: "\ea3d";
+}
+
 .note-icon-italic::before {
   content: "\ea1e";
+}
+
+.note-icon-layout::before {
+  content: "\ea45";
 }
 
 .note-icon-link::before {
@@ -214,6 +261,10 @@ $sni-css-prefix: note-icon !default;
 
 .note-icon-orderedlist::before {
   content: "\ea23";
+}
+
+.note-icon-paintbrush::before {
+  content: "\ea3e";
 }
 
 .note-icon-para::before {
@@ -252,8 +303,16 @@ $sni-css-prefix: note-icon !default;
   content: "\ea2c";
 }
 
+.note-icon-smiley::before {
+  content: "\ea46";
+}
+
 .note-icon-special-character::before {
   content: "\ea2d";
+}
+
+.note-icon-spell-check::before {
+  content: "\ea41";
 }
 
 .note-icon-square::before {

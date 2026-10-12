@@ -131,7 +131,7 @@ export default class TableStyles {
   getListItem(value, label, isExclusive) {
     const item = `
       <a href='javascript:;' class='dropdown-item ${isExclusive ? "exclusive-item" : "inclusive-item"}' data-value="${value}">
-        <i class="fa fa-check"></i>
+        ${this.ui.icon(this.options.icons.menuCheck)}
         ${label}
       </a>
     `;

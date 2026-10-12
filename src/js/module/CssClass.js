@@ -130,7 +130,7 @@ export default class CssClass {
         children: [
           this.ui.button({
             className: 'dropdown-toggle',
-            contents: this.ui.icon("fab fa-css3"), // TODO
+            contents: this.ui.icon(this.options.icons.css),
             tooltip: this.lang.attrs.cssClass,
             data: {
               toggle: 'dropdown'
@@ -175,7 +175,7 @@ export default class CssClass {
         children: [
           this.ui.button({
             className: 'dropdown-toggle',
-            contents: this.ui.icon("fab fa-css3"),
+            contents: this.ui.icon(this.options.icons.css),
             tooltip: this.lang.imageShapes.tooltip,
             click: (e) => {
               this.refreshDropdown($(e.currentTarget).next(), $(this.selection.selectedControl), true);
