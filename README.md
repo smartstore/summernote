@@ -123,6 +123,19 @@ before the dialog opens. Component fragments are imported into the active docume
 to ensure custom elements are upgraded when inserted. Clipboard fragment markers
 are stripped and are not retained in code output.
 
+## Extending the emoji picker
+
+Applications register additional tabs through `emojiPickerTabs` or
+`summernote('emoji.addTab', definition)`, before or after opening the picker.
+Each definition has a unique `id`, a text `label`, an optional text `icon`, and
+`render(container, picker)`. The optional `icon` accepts text or a DOM element
+(cloned for each tab button). Rendering runs once, on first activation. The picker
+API exposes `context`, `insertHtml(html)` and `close()`. Insertion uses the saved
+selection and closes the picker. Optional `activate(container)` runs on every tab selection, for example to focus
+the search field. Optional `destroy(container)` releases resources.
+The tab switch remains hidden until extra tabs exist. The Smartstore-style demo
+registers a simple Symbols tab without an IconKit dependency.
+
 ## Contacts
 
 * Discord: [Join the Summernote Discord community](https://discord.gg/7A64GBKwyu)

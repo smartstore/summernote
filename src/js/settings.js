@@ -382,6 +382,7 @@ $.summernote = $.extend($.summernote, {
       },
     },
     icons: icons,
+    emojiPickerTabs: [],
     emojiCdnUrl: 'https://cdn.jsdelivr.net/npm/emojibase-data@15.0.0',
   },
 });

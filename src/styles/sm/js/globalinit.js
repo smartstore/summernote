@@ -193,4 +193,20 @@ let summernote_image_upload_url;
 	$(function () {
     const options = $.extend(true, summernote_global_config, { height: 450, focus: true });
     $('.summernote').summernote(options);
+    // Application-owned picker tab prototype. No IconKit dependency in Summernote.
+    $('.summernote').each(function () {
+      $(this).summernote('emoji.addTab', {
+        id: 'symbols-demo',
+        label: 'Symbols',
+        icon: '☆',
+        render(container, picker) {
+          $('<p class="text-muted small">An application can mount its own picker here.</p>').appendTo(container);
+          const grid = $('<div class="d-flex flex-wrap gap-2 p-2"></div>').appendTo(container);
+          for (const symbol of ['○', '□', '△', '◇', '☆', '♡', '✓', '→']) {
+            $('<button type="button" class="btn btn-light btn-icon"></button>')
+              .text(symbol).appendTo(grid).on('click', () => picker.insertHtml(symbol));
+          }
+        },
+      });
+    });
 	});

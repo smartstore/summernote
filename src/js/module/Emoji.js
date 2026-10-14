@@ -5,6 +5,8 @@ import range from '../core/range';
 import Type from '../core/Type';
 import EmojiDb from './EmojiDb';
 
+let pickerId = 0;
+
 export default class Emoji {
   constructor(context) {
     this.context = context;
@@ -18,9 +20,12 @@ export default class Emoji {
     this.$btn = null;
     this.marker = null;
     this.$popover = null;
+    this.pickerTabs = new Map();
+    this.pickerId = ++pickerId;
   }
 
   initialize() {
+    for (const tab of this.options.emojiPickerTabs) this.addTab(tab);
     this.context.memo('button.emoji', () => {
       return this.ui.button({
         className: 'note-btn-emoji',
@@ -76,6 +81,7 @@ export default class Emoji {
     insertRange.insertNode(this.marker);
 
     // Restore native Selection
+    this.pickerRange = originalRange;
     this.editor.selection.setRange(originalRange);
 
     this.editor.showPopover(this.$popover, this.marker, 'bottom', 'viewport'); 
@@ -96,7 +102,9 @@ export default class Emoji {
       className: 'note-emoji-popover',
     }).render()
       .appendTo(this.options.container)
-      .on('mousedown', e => e.preventDefault());
+      .on('mousedown', e => {
+        if (!$(e.target).closest('input, textarea, select, button').length) e.preventDefault();
+      });
 
     // Show loading state
     $popover
@@ -106,18 +114,96 @@ export default class Emoji {
       .html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div></div>');
 
     // Hide when clicking elsewhere
-    $(document).on('mousedown', (e) => this.closePopover(e));
+    this.onDocumentMouseDown = e => this.closePopover(e);
+    $(document).on('mousedown', this.onDocumentMouseDown);
 
     return $popover;
   }
 
+  /** Registers an application-owned picker tab without introducing dependencies. */
+  addTab(tab) {
+    if (!tab.id || tab.id === 'emoji' || this.pickerTabs.has(tab.id)) {
+      throw new Error('Picker tab IDs must be unique and cannot be emoji.');
+    }
+    this.pickerTabs.set(tab.id, { ...tab });
+    if (this.$tabs) this.mountTab(this.pickerTabs.get(tab.id));
+  }
+
+  createTabs($popover) {
+    const $body = $popover.find('> .popover-content');
+    this.$emojiPane = $('<div>').append($body.contents());
+    this.$panes = $('<div class="flex-grow-1">').css('min-height', 0).appendTo($body);
+    const $switcher = $('<div class="d-flex justify-content-center flex-shrink-0 p-2 pb-0"></div>').prependTo($body);
+    this.$tabs = $('<div class="nav nav-segmented" role="tablist"></div>').css({ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: '1fr', '--nav-link-padding-y': '0.25rem', '--nav-link-padding-x': '1rem', '--nav-link-font-size': '0.875rem' }).appendTo($switcher);
+    this.mountTab({ id: 'emoji', label: this.lang.emoji.emoji, icon: '😀', $pane: this.$emojiPane, activate: pane => $(pane).find('input').trigger('focus') });
+    for (const tab of this.pickerTabs.values()) this.mountTab(tab);
+    this.activateTab('emoji');
+    this.$tabs.on('keydown', 'button', e => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+      e.preventDefault();
+      const buttons = this.$tabs.find('button').toArray();
+      let index = buttons.indexOf(e.currentTarget);
+      index = e.key === 'Home' ? 0 : e.key === 'End' ? buttons.length - 1
+        : (index + (e.key === 'ArrowRight' ? 1 : buttons.length - 1)) % buttons.length;
+      buttons[index].click();
+      buttons[index].focus();
+    });
+  }
+
+  mountTab(tab) {
+    const id = 'note-picker-' + this.pickerId + '-' + this.$tabs.children().length;
+    const $icon = tab.icon?.nodeType === 1
+      ? $(tab.icon.cloneNode(true))
+      : $('<span>').text(tab.icon || '◇');
+    $icon.attr('aria-hidden', 'true');
+    const $button = $('<button type="button" class="nav-link" role="tab"></button>')
+      .append($icon)
+      .append(document.createTextNode(tab.label)).attr({ id, 'aria-controls': id + '-pane' })
+      .data('picker-tab', tab.id).appendTo(this.$tabs)
+      .on('click', () => this.activateTab(tab.id));
+    tab.$pane = (tab.$pane || $('<div>')).css({ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }).attr({ id: id + '-pane', role: 'tabpanel', 'aria-labelledby': id })
+      .appendTo(this.$panes);
+    if (tab.id !== 'emoji') tab.$pane.css('padding', 'var(--note-emoji-padding)');
+    $button.data('definition', tab);
+    const hasTabs = this.$tabs.children().length > 1;
+    this.$tabs.parent().toggleClass('d-flex', hasTabs).toggleClass('d-none', !hasTabs);
+    tab.$pane.toggle(tab.id === this.activeTab);
+  }
+
+  async activateTab(id) {
+    this.activeTab = id;
+    for (const button of this.$tabs.children().toArray()) {
+      const tab = $(button).data('definition');
+      const active = tab.id === id;
+      $(button).toggleClass('active', active).attr({ 'aria-selected': String(active), tabindex: active ? 0 : -1 });
+      tab.$pane.toggle(active);
+      if (active && tab.render && !tab.initialized) {
+        tab.initialized = true;
+        await tab.render(tab.$pane[0], {
+          context: this.context,
+          insertHtml: html => {
+            const insertion = this.pickerRange.cloneRange();
+            this.closePopover();
+            this.editor.focus();
+            const wrappedRange = range.createFromNativeRange(insertion);
+            this.selection.setRange(wrappedRange);
+            this.editor.pasteHTML(html, [], wrappedRange);
+          },
+          close: () => this.closePopover(),
+        });
+      }
+      if (active && this.activeTab === id) tab.activate?.(tab.$pane[0]);
+    }
+  }
+
   async initializePopover($popover) {
+    this.createTabs($popover);
     const db = await EmojiDb.create(this.context);
     await this.buildPicker($popover, db);
   }
 
   async buildPicker($popover, db) {
-    const $menu = $popover.find('> .popover-content');
+    const $menu = this.$emojiPane || $popover.find('> .popover-content');
 
     try {
       // Build navigation
@@ -182,7 +268,7 @@ export default class Emoji {
       // Event handlers
       this.$note
         .on('summernote.popover.shown', (_, $p) => {
-          if ($p == this.$popover) setTimeout(() => $searchInput.trigger('focus'), 0);
+          if ($p == this.$popover && this.activeTab === 'emoji') setTimeout(() => $searchInput.trigger('focus'), 0);
         })
         .on('summernote.popover.hidden', (_, $p) => {
           if ($p == this.$popover) this.editor.selection.restoreBookmark();
@@ -359,6 +445,9 @@ export default class Emoji {
   }
 
   destroy() {
+    $(document).off('mousedown', this.onDocumentMouseDown);
+    for (const tab of this.pickerTabs.values()) tab.destroy?.(tab.$pane?.[0]);
+    this.marker?.remove();
     this.$popover?.remove();
     this.$popover = null;
   }
