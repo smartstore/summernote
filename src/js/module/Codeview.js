@@ -193,7 +193,7 @@ export default class CodeView {
 
     const value = this.purify(dom.value(this.$codable, false) || dom.emptyPara);
     //const value = dom.value(this.$codable, false) || dom.emptyPara;
-    const hasChanged = this.$editable.html() !== value;
+    const hasChanged = this.context.invoke('editor.serialize') !== value;
 
     this.$editable.html(value);
     // Unnecessary

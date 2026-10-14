@@ -96,6 +96,33 @@ blank"><img src="https://opencollective.com/summernote/sponsor.svg?width=890"></
 Please be our [Backers](https://opencollective.com/summernote#backers).
 <a href="https://opencollective.com/summernote#backers" target="_blank"><img src="https://opencollective.com/summernote/backers.svg?width=890"></a>
 
+## Custom element serialization (Smartstore fork)
+
+Configure `serializableElements` with custom-element tag names and provide
+`callbacks.onSerializeElement(element)`. The callback receives the live element
+and returns a DOM node containing its authored representation, or null to retain
+the current markup. Returned nodes should be created in an inert document to
+avoid custom-element initialization. The callback must not mutate the live editor.
+
+The editor serializes into an inert copy. Code view, the public `code()` getter,
+save operations and undo snapshots all use this representation. The default empty
+list preserves the original behavior. No component framework is required.
+
+Configure `atomicElements` separately for inline components that must be selected as
+indivisible objects. They receive a selection frame without resize handles. Arrow
+keys move outside the selected component; clicks within the outer 4 px place the caret
+before or after it (with a smaller zone for tiny components); Delete and Backspace remove it with undo
+support. Temporary editability attributes are stripped during serialization.
+The `summernote.component.selected` event receives the selected element for optional
+application popovers. No component popover is included. Copy and cut serialize the selected range through
+the same authored-node callback; paste also accepts HTML-only clipboard content.
+Copies carry an instance-specific clipboard format. Pasting back into the same
+editor preserves formatting without the external-content dialog. External content
+continues through the configured paste sanitization. The insertion range is captured
+before the dialog opens. Component fragments are imported into the active document
+to ensure custom elements are upgraded when inserted. Clipboard fragment markers
+are stripped and are not retained in code output.
+
 ## Contacts
 
 * Discord: [Join the Summernote Discord community](https://discord.gg/7A64GBKwyu)

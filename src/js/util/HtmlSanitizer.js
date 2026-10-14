@@ -330,5 +330,6 @@ const prettify = (context, html) => {
 export default {
   prettify,
   purify,
-  purifyRange
+  purifyRange,
+  extractFragmentContent
 }

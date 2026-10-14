@@ -104,7 +104,7 @@ export default class Context {
     if (html === undefined) {
       // Get
       this.invoke('codeview.sync');
-      return isCodeView ? this.layoutInfo.codable.val() : this.layoutInfo.editable.html();
+      return isCodeView ? this.layoutInfo.codable.val() : this.invoke('editor.serialize');
     } else {
       // Set
       if (isCodeView) {

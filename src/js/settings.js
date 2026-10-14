@@ -12,6 +12,7 @@ import Codeview from './module/Codeview';
 import Statusbar from './module/Statusbar';
 import Fullscreen from './module/Fullscreen';
 import Handle from './module/Handle';
+import ComponentSelection from './module/ComponentSelection';
 import EditorResizer from './module/EditorResizer';
 import AutoLink from './module/AutoLink';
 import AutoSync from './module/AutoSync';
@@ -54,6 +55,7 @@ $.summernote = $.extend($.summernote, {
       'statusbar': Statusbar,
       'fullscreen': Fullscreen,
       'handle': Handle,
+      'componentSelection': ComponentSelection,
       'editorResizer': EditorResizer,
       // FIXME: HintPopover & InlineEmoji must be front of autolink
       //  - Script error about range when Enter key is pressed on hint popover
@@ -157,6 +159,10 @@ $.summernote = $.extend($.summernote, {
     recordEveryKeystroke: false,
     historyLimit: 200,
     prettifyHtml: true,
+    // Tag names whose authored representation is supplied by onSerializeElement.
+    serializableElements: [],
+    // Inline elements selected as indivisible, non-resizable objects.
+    atomicElements: [],
 
     // TODO: need to be documented
     showDomainOnlyForAutolink: false,
@@ -247,6 +253,7 @@ $.summernote = $.extend($.summernote, {
       onImageUpload: null,
       onImageUploadError: null,
       onPrettifyHtml: null,
+      onSerializeElement: null,
       onPurifyHtml: null,
       onInit: null,
       onKeydown: null,

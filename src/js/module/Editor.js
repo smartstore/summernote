@@ -723,12 +723,54 @@ export default class Editor {
   html(prettify) {
     this.cleanupDom();
 
-    let html = this.$editable.html();
+    let html = this.serialize();
     if (Obj.valueOrDefault(prettify, this.options.prettifyHtml)) {
       html = HtmlSanitizer.prettify(this.context, html);
     }
 
     return html;
+  }
+
+  /**
+   * Serializes editable content without mutating live custom elements.
+   * Configured elements may supply an authored node through onSerializeElement.
+   */
+  serialize(selection = null) {
+    const callback = this.options.callbacks.onSerializeElement;
+    const names = this.options.serializableElements;
+    if (!selection && (!callback || !names?.length) && !this.options.atomicElements.length) return this.$editable.html();
+
+    const tags = new Set(names.map(name => name.toLowerCase()));
+    // Cloning in an inert document avoids custom-element upgrades and side effects.
+    const document = this.editable.ownerDocument.implementation.createHTMLDocument('');
+    const copies = new Map();
+    const copy = node => {
+      if (callback && node.nodeType === 1 && tags.has(node.localName)) {
+        const source = callback.call(this.$note[0], node);
+        if (source) {
+          const clone = document.importNode(source, true);
+          copies.set(node, clone);
+          return this.context.modules.componentSelection.cleanSource(node, clone);
+        }
+      }
+      // Template contents are inert authored markup, not live rendered components.
+      if (node.nodeType === 1 && node.localName === 'template') return document.importNode(node, true);
+      const clone = document.importNode(node, false);
+      copies.set(node, clone);
+      this.context.modules.componentSelection.cleanSource(node, clone);
+      for (const child of node.childNodes) clone.appendChild(copy(child));
+      return clone;
+    };
+    const root = copy(this.editable);
+    // Clipboard transport markers are not authored editor content.
+    const cleanHtml = html => html.replace(/<!--(?:Start|End)Fragment-->/g, '');
+    if (!selection) return cleanHtml(root.innerHTML);
+    const selectedRange = document.createRange();
+    selectedRange.setStart(copies.get(selection.startContainer), selection.startOffset);
+    selectedRange.setEnd(copies.get(selection.endContainer), selection.endOffset);
+    const container = document.createElement('div');
+    container.append(selectedRange.cloneContents());
+    return cleanHtml(container.innerHTML);
   }
 
   cleanupDom(root = null) {

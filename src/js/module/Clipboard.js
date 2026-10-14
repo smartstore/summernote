@@ -1,6 +1,10 @@
+import range from '../core/range';
+import HtmlSanitizer from '../util/HtmlSanitizer';
+
 export default class Clipboard {
   constructor(context) {
     this.context = context;
+    this.clipboardId = Array.from(crypto.getRandomValues(new Uint32Array(4)), value => value.toString(16)).join('-');
     this.ui = $.summernote.ui;
     this.options = context.options;
     this.lang = this.options.langInfo;
@@ -10,6 +14,28 @@ export default class Clipboard {
   initialize() {
     this.editor = this.context.modules.editor;
     this.$editable.on('paste', this.pasteByEvent.bind(this));
+    this.$editable.on('copy cut', this.copyByEvent.bind(this));
+  }
+
+  copyByEvent(e) {
+    if (this.context.isDisabled()) return;
+    const selection = this.editor.selection.nativeSelection;
+    if (!selection.rangeCount || selection.isCollapsed) return;
+    const selectedRange = selection.getRangeAt(0);
+    if (!this.editor.selection.isValidRange(selectedRange)) return;
+    const data = e.originalEvent.clipboardData;
+    if (!data) return;
+    data.setData('text/html', this.editor.serialize(selectedRange));
+    data.setData('text/plain', selection.toString());
+    data.setData('application/x-summernote-origin', this.clipboardId);
+    e.preventDefault();
+    if (e.type === 'cut') {
+      this.editor.history.recordUndo();
+      this.editor.beforeCommand();
+      selectedRange.deleteContents();
+      this.context.invoke('componentSelection.hide');
+      this.editor.afterCommand();
+    }
   }
 
   getPasteDialog() {
@@ -55,6 +81,17 @@ export default class Clipboard {
 
     let preventDefault = false;
     let clipboardText = data.getData('Text');
+    const html = data.getData('text/html');
+    // Preserve the insertion point before a paste dialog takes focus away.
+    const selection = this.editor.selection.nativeSelection;
+    const pasteRange = selection.rangeCount && this.editor.selection.isValidRange(selection.getRangeAt(0))
+      ? range.createFromNativeRange(selection.getRangeAt(0).cloneRange())
+      : this.editor.selection.getRange();
+    if (html && data.getData('application/x-summernote-origin') === this.clipboardId) {
+      if (focus) this.editor.focus();
+      this.editor.pasteHTML(HtmlSanitizer.extractFragmentContent(html), [], pasteRange);
+      return true;
+    }
 
     if (data.files.length > 0 && this.options.allowClipboardImagePasting) {
       // Paste img file
@@ -67,7 +104,7 @@ export default class Clipboard {
       // Call editor.afterCommand after proceeding default event handler
       setTimeout(() => this.context.invoke('editor.afterCommand'), 10);
     }
-    else if (clipboardText.length) {
+    else if (clipboardText.length || data.getData('text/html')) {
       // Check available types
       const types = data.types || [];
 
@@ -88,7 +125,7 @@ export default class Clipboard {
               flags = [... flags, 'format'];
             }
 
-            this.editor.pasteHTML(html, flags);
+            this.editor.pasteHTML(html, flags, pasteRange);
           }).fail(() => {
             this.context.invoke('editor.selection.restoreBookmark');
           });

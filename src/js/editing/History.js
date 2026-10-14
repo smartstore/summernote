@@ -17,7 +17,7 @@ export default class History {
     const rng = range.create(this.editable);
     const emptyBookmark = { s: { path: [], offset: 0 }, e: { path: [], offset: 0 } };
     return {
-      contents: this.$editable.html(),
+      contents: this.editor.serialize(),
       bookmark: ((rng && rng.isOnEditable()) ? rng.createBookmark(this.editable) : emptyBookmark),
     };
   }
@@ -38,7 +38,7 @@ export default class History {
   */
   rewind() {
     // Create snap shot if not yet recorded
-    if (this.$editable.html() !== this.stack[this.stackOffset].contents) {
+    if (this.editor.serialize() !== this.stack[this.stackOffset].contents) {
       this.recordUndo();
     }
 
@@ -91,7 +91,7 @@ export default class History {
    */
   undo() {
     // Create snap shot if not yet recorded
-    if (this.$editable.html() !== this.stack[this.stackOffset].contents) {
+    if (this.editor.serialize() !== this.stack[this.stackOffset].contents) {
       this.recordUndo();
     }
 
