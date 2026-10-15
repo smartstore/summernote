@@ -35,27 +35,19 @@ export default class Handle {
   }
 
   initialize() {
-    this.$handle = $([
-      '<div class="note-handle">',
-        '<div class="note-control-selection">',
-          '<div class="note-control-selection-bg"></div>',
-          '<div class="note-control-holder note-control-nw"></div>',
-          '<div class="note-control-holder note-control-ne"></div>',
-          '<div class="note-control-holder note-control-sw"></div>',
-          '<div class="',
-            (this.options.disableResizeImage ? 'note-control-holder' : 'note-control-sizing'),
-          ' note-control-se"></div>',
-          (this.options.disableResizeImage ? '' : '<div class="note-control-selection-info"></div>'),
-        '</div>',
-      '</div>',
-    ].join('')).prependTo(this.$editingArea);
+    this.frame = this.context.modules.selectionFrame;
+    this.$handle = this.frame.$container;
+    this.$controls = this.options.disableResizeImage ? $() : $(
+      '<div class="note-control-sizing note-control-se"></div>' +
+      '<div class="note-control-selection-info"></div>');
 
     this.$handle.on('mousedown', (event) => {
       if (dom.isControlSizing(event.target)) {
         event.preventDefault();
         event.stopPropagation();
 
-        const $target = this.$handle.find('.note-control-selection').data('target');
+        if (this.frame.owner !== this) return;
+        const $target = $(this.frame.target);
         const posStart = $target.offset();
         const scrollTop = this.$document.scrollTop();
 
@@ -90,7 +82,9 @@ export default class Handle {
   }
 
   destroy() {
-    this.$handle.remove();
+    this.hide();
+    this.$handle.off();
+    this.$controls.remove();
   }
 
   update(target, e) {
@@ -108,7 +102,7 @@ export default class Handle {
     const isImage = dom.isImg(target);
     const isMedia = !isImage && dom.isMedia(target);
 
-    const $selection = this.$handle.find('.note-control-selection');
+    const $selection = this.frame.$frame;
 
     if (!isScroll) {
       this.context.invoke('imagePopover.update', target, e);
@@ -117,16 +111,8 @@ export default class Handle {
     if (isImage || isMedia) {
       const $control = $(target);
 
-      const areaRect = this.$editingArea[0].getBoundingClientRect();
-      const controlRect = target.getBoundingClientRect();
-
-      $selection.css({
-        display: 'block',
-        left: controlRect.left - areaRect.left,
-        top: controlRect.top - areaRect.top,
-        width: controlRect.width,
-        height: controlRect.height,
-      }).data('target', $control); // save current image element.
+      const controlRect = this.frame.show(target, this, { controls: this.$controls });
+      if (!controlRect) return false;
 
       let sizingText = Math.ceil(controlRect.width) + 'x' + Math.ceil(controlRect.height);
 
@@ -143,7 +129,7 @@ export default class Handle {
       const exceeds = $info.outerWidth() > controlRect.width - 10 || $info.outerHeight() > controlRect.height - 10;
 
       $info.toggle(!exceeds);
-      this.context.invoke('editor.saveTarget', target);
+
     } 
     else {
       this.hide();
@@ -158,9 +144,6 @@ export default class Handle {
    * @param {jQuery} $handle
    */
   hide() {
-    this.$handle.children().hide();
-    if (this.context.modules.componentSelection?.target !== this.editor.selection.selectedControl) {
-      this.context.invoke('editor.clearTarget');
-    }
+    this.frame?.hide(this);
   }
 }

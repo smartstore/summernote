@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import range from '../core/range';
 
 // Inline components are selectable objects, but never resizable image controls.
@@ -8,7 +7,6 @@ export default class ComponentSelection {
     this.originalAttributes = new WeakMap();
     this.events = {
       'summernote.codeview.toggled summernote.disable': () => this.hide(),
-      'summernote.scroll': () => this.position(),
     };
   }
 
@@ -28,13 +26,7 @@ export default class ComponentSelection {
     };
     this.root.ownerDocument.addEventListener('mousedown', this.onOutsideInteraction, true);
     this.root.ownerDocument.addEventListener('focusin', this.onOutsideInteraction, true);
-    this.$frame = $('<div class="note-control-selection note-component-selection">' +
-      '<div class="note-control-holder note-control-nw"></div>' +
-      '<div class="note-control-holder note-control-ne"></div>' +
-      '<div class="note-control-holder note-control-sw"></div>' +
-      '<div class="note-control-holder note-control-se"></div></div>')
-      .css('pointer-events', 'none').appendTo(this.context.layoutInfo.editingArea);
-    this.resizeObserver = new ResizeObserver(() => this.position());
+    this.frame = this.context.modules.selectionFrame;
     this.prepare();
     this.observer = new MutationObserver(() => { this.prepare(); this.position(); });
     this.observer.observe(this.root, { childList: true, subtree: true });
@@ -47,7 +39,6 @@ export default class ComponentSelection {
       e.preventDefault();
       e.stopImmediatePropagation();
       this.root.focus();
-      this.context.invoke('handle.hide');
       this.context.invoke('imagePopover.hide');
       const nativeRange = this.root.ownerDocument.createRange();
       nativeRange.selectNode(target);
@@ -62,11 +53,8 @@ export default class ComponentSelection {
         this.hide();
         return;
       }
-      this.resizeObserver.disconnect();
-      this.target = target;
-      this.resizeObserver.observe(target, { box: 'border-box' });
+      this.frame.show(target, this, { className: 'note-component-selection', pointerEvents: 'none' });
       this.editor.selection.setRange(range.createFromNativeRange(nativeRange));
-      this.editor.saveTarget(target);
       this.editor.selection.triggerChangeEvent(target);
       this.position();
       this.context.triggerEvent('component.selected', target);
@@ -122,28 +110,24 @@ export default class ComponentSelection {
     return clone;
   }
 
+  get target() {
+    return this.frame?.owner === this ? this.frame.target : null;
+  }
+
   position() {
-    if (!this.target?.isConnected) return this.hide();
-    const area = this.context.layoutInfo.editingArea[0].getBoundingClientRect();
-    const rect = this.target.getBoundingClientRect();
-    this.$frame.css({ display: 'block', left: rect.left - area.left,
-      top: rect.top - area.top, width: rect.width, height: rect.height });
+    if (this.target) this.frame.position();
   }
 
   hide() {
-    this.resizeObserver?.disconnect();
-    if (this.target) this.editor.clearTarget();
-    this.target = null;
-    this.$frame?.hide();
+    this.frame?.hide(this);
   }
 
   destroy() {
     this.root?.ownerDocument.removeEventListener('mousedown', this.onOutsideInteraction, true);
     this.root?.ownerDocument.removeEventListener('focusin', this.onOutsideInteraction, true);
     this.observer?.disconnect();
-    this.resizeObserver?.disconnect();
     this.root?.removeEventListener('mousedown', this.onMouseDown, true);
     this.root?.removeEventListener('keydown', this.onKeyDown, true);
-    this.$frame?.remove();
+    this.hide();
   }
 }

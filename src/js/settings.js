@@ -12,6 +12,7 @@ import Codeview from './module/Codeview';
 import Statusbar from './module/Statusbar';
 import Fullscreen from './module/Fullscreen';
 import Handle from './module/Handle';
+import SelectionFrame from './module/SelectionFrame';
 import ComponentSelection from './module/ComponentSelection';
 import EditorResizer from './module/EditorResizer';
 import AutoLink from './module/AutoLink';
@@ -54,6 +55,7 @@ $.summernote = $.extend($.summernote, {
       'codeview': Codeview,
       'statusbar': Statusbar,
       'fullscreen': Fullscreen,
+      'selectionFrame': SelectionFrame,
       'handle': Handle,
       'componentSelection': ComponentSelection,
       'editorResizer': EditorResizer,

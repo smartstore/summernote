@@ -146,7 +146,7 @@ export default class Emoji {
     this.$tabs = $('<div class="nav nav-segmented" role="tablist"></div>').css({ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: '1fr', '--nav-link-padding-y': '0.25rem', '--nav-link-padding-x': '1rem', '--nav-link-font-size': '0.875rem' }).appendTo($switcher);
     this.mountTab({ id: 'emoji', label: this.lang.emoji.emoji, icon: '😀', $pane: this.$emojiPane, activate: pane => $(pane).find('input').trigger('focus') });
     for (const tab of this.pickerTabs.values()) this.mountTab(tab);
-    this.activateTab('emoji');
+    this.activateTab(this.$tabs.children().first().data('picker-tab'));
     this.$tabs.on('keydown', 'button', e => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
       e.preventDefault();
@@ -173,6 +173,10 @@ export default class Emoji {
     tab.$pane = (tab.$pane || $('<div>')).css({ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }).attr({ id: id + '-pane', role: 'tabpanel', 'aria-labelledby': id })
       .appendTo(this.$panes);
     if (tab.id !== 'emoji') tab.$pane.css('padding', 'var(--note-emoji-padding)');
+    if (tab.prepend) {
+      $button.prependTo(this.$tabs);
+      tab.$pane.prependTo(this.$panes);
+    }
     $button.data('definition', tab);
     const hasTabs = this.$tabs.children().length > 1;
     this.$tabs.parent().toggleClass('d-flex', hasTabs).toggleClass('d-none', !hasTabs);
