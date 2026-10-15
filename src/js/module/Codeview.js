@@ -91,16 +91,16 @@ export default class CodeView {
     const editor = this.context.modules.editor;
     const selection = editor.selection;
 
-    let rng;
-    if (selection.selectedControl) {
-      // TODO: selectedControl is always null due to Handle.js blur event firing beforehand.
-      rng = range.createFromNodeBefore(selection.selectedControl);
-    } 
-    else {
-      rng = selection.getRange().cloneRange().collapse(true);
+    const selected = this.context.modules.componentSelection?.target || selection.selectedControl;
+    if (selected && this.$editable[0].contains(selected)) {
+      // Custom elements serialize their authored content, so the marker must be outside.
+      const rng = selected.ownerDocument.createRange();
+      rng.setStartBefore(selected);
+      rng.collapse(true);
+      return rng;
     }
 
-    return range.getNativeRange(rng);
+    return range.getNativeRange(selection.getRange().cloneRange().collapse(true));
   }
 
   /**

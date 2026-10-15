@@ -159,6 +159,8 @@ export default class Handle {
    */
   hide() {
     this.$handle.children().hide();
-    this.context.invoke('editor.clearTarget');
+    if (this.context.modules.componentSelection?.target !== this.editor.selection.selectedControl) {
+      this.context.invoke('editor.clearTarget');
+    }
   }
 }

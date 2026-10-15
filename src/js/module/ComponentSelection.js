@@ -7,7 +7,7 @@ export default class ComponentSelection {
     this.context = context;
     this.originalAttributes = new WeakMap();
     this.events = {
-      'summernote.codeview.toggled summernote.disable summernote.blur': () => this.hide(),
+      'summernote.codeview.toggled summernote.disable': () => this.hide(),
       'summernote.scroll': () => this.position(),
     };
   }
@@ -20,12 +20,21 @@ export default class ComponentSelection {
     this.editor = this.context.modules.editor;
     this.root = this.editor.editable;
     this.selector = this.context.options.atomicElements.join(',');
+    this.onOutsideInteraction = e => {
+      if (!this.target) return;
+      const owner = e.target.closest?.('[data-note-owner]');
+      if (!this.context.layoutInfo.editor[0].contains(e.target)
+        && owner?.getAttribute('data-note-owner') !== String(this.context.options.id)) this.hide();
+    };
+    this.root.ownerDocument.addEventListener('mousedown', this.onOutsideInteraction, true);
+    this.root.ownerDocument.addEventListener('focusin', this.onOutsideInteraction, true);
     this.$frame = $('<div class="note-control-selection note-component-selection">' +
-      '<div class="note-control-selection-bg"></div>' +
       '<div class="note-control-holder note-control-nw"></div>' +
       '<div class="note-control-holder note-control-ne"></div>' +
-      '<div class="note-control-holder note-control-sw"></div></div>')
+      '<div class="note-control-holder note-control-sw"></div>' +
+      '<div class="note-control-holder note-control-se"></div></div>')
       .css('pointer-events', 'none').appendTo(this.context.layoutInfo.editingArea);
+    this.resizeObserver = new ResizeObserver(() => this.position());
     this.prepare();
     this.observer = new MutationObserver(() => { this.prepare(); this.position(); });
     this.observer.observe(this.root, { childList: true, subtree: true });
@@ -53,9 +62,12 @@ export default class ComponentSelection {
         this.hide();
         return;
       }
+      this.resizeObserver.disconnect();
       this.target = target;
+      this.resizeObserver.observe(target, { box: 'border-box' });
       this.editor.selection.setRange(range.createFromNativeRange(nativeRange));
       this.editor.saveTarget(target);
+      this.editor.selection.triggerChangeEvent(target);
       this.position();
       this.context.triggerEvent('component.selected', target);
     };
@@ -119,13 +131,17 @@ export default class ComponentSelection {
   }
 
   hide() {
+    this.resizeObserver?.disconnect();
     if (this.target) this.editor.clearTarget();
     this.target = null;
     this.$frame?.hide();
   }
 
   destroy() {
+    this.root?.ownerDocument.removeEventListener('mousedown', this.onOutsideInteraction, true);
+    this.root?.ownerDocument.removeEventListener('focusin', this.onOutsideInteraction, true);
     this.observer?.disconnect();
+    this.resizeObserver?.disconnect();
     this.root?.removeEventListener('mousedown', this.onMouseDown, true);
     this.root?.removeEventListener('keydown', this.onKeyDown, true);
     this.$frame?.remove();

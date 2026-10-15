@@ -1352,6 +1352,7 @@ export default class Editor {
 
   showPopover($popover, target, placement = 'top', boundariesElement = null) {
     if ($popover?.length) {
+      $popover.attr('data-note-owner', this.options.id);
 
       let popper = $popover.data('popper');
       if (popper) {
@@ -1376,6 +1377,7 @@ export default class Editor {
 
   hidePopover($popover) {
     if ($popover?.length) {
+      $popover.attr('data-note-owner', this.options.id);
       let raiseEvent = false;
       let popper = $popover.data('popper');
       if (popper) {

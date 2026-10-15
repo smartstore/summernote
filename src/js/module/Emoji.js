@@ -62,11 +62,20 @@ export default class Emoji {
   }
 
   showPopover() {
-    if (this.selection.selectedControl) return; // Prevent opening if a control is selected
+    // Toolbar focus can clear selectedControl while the saved selection still owns the component.
+    const originalRange = this.editor.getLastRange().getNativeRange().cloneRange();
+    const selectedNode = originalRange.startContainer === originalRange.endContainer
+      && originalRange.endOffset === originalRange.startOffset + 1
+      ? originalRange.startContainer.childNodes[originalRange.startOffset] : null;
+    const selected = this.selection.selectedControl
+      || (selectedNode?.nodeType === 1 && this.options.atomicElements.some(selector => selectedNode.matches(selector)) ? selectedNode : null);
+    const atomic = selected && this.options.atomicElements.some(selector => selected.matches(selector));
+    if (selected && !atomic) return;
+    this.pickerTarget = atomic ? selected : null;
     this.$btn.addClass('active');
 
-    // Clone the current range
-    const originalRange = this.editor.getLastRange().getNativeRange().cloneRange();
+    // Keep the complete component selected when opening from the toolbar.
+    if (this.pickerTarget) originalRange.selectNode(this.pickerTarget);
 
     // Collapse a second Range at the start of the original
     const insertRange = originalRange.cloneRange();
@@ -181,6 +190,7 @@ export default class Emoji {
         tab.initialized = true;
         await tab.render(tab.$pane[0], {
           context: this.context,
+          getSelectedElement: () => this.pickerTarget,
           insertHtml: html => {
             const insertion = this.pickerRange.cloneRange();
             this.closePopover();

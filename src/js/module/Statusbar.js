@@ -125,6 +125,11 @@ export default class Statusbar {
 
   updateSelectionPath(rng, force) {
     let startNode = dom.isElement(rng) ? rng : rng?.sc;
+    // A node selection surrounds the element; its range starts in the parent.
+    if (!dom.isElement(rng) && rng && rng.sc === rng.ec && rng.eo === rng.so + 1) {
+      const selected = rng.sc.childNodes[rng.so];
+      if (dom.isElement(selected)) startNode = selected;
+    }
     if (startNode) {
       const isTextNode = dom.isText(startNode);
       if (isTextNode) {
